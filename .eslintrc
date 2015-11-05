@@ -1,0 +1,16 @@
+{
+    "env": {
+        "es6": true
+    },
+    "ecmaFeatures": {
+        "modules": true
+    },
+    "rules": {
+        "no-undef": 2,
+        "semi": 2,
+        "no-console": 2,
+        "no-unreachable": 2,
+        "no-shadow": 2,
+        "no-unused-vars": 2
+    }
+}
