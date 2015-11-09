@@ -1,4 +1,5 @@
 import Trie from './Trie';
+export {default as BinaryString} from './BinaryString';
 
 /**
  * Synchronously construct a new Trie out of the given strings.

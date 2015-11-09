@@ -59,10 +59,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.BinaryString = undefined;
+
+	var _BinaryString = __webpack_require__(1);
+
+	Object.defineProperty(exports, 'BinaryString', {
+	  enumerable: true,
+	  get: function get() {
+	    return _BinaryString.default;
+	  }
+	});
 	exports.createSync = createSync;
 	exports.createFrozenSync = createFrozenSync;
 
-	var _Trie = __webpack_require__(1);
+	var _Trie = __webpack_require__(3);
 
 	var _Trie2 = _interopRequireDefault(_Trie);
 
@@ -108,7 +118,175 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _floor_log2 = _interopRequireDefault(_floor_log);
 
-	var _BinaryString = __webpack_require__(3);
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII
+	 * character.
+	 * @type {String[]}
+	 */
+	var BASE64_TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
+
+	/**
+	 * Interface for writing binary data into a Base64-encoded string
+	 */
+
+	var BinaryString = (function () {
+	    function BinaryString() {
+	        _classCallCheck(this, BinaryString);
+
+	        /**
+	         * Data buffer
+	         * @type {Number?}
+	         */
+	        this.buffer = 0;
+
+	        /**
+	         * Word pointer for buffer. With every entry into the buffer, the
+	         * pointer gets incremented by the entry's width. Every six characters
+	         * may be encoded, so when the pointer exceeds 6, the buffer can be
+	         * emptied until the pointer is back under 6.
+	         * @type {Number}
+	         */
+	        this.pointer = 0;
+
+	        /**
+	         * Encoded data as a string of base64 characters
+	         * @type {String}
+	         */
+	        this.data = '';
+	    }
+
+	    /**
+	     * Write a value to the binary string. This value should be thought of as
+	     * an integer representing the binary data to write.
+	     * @param  {Integer} val - data to write
+	     * @param  {Integer} [width] - optionally specify a width for this data.
+	     *                             if none is given, width will be inferred
+	     *                             automatically. An error will be thrown if
+	     *                             the width is too small to contain the data.
+	     * @return {[type]}       [description]
+	     */
+
+	    _createClass(BinaryString, [{
+	        key: 'write',
+	        value: function write(val) {
+	            var width = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+
+	            var buf = this.buffer;
+	            var len = width || (0, _floor_log2.default)(val) + 1;
+
+	            if (width && val >= 0x1 << width) {
+	                throw new Error('Can\'t write ' + val + ' in only ' + width + ' bits');
+	            }
+
+	            this.buffer = buf << len | val;
+	            this.pointer += len;
+
+	            this._digest();
+	        }
+
+	        /**
+	         * Encode the remaining items in the buffer. Use this when the input stream
+	         * is finished to ensure that all data has been encoded.
+	         */
+
+	    }, {
+	        key: 'flush',
+	        value: function flush() {
+	            var buffer = this.buffer;
+	            var pointer = this.pointer;
+	            // NB if pointer is at 0, there's nothing to flush.
+	            while (pointer && pointer < 6) {
+	                buffer <<= 1;
+	                pointer += 1;
+	            }
+	            this.pointer = pointer;
+	            this.buffer = buffer;
+	            this._digest();
+	        }
+
+	        /**
+	         * Get the binary data as base64. This output does not include padding
+	         * characters. This procedure flushes the buffer.
+	         * @return {String}
+	         */
+
+	    }, {
+	        key: 'getData',
+	        value: function getData() {
+	            this.flush();
+	            return this.data;
+	        }
+
+	        // Process as many items from the buffer as possible
+
+	    }, {
+	        key: '_digest',
+	        value: function _digest() {
+	            var buffer = this.buffer;
+	            var pointer = this.pointer;
+	            var newData = '';
+	            while (pointer >= 6) {
+	                var remainder = pointer - 6;
+	                var code = buffer >> remainder;
+	                buffer = buffer ^ code << remainder;
+	                pointer = remainder;
+	                newData += BASE64_TABLE[code];
+	            }
+	            this.pointer = pointer;
+	            this.buffer = buffer;
+	            this.data += newData;
+	        }
+	    }]);
+
+	    return BinaryString;
+	})();
+
+	exports.default = BinaryString;
+
+/***/ },
+/* 2 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.default = floor_log2;
+	/**
+	 * Fast floor(log2(x)) operation
+	 * @param  {Number} x
+	 * @return {Number}
+	 */
+	function floor_log2(x) {
+	    var n = 0;
+	    while (x >>= 1) {
+	        n++;
+	    }
+	    return n;
+	}
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _floor_log = __webpack_require__(2);
+
+	var _floor_log2 = _interopRequireDefault(_floor_log);
+
+	var _BinaryString = __webpack_require__(1);
 
 	var _BinaryString2 = _interopRequireDefault(_BinaryString);
 
@@ -491,173 +669,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	})();
 
 	exports.default = Trie;
-
-/***/ },
-/* 2 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	exports.default = floor_log2;
-	/**
-	 * Fast floor(log2(x)) operation
-	 * @param  {Number} x
-	 * @return {Number}
-	 */
-	function floor_log2(x) {
-	    var n = 0;
-	    while (x >>= 1) {
-	        n++;
-	    }
-	    return n;
-	}
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _floor_log = __webpack_require__(2);
-
-	var _floor_log2 = _interopRequireDefault(_floor_log);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII
-	 * character.
-	 * @type {String[]}
-	 */
-	var BASE64_TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
-
-	/**
-	 * Interface for writing binary data into a Base64-encoded string
-	 */
-
-	var BinaryString = (function () {
-	    function BinaryString() {
-	        _classCallCheck(this, BinaryString);
-
-	        /**
-	         * Data buffer
-	         * @type {Number?}
-	         */
-	        this.buffer = 0;
-
-	        /**
-	         * Word pointer for buffer. With every entry into the buffer, the
-	         * pointer gets incremented by the entry's width. Every six characters
-	         * may be encoded, so when the pointer exceeds 6, the buffer can be
-	         * emptied until the pointer is back under 6.
-	         * @type {Number}
-	         */
-	        this.pointer = 0;
-
-	        /**
-	         * Encoded data as a string of base64 characters
-	         * @type {String}
-	         */
-	        this.data = '';
-	    }
-
-	    /**
-	     * Write a value to the binary string. This value should be thought of as
-	     * an integer representing the binary data to write.
-	     * @param  {Integer} val - data to write
-	     * @param  {Integer} [width] - optionally specify a width for this data.
-	     *                             if none is given, width will be inferred
-	     *                             automatically. An error will be thrown if
-	     *                             the width is too small to contain the data.
-	     * @return {[type]}       [description]
-	     */
-
-	    _createClass(BinaryString, [{
-	        key: 'write',
-	        value: function write(val) {
-	            var width = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-
-	            var buf = this.buffer;
-	            var len = width || (0, _floor_log2.default)(val) + 1;
-
-	            if (width && val >= 0x1 << width) {
-	                throw new Error('Can\'t write ' + val + ' in only ' + width + ' bits');
-	            }
-
-	            this.buffer = buf << len | val;
-	            this.pointer += len;
-
-	            this._digest();
-	        }
-
-	        /**
-	         * Encode the remaining items in the buffer. Use this when the input stream
-	         * is finished to ensure that all data has been encoded.
-	         */
-
-	    }, {
-	        key: 'flush',
-	        value: function flush() {
-	            var buffer = this.buffer;
-	            var pointer = this.pointer;
-	            while (pointer < 6) {
-	                buffer <<= 1;
-	                pointer += 1;
-	            }
-	            this.pointer = pointer;
-	            this.buffer = buffer;
-	            this._digest();
-	        }
-
-	        /**
-	         * Get the binary data as base64. This output does not include padding
-	         * characters. This procedure flushes the buffer.
-	         * @return {String}
-	         */
-
-	    }, {
-	        key: 'getData',
-	        value: function getData() {
-	            this.flush();
-	            return this.data;
-	        }
-
-	        // Process as many items from the buffer as possible
-
-	    }, {
-	        key: '_digest',
-	        value: function _digest() {
-	            var buffer = this.buffer;
-	            var pointer = this.pointer;
-	            var newData = '';
-	            while (pointer >= 6) {
-	                var remainder = pointer - 6;
-	                var code = buffer >> remainder;
-	                buffer = buffer ^ code << remainder;
-	                pointer = remainder;
-	                newData += BASE64_TABLE[code];
-	            }
-	            this.pointer = pointer;
-	            this.buffer = buffer;
-	            this.data += newData;
-	        }
-	    }]);
-
-	    return BinaryString;
-	})();
-
-	exports.default = BinaryString;
 
 /***/ }
 /******/ ])

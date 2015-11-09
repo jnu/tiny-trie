@@ -73,7 +73,8 @@ class BinaryString {
     flush() {
         let buffer = this.buffer;
         let pointer = this.pointer;
-        while (pointer < 6) {
+        // NB if pointer is at 0, there's nothing to flush.
+        while (pointer && pointer < 6) {
             buffer <<= 1;
             pointer += 1;
         }
