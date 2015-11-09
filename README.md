@@ -3,6 +3,8 @@ tiny-trie
 
 Trie / DAWG implementation for JavaScript.
 
+[![Build Status](https://travis-ci.org/jnu/tiny-trie.svg?branch=master)](https://travis-ci.org/jnu/tiny-trie)
+
 ## About
 
 Construct a trie out of a list of words for efficient searches. The trie

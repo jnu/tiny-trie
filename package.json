@@ -1,7 +1,7 @@
 {
   "name": "tiny-trie",
   "version": "1.0.0",
-  "description": "JS implementation of a succinct trie by Steve Hanov",
+  "description": "JS Trie / DAWG classes",
   "main": "src/index.js",
   "scripts": {
     "lint": "$(npm bin)/eslint ./src",
