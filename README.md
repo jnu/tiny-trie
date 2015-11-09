@@ -29,9 +29,37 @@ trie.test('split');
 trie.freeze();
 ```
 
+## Benchmarks
+
+Quick benchmarks with the initial implementation on an MBP, node v5.0.0.
+
+Gives an idea roughly how long things take.
+
+```
+// words.txt = scrabble dictionary with 178,692 words. Chars A-Z
+
+> var trie = TinyTrie.createSync(words);
+// 846 milliseconds
+
+> trie.test(...);
+// avg: 0.05 milliseconds
+
+> trie.freeze();
+// 124 seconds
+
+> trie.encode();
+// 936 milliseconds
+```
+
+The init time of almost 1s is not acceptable for a client-side application.
+The goal of running `Trie#freeze(); Trie#encode();` at build time is to
+produce a blob version of the DAWG that has virtually *no* init time - the
+blob can be queried directly, with speeds approaching the full `Trie`'s very
+fast 50 microsecond times.
+
 ## TODO
 
-* Implement `Trie#encode`
+* Finish `Trie#encode` implementation
 
 * Implement `ClientTrie`
 
