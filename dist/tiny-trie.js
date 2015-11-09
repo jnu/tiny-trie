@@ -94,7 +94,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 1 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -103,6 +103,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
+
+	var _floor_log = __webpack_require__(2);
+
+	var _floor_log2 = _interopRequireDefault(_floor_log);
+
+	var _BinaryString = __webpack_require__(3);
+
+	var _BinaryString2 = _interopRequireDefault(_BinaryString);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -219,53 +229,238 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var suffixTree = {};
 
 	            // Walk the entire trie depth first, de-duping suffixes
-	            (function walk(node) {
+	            var node = this.root;
+	            var stack = [];
+	            var depthStack = [node];
+
+	            // Iterate over tree nodes, pushing children onto the depthStack so
+	            // that the items pushed on to the main `stack` are in the correct
+	            // order for a second traversal.
+	            while (depthStack.length) {
+	                node = depthStack.pop();
+
 	                Object.keys(node).forEach(function (char) {
-	                    var current = node[char];
-	                    walk(current);
-
-	                    // Find potential suffix duplicates with a char lookup
-	                    if (suffixTree.hasOwnProperty(char)) {
-	                        var suffixMeta = suffixTree[char];
-
-	                        // Find a matching suffix by comparing children. Since
-	                        // deduping is depth-first, comparing children by identity
-	                        // is a valid way to check if this node is a duplicate.
-	                        var match = suffixMeta.find(function (other) {
-	                            var oKeys = Object.keys(other);
-	                            var cKeys = Object.keys(current);
-	                            return oKeys.length === cKeys.length && oKeys.every(function (key) {
-	                                return other[key] === current[key];
-	                            });
-	                        });
-
-	                        // If this node is a dupe, update its parent reference to
-	                        // point to the cached match.
-	                        if (match) {
-	                            node[char] = match;
-	                        }
-	                        // If the node is novel, cache it for future checks.
-	                        else {
-	                                suffixMeta.push(current);
-	                            }
+	                    if (char[1] === '_') {
+	                        return;
 	                    }
-	                    // If this char is novel, create a new suffixMeta entry
-	                    else {
-	                            suffixTree[char] = [current];
-	                        }
+	                    var current = node[char];
+	                    stack.push({
+	                        current: current,
+	                        char: char,
+	                        parent: node
+	                    });
+	                    depthStack.push(current);
 	                });
-	            })(this.root);
+	            }
+
+	            // Now do node processing, joining / deduping suffix lines.
+
+	            var _loop = function _loop() {
+	                var _stack$pop = stack.pop();
+
+	                var char = _stack$pop.char;
+	                var parent = _stack$pop.parent;
+	                var current = _stack$pop.current;
+
+	                // Find potential suffix duplicates with a char lookup
+
+	                if (suffixTree.hasOwnProperty(char)) {
+	                    var suffixMeta = suffixTree[char];
+
+	                    // Find a matching suffix by comparing children. Since
+	                    // deduping is depth-first, comparing children by identity
+	                    // is a valid way to check if this node is a duplicate.
+	                    var match = suffixMeta.find(function (other) {
+	                        var oKeys = Object.keys(other);
+	                        var cKeys = Object.keys(current);
+	                        return oKeys.length === cKeys.length && oKeys.every(function (key) {
+	                            return other[key] === current[key];
+	                        });
+	                    });
+
+	                    // If this node is a dupe, update its parent reference to
+	                    // point to the cached match.
+	                    if (match) {
+	                        parent[char] = match;
+	                    }
+	                    // If the node is novel, cache it for future checks.
+	                    else {
+	                            suffixMeta.push(current);
+	                        }
+	                }
+	                // If this char is novel, create a new suffixMeta entry
+	                else {
+	                        suffixTree[char] = [current];
+	                    }
+	            };
+
+	            while (stack.length) {
+	                _loop();
+	            }
 
 	            // Flag the tree as frozen
 	            this.frozen = true;
 
 	            return this;
 	        }
+
+	        /**
+	         * Encode the Trie in a binary format. This format stores the trie or DAWG
+	         * efficiently and still allows for fast queries.
+	         * @return {Object}
+	         */
+
 	    }, {
 	        key: 'encode',
 	        value: function encode() {
-	            // TODO
-	            throw new Error("Not implemented");
+	            var chunks = [];
+	            var queue = [this.root];
+	            var charTable = new Set();
+	            var visitCode = Date.now();
+	            var offsetMin = Infinity;
+	            var offsetMax = -Infinity;
+
+	            var _loop2 = function _loop2() {
+	                var node = queue.shift();
+	                var keys = Object.keys(node).filter(function (k) {
+	                    return k[1] !== '_';
+	                });
+	                var n = keys.length;
+
+	                node.__visited__ = visitCode;
+	                var nodeChunkIndex = node.__idx__ = chunks.length;
+
+	                // Fill in the parent chunks that are waiting to find out what
+	                // index this chunk gets assigned
+	                if (node.__parents__) {
+	                    node.__parents__.forEach(function (chunk) {
+	                        var offset = chunk.offset = nodeChunkIndex - chunk.idx;
+	                        if (offset < offsetMin) {
+	                            offsetMin = offset;
+	                        }
+	                        if (offset > offsetMax) {
+	                            offsetMax = offset;
+	                        }
+	                    });
+	                }
+
+	                keys.forEach(function (char, i) {
+	                    var child = node[char];
+	                    var chunkIdx = chunks.length;
+	                    var lastInLevel = i === n - 1;
+
+	                    var newChunk = {
+	                        char: char,
+	                        idx: chunkIdx,
+	                        offset: null,
+	                        last: lastInLevel
+	                    };
+
+	                    // If the child has been visited, jump directly to that node
+	                    // instead of creating a new entry.
+	                    if (child.__visited__ === visitCode) {
+	                        var idx = child.__idx__;
+	                        var offset = newChunk.offset = idx - chunkIdx;
+	                        if (offset < offsetMin) {
+	                            offsetMin = offset;
+	                        }
+	                        if (offset > offsetMax) {
+	                            offsetMax = offset;
+	                        }
+	                    }
+	                    // If child is novel, add it to the process queue and add an
+	                    // instruction to jump there.
+	                    else {
+	                            if (child.__willVisit__ === visitCode) {
+	                                child.__parents__.push(newChunk);
+	                            } else {
+	                                child.__willVisit__ = visitCode;
+	                                child.__parents__ = [newChunk];
+	                            }
+	                            queue.push(child);
+	                        }
+
+	                    // Add a new chunk to the array
+	                    chunks.push(newChunk);
+
+	                    // Ensure that the char is in the chartable
+	                    charTable.add(char);
+	                });
+	            };
+
+	            while (queue.length) {
+	                _loop2();
+	            }
+
+	            // Assign a unique integer ID to each character. The actual ID is
+	            // arbitrary.
+	            var charTableAsArray = Array.from(charTable);
+	            var charMap = charTableAsArray.reduce(function (agg, char, i) {
+	                agg[char] = i;
+	                return agg;
+	            }, {});
+	            var charEncodingWidth = (0, _floor_log2.default)(charTableAsArray.length - 1) + 1;
+
+	            var pointerRange = offsetMax - offsetMin;
+	            var pointerEncodingWidth = (0, _floor_log2.default)(pointerRange) + 1;
+
+	            // The binary with of node encodings is variable. There are three parts
+	            // that get encoded:
+	            //
+	            //  1) character index (corresponding to character table),
+	            //  2) pointer (as offset from start of word to next node),
+	            //  3) last (flag to indicate whether this is the last block in this
+	            //     subtree)
+	            //
+	            // The width of the first two items are determined as the binary width
+	            // of the unsigned integer representing the maximum in the range. The
+	            // width of the third is a constant 1 binary digit.
+	            //
+	            // E.g., if the charTable is 28 characters in length, then the binary
+	            // digit representing 27 (the last item in the array) is:
+	            //
+	            //   1 1011
+	            //
+	            // So the width is determined to be 5. If the pointer range has a
+	            // maximum of 250, represented in binary as:
+	            //
+	            //   1111 1010
+	            //
+	            // Giving a width of 8. With these specifications, a node such as:
+	            //
+	            //   charIndex: 8, pointer: 100, last: false
+	            //
+	            // Would be encoded as:
+	            //
+	            //   --A---|----B-----|C|XXXXX
+	            //   0100 0|011 0010 0|1|00 00
+	            //
+	            // Which can be represented in Base64 as:
+	            //
+	            //   QyQ==
+	            //
+	            // TODO could be more clever and combine the first two fields.
+
+	            var encodedTrie = new _BinaryString2.default();
+
+	            chunks.forEach(function (chunk) {
+	                var char = chunk.char;
+	                var offset = chunk.offset;
+	                var last = chunk.last;
+
+	                encodedTrie.write(charMap[char], charEncodingWidth);
+	                encodedTrie.write(offset - offsetMin, pointerEncodingWidth);
+	                encodedTrie.write(+last, 1);
+	            });
+
+	            encodedTrie.flush();
+
+	            return {
+	                table: charTableAsArray.join(''),
+	                offset: offsetMin,
+	                dimensions: [charEncodingWidth, pointerEncodingWidth],
+	                data: encodedTrie.getData()
+	            };
 	        }
 
 	        /**
@@ -296,6 +491,173 @@ return /******/ (function(modules) { // webpackBootstrap
 	})();
 
 	exports.default = Trie;
+
+/***/ },
+/* 2 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.default = floor_log2;
+	/**
+	 * Fast floor(log2(x)) operation
+	 * @param  {Number} x
+	 * @return {Number}
+	 */
+	function floor_log2(x) {
+	    var n = 0;
+	    while (x >>= 1) {
+	        n++;
+	    }
+	    return n;
+	}
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _floor_log = __webpack_require__(2);
+
+	var _floor_log2 = _interopRequireDefault(_floor_log);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII
+	 * character.
+	 * @type {String[]}
+	 */
+	var BASE64_TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
+
+	/**
+	 * Interface for writing binary data into a Base64-encoded string
+	 */
+
+	var BinaryString = (function () {
+	    function BinaryString() {
+	        _classCallCheck(this, BinaryString);
+
+	        /**
+	         * Data buffer
+	         * @type {Number?}
+	         */
+	        this.buffer = 0;
+
+	        /**
+	         * Word pointer for buffer. With every entry into the buffer, the
+	         * pointer gets incremented by the entry's width. Every six characters
+	         * may be encoded, so when the pointer exceeds 6, the buffer can be
+	         * emptied until the pointer is back under 6.
+	         * @type {Number}
+	         */
+	        this.pointer = 0;
+
+	        /**
+	         * Encoded data as a string of base64 characters
+	         * @type {String}
+	         */
+	        this.data = '';
+	    }
+
+	    /**
+	     * Write a value to the binary string. This value should be thought of as
+	     * an integer representing the binary data to write.
+	     * @param  {Integer} val - data to write
+	     * @param  {Integer} [width] - optionally specify a width for this data.
+	     *                             if none is given, width will be inferred
+	     *                             automatically. An error will be thrown if
+	     *                             the width is too small to contain the data.
+	     * @return {[type]}       [description]
+	     */
+
+	    _createClass(BinaryString, [{
+	        key: 'write',
+	        value: function write(val) {
+	            var width = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+
+	            var buf = this.buffer;
+	            var len = width || (0, _floor_log2.default)(val) + 1;
+
+	            if (width && val >= 0x1 << width) {
+	                throw new Error('Can\'t write ' + val + ' in only ' + width + ' bits');
+	            }
+
+	            this.buffer = buf << len | val;
+	            this.pointer += len;
+
+	            this._digest();
+	        }
+
+	        /**
+	         * Encode the remaining items in the buffer. Use this when the input stream
+	         * is finished to ensure that all data has been encoded.
+	         */
+
+	    }, {
+	        key: 'flush',
+	        value: function flush() {
+	            var buffer = this.buffer;
+	            var pointer = this.pointer;
+	            while (pointer < 6) {
+	                buffer <<= 1;
+	                pointer += 1;
+	            }
+	            this.pointer = pointer;
+	            this.buffer = buffer;
+	            this._digest();
+	        }
+
+	        /**
+	         * Get the binary data as base64. This output does not include padding
+	         * characters. This procedure flushes the buffer.
+	         * @return {String}
+	         */
+
+	    }, {
+	        key: 'getData',
+	        value: function getData() {
+	            this.flush();
+	            return this.data;
+	        }
+
+	        // Process as many items from the buffer as possible
+
+	    }, {
+	        key: '_digest',
+	        value: function _digest() {
+	            var buffer = this.buffer;
+	            var pointer = this.pointer;
+	            var newData = '';
+	            while (pointer >= 6) {
+	                var remainder = pointer - 6;
+	                var code = buffer >> remainder;
+	                buffer = buffer ^ code << remainder;
+	                pointer = remainder;
+	                newData += BASE64_TABLE[code];
+	            }
+	            this.pointer = pointer;
+	            this.buffer = buffer;
+	            this.data += newData;
+	        }
+	    }]);
+
+	    return BinaryString;
+	})();
+
+	exports.default = BinaryString;
 
 /***/ }
 /******/ ])
