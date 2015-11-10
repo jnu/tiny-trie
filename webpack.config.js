@@ -4,7 +4,7 @@ var path = require('path');
 
 var DEBUG = process.env.NODE_ENV !== 'production';
 
-var bundleName = 'tiny-trie' + (DEBUG ? '' : '.min') + '.js';
+var bundleExt = (DEBUG ? '' : '.min') + '.js';
 
 var plugins = [];
 if (!DEBUG) {
@@ -12,7 +12,10 @@ if (!DEBUG) {
 }
 
 module.exports = {
-    entry: './src/index.js',
+    entry: {
+        'tiny-trie': './src/index.js',
+        'packed-trie': './src/PackedTrie.js'
+    },
     module: {
         loaders: [
             {
@@ -25,7 +28,7 @@ module.exports = {
     plugins: plugins,
     output: {
         path: path.join(__dirname, 'dist'),
-        filename: bundleName,
+        filename: '[name]' + bundleExt,
         libraryTarget: 'umd',
         library: 'TinyTrie'
     }

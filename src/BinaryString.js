@@ -1,16 +1,5 @@
 import floor_log2 from './floor_log2';
-
-/**
- * Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII
- * character.
- * @type {String[]}
- */
-const BASE64_TABLE = `\
-ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-abcdefghijklmnopqrstuvwxyz\
-0123456789\
-+/\
-`.split('');
+import {BASE64_INT_TO_CHAR} from './base64';
 
 
 /**
@@ -19,7 +8,6 @@ abcdefghijklmnopqrstuvwxyz\
 class BinaryString {
 
     constructor() {
-
         /**
          * Data buffer
          * @type {Number?}
@@ -103,7 +91,7 @@ class BinaryString {
             let code = buffer >> remainder;
             buffer = buffer ^ (code << remainder);
             pointer = remainder;
-            newData += BASE64_TABLE[code];
+            newData += BASE64_INT_TO_CHAR[code];
         }
         this.pointer = pointer;
         this.buffer = buffer;

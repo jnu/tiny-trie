@@ -1,17 +1,6 @@
 import floor_log2 from './floor_log2';
 import BinaryString from './BinaryString';
-
-/**
- * String terminal character
- * @type {String}
- */
-const TERMINAL = '\0';
-
-/**
- * Terminal edge
- * @type {Object}
- */
-const TERMINUS = Object.create(null);
+import {TERMINAL, TERMINUS} from './constants';
 
 
 /**
@@ -243,13 +232,17 @@ class Trie {
         }
 
         // Assign a unique integer ID to each character. The actual ID is
-        // arbitrary.
-        let charTableAsArray = Array.from(charTable);
+        // arbitrary. For the convenience of not having to serialize the \0
+        // character, the TERMINAL is always encoded at the 0 index, and it is
+        // not included in the charTable.
+        let charTableAsArray = Array.from(charTable)
+            .filter(char => char !== TERMINAL);
         let charMap = charTableAsArray.reduce((agg, char, i) => {
-            agg[char] = i;
+            agg[char] = i + 1;
             return agg;
-        }, {});
-        let charEncodingWidth = floor_log2(charTableAsArray.length - 1) + 1;
+        }, { [TERMINAL]: 0 });
+        // Determine the number of bits that can index the entire charTable.
+        let charEncodingWidth = floor_log2(charTableAsArray.length) + 1;
 
         let pointerRange = offsetMax - offsetMin;
         let pointerEncodingWidth = floor_log2(pointerRange) + 1;
