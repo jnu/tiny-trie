@@ -2,13 +2,13 @@
   "name": "tiny-trie",
   "version": "0.1.0",
   "description": "JS Trie / DAWG classes",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "lint": "$(npm bin)/eslint ./src",
+    "lint": "$(npm bin)/eslint ./lib",
     "build": "$(npm bin)/webpack",
     "build-min": "NODE_ENV=production $(npm bin)/webpack",
     "build-all": "npm run build && npm run build-min",
-    "test": "npm run lint && $(npm bin)/mocha --compilers js:babel-core/register src/*.test.js"
+    "test": "npm run lint && $(npm bin)/mocha --compilers js:babel-core/register lib/*.test.js"
   },
   "repository": {
     "type": "git",

@@ -13,8 +13,8 @@ if (!DEBUG) {
 
 module.exports = {
     entry: {
-        'tiny-trie': './src/index.js',
-        'packed-trie': './src/PackedTrie.js'
+        'tiny-trie': './lib/index.js',
+        'packed-trie': './lib/PackedTrie.js'
     },
     module: {
         loaders: [
