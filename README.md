@@ -40,6 +40,13 @@ trie.freeze();
 
 // encode the trie
 let json = trie.encode();
+// outputs:
+// {
+//   table: 'spiaot',
+//   offset: 0,
+//   dimensions: [ 3, 4 ],
+//   data: 'I0NmhqfPzcsQLwwrCCcBAQE'
+// }
 
 // The JSON describes the DAWG in a concise binary format. This format can be
 // interpreted by the `PackedTrie` class. The outputs will be identically to
@@ -82,7 +89,7 @@ Bundled, ES5-compatible equivalents to the above are in `./dist`.
 
 ```js
 // tiny-trie[.min].js
-TinyTrie.TinyTrie
+TinyTrie.Trie
 TinyTrie.createSync
 TinyTrie.createFrozenSync
 
@@ -96,7 +103,7 @@ Quick benchmarks with the initial implementation on an MBP, node v5.0.0.
 
 Gives an idea roughly how long things take.
 
-```
+```js
 // words.txt = scrabble dictionary with 178,692 words. Chars A-Z
 
 > var trie = TinyTrie.createSync(words);
