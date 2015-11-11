@@ -17,8 +17,9 @@ encode it, but it usually makes sense to do so.) The binary format is output in
 Base-64 and can be transmitted as JSON.
 
 To use an encoded trie, there is a `PackedTrie` class. This class can make
-queries against the trie without ever having to parse the binary file. Queries
-on the binary data are virtually as fast as on the original trie.
+queries against the trie without ever having to parse the binary file. This
+class has virtually no initialization cost and low memory overhead without
+sacrificing lookup speed.
 
 ## Usage
 
@@ -39,19 +40,12 @@ trie.test('split');
 trie.freeze();
 
 // encode the trie
-let json = trie.encode();
-// outputs:
-// {
-//   table: 'spiaot',
-//   offset: 0,
-//   dimensions: [ 3, 4 ],
-//   data: 'I0NmhqfPzcsQLwwrCCcBAQE'
-// }
+let encoded = trie.encode();
+// -> 'A4AAAAMEspiaotI0NmhqfPzcsQLwwrCCcBAQE'
 
-// The JSON describes the DAWG in a concise binary format. This format can be
-// interpreted by the `PackedTrie` class. The outputs will be identically to
-// the full trie.
-let smallDawg = new PackedTrie(json);
+// This string describes the DAWG in a concise binary format. This format can
+// be interpreted by the `PackedTrie` class.
+let smallDawg = new PackedTrie(encoded);
 
 smallDawg.test('spit');
 // -> true
@@ -134,9 +128,6 @@ fast 50 microsecond times.
 ## TODO
 
 * Tests for `PackedTrie`
-
-* Pack metadata into binary format in encoding, so that the entire trie can be
-transferred as plaintext.
 
 * Real benchmarks, comparison with other implementations
 

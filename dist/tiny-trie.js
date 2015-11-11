@@ -147,6 +147,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var TERMINUS = exports.TERMINUS = Object.create(null);
 
+	var HEADER_WIDTH_FIELD = exports.HEADER_WIDTH_FIELD = 10;
+	var OFFSET_SIGN_FIELD = exports.OFFSET_SIGN_FIELD = 1;
+	var OFFSET_VAL_FIELD = exports.OFFSET_VAL_FIELD = 21;
+	var CHAR_WIDTH_FIELD = exports.CHAR_WIDTH_FIELD = 8;
+	var POINTER_WIDTH_FIELD = exports.POINTER_WIDTH_FIELD = 8;
+
 /***/ },
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
@@ -367,6 +373,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var offsetMin = Infinity;
 	            var offsetMax = -Infinity;
 
+	            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	            // Encode trie
+	            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	            var _loop2 = function _loop2() {
 	                var node = queue.shift();
 	                var keys = Object.keys(node).filter(function (k) {
@@ -507,12 +517,28 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            encodedTrie.flush();
 
-	            return {
-	                table: charTableAsArray.join(''),
-	                offset: offsetMin,
-	                dimensions: [charEncodingWidth, pointerEncodingWidth],
-	                data: encodedTrie.getData()
-	            };
+	            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	            // Encode header
+	            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	            var headerString = new _BinaryString2.default();
+	            var outputCharTable = charTableAsArray.join('');
+
+	            // Header width designates the ASCII-character count at the beginning
+	            // of the file that encodes the header.
+	            var headerWidth = Math.ceil((_constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD + _constants.CHAR_WIDTH_FIELD + _constants.POINTER_WIDTH_FIELD) / 6) + outputCharTable.length;
+	            // Mark the offset as positive or negative
+	            var offsetSign = +(offsetMin < 0);
+
+	            headerString.write(headerWidth, _constants.HEADER_WIDTH_FIELD);
+	            headerString.write(offsetSign, _constants.OFFSET_SIGN_FIELD);
+	            headerString.write(offsetSign ? -offsetMin : offsetMin, _constants.OFFSET_VAL_FIELD);
+	            headerString.write(charEncodingWidth, _constants.CHAR_WIDTH_FIELD);
+	            headerString.write(pointerEncodingWidth, _constants.POINTER_WIDTH_FIELD);
+	            headerString.flush();
+
+	            // Concat the header, charTable, and trie
+	            return '' + headerString.getData() + outputCharTable + encodedTrie.getData();
 	        }
 
 	        /**

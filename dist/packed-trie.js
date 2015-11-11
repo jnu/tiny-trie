@@ -56,12 +56,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })(); /**
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        * @file Small class for querying a binary-encoded Trie
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        *
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        * TODO - rewrite as a native class. Babel adds a lot of overhead. This class
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        * should be tiny and transparent.
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        */
 
 	Object.defineProperty(exports, "__esModule", {
-	  value: true
+	    value: true
 	});
 
 	var _base = __webpack_require__(1);
@@ -72,9 +75,33 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	// TODO
-	// Rewrite as a native class. Babel adds a ton of overhead. This file should
-	// be under 1kb.
+	/**
+	 * Extract a window of bits from a Base64 encoded sequence
+	 * @param  {String} binary - base64 encoded sequence
+	 * @param  {Number} start - first bit to read
+	 * @param  {Number} len - number of bits to read
+	 * @return {Number} - bits from string, as number
+	 */
+	function readBits(binary, start, len) {
+	    var startChar = ~ ~(start / 6);
+	    var startBitOffset = start % 6;
+	    var endBit = startBitOffset + len;
+	    var charLen = Math.ceil(endBit / 6);
+	    var mask = (0x1 << len) - 1;
+	    var chunk = 0;
+
+	    for (var i = 0; i < charLen; i++) {
+	        chunk <<= 6;
+	        chunk |= _base.BASE64_CHAR_TO_INT[binary[startChar + i]];
+	    }
+
+	    var rightPadding = endBit % 6;
+	    if (rightPadding) {
+	        chunk >>= 6 - rightPadding;
+	    }
+
+	    return chunk & mask;
+	}
 
 	/**
 	 * Class for interacting with an encoded trie. The class performs lookups
@@ -84,167 +111,158 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	var PackedTrie = (function () {
-	  function PackedTrie(trieJson) {
-	    _classCallCheck(this, PackedTrie);
+	    function PackedTrie(binary) {
+	        _classCallCheck(this, PackedTrie);
 
-	    var _trieJson$dimensions = _slicedToArray(trieJson.dimensions, 2);
+	        // Split binary into header and content by checking first field
+	        var headerCharCount = readBits(binary, 0, _constants.HEADER_WIDTH_FIELD);
+	        var header = binary.substr(0, headerCharCount);
 
-	    var charWidth = _trieJson$dimensions[0];
-	    var pointerWidth = _trieJson$dimensions[1];
+	        /**
+	         * Binary string encoded as Base64 representing Trie
+	         * @type {String}
+	         */
+	        this.data = binary.substr(headerCharCount);
 
-	    /**
-	     * Character table, mapping character to an integer ID
-	     * @type {Object}
-	     */
+	        // compute pointer offset
+	        var offsetSign = readBits(header, _constants.HEADER_WIDTH_FIELD, _constants.OFFSET_SIGN_FIELD);
+	        var offset = readBits(header, _constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD, _constants.OFFSET_VAL_FIELD);
 
-	    this.table = trieJson.table.split('').reduce(function (agg, char, i) {
-	      agg[char] = i + 1;
-	      return agg;
-	    }, _defineProperty({}, _constants.TERMINAL, 0));
-
-	    /**
-	     * Pointer offset. Add this to every pointer read from every word in
-	     * the trie to obtain the true value of the pointer. This offset is
-	     * used to avoid signed integers in the word.
-	     * @type {Number}
-	     */
-	    this.offset = trieJson.offset;
-
-	    /**
-	     * Binary string encoded as Base64 representing Trie
-	     * @type {String}
-	     */
-	    this.data = trieJson.data;
-
-	    /**
-	     * Number of bits in one word
-	     * @type {Number}
-	     */
-	    this.wordWidth = this.charWidth + this.pointerWidth + 1;
-
-	    /**
-	     * Maximum length of a chunk of Base64 characters that's needed to
-	     * view the word. The exact chunk length needed could be determined
-	     * dynamically on a case-by-case basis. A more clever strategy might
-	     * be necessary when pushing the limits of wide chartables and long
-	     * word lists.
-	     * @type {Number}
-	     */
-	    this.chunkLen = Math.ceil(this.wordWidth / 6) + 1;
-
-	    /**
-	     * Mask for reading the "last block" flag in a word
-	     * @type {Number}
-	     */
-	    this.lastMask = 0x1;
-
-	    /**
-	     * Mask for reading the pointer value from a word
-	     * @type {Number}
-	     */
-	    this.pointerMask = 0x1 << pointerWidth;
-
-	    /**
-	     * Offset of pointer field in a word
-	     * @type {Number}
-	     */
-	    this.pointerShift = 1;
-
-	    /**
-	     * Mask for reading the charTable index in a word
-	     * @type {Number}
-	     */
-	    this.charMask = (0x1 << charWidth) - 1;
-
-	    /**
-	     * Offset of charTable index field in a word
-	     * @type {[type]}
-	     */
-	    this.charShift = 1 + pointerWidth;
-	  }
-
-	  /**
-	   * Test whether trie contains the given string.
-	   * @param  {String} string
-	   * @return {Boolean}
-	   */
-
-	  _createClass(PackedTrie, [{
-	    key: 'test',
-	    value: function test(string) {
-	      var data = this.data;
-	      var offset = this.offset;
-	      var table = this.table;
-	      var wordWidth = this.wordWidth;
-	      var chunkLen = this.chunkLen;
-	      var lastMask = this.lastMask;
-	      var pointerShift = this.pointerShift;
-	      var pointerMask = this.pointerMask;
-	      var charShift = this.charShift;
-	      var charMask = this.charMask;
-
-	      var wordPointer = 0;
-
-	      // Test every character, with a terminal at the end
-	      var match = string.split('').concat(_constants.TERMINAL).every(function (char) {
-	        // TODO is binary search possible within blocks? Not sure if the
-	        // encoder guarantees ordering, plus there's no indication how long
-	        // a block is, so it'd require extra overhead for each block.
-	        while (true) {
-	          var queryCharId = table[char];
-
-	          // Exit immediately if the char was not found in the table,
-	          // (or if it was the TERMINAL character, which has a code of 0)
-	          if (!queryCharId) {
-	            return false;
-	          }
-
-	          var bits = wordPointer * wordWidth;
-	          var chunkIdx = ~ ~(bits / 6);
-	          var chunkOffset = bits % 6;
-	          var chunk = 0;
-
-	          // Interpret each char as Base64
-	          // TODO buffering here to prevent overflows
-	          for (var i = 0; i < chunkLen; i++) {
-	            chunk <<= 6;
-	            chunk |= _base.BASE64_CHAR_TO_INT[data[i + chunkIdx]];
-	          }
-
-	          // Align the word on the right edge of the chunk
-	          chunk >>= 6 * chunkLen - wordWidth - chunkOffset;
-
-	          // Read the character index
-	          var charIdx = chunk >> charShift & charMask;
-
-	          // If this character is matched, jump to the pointer given in
-	          // this node.
-	          if (charIdx === queryCharId) {
-	            var pointer = chunk >> pointerShift & pointerMask;
-	            wordPointer += offset + pointer;
-	            return true;
-	          }
-
-	          // If this wasn't a match, check if this was the last key in
-	          // the block.
-	          var last = chunk & lastMask;
-
-	          // If this was the last node, the word was not found.
-	          if (last) {
-	            return false;
-	          }
-	          // Otherwise increment the pointer to the next sibling key
-	          else {
-	              wordPointer += 1;
-	            }
+	        if (offsetSign) {
+	            offset = -offset;
 	        }
-	      });
+	        /**
+	         * Pointer offset. Add this to every pointer read from every word in
+	         * the trie to obtain the true value of the pointer. This offset is
+	         * used to avoid signed integers in the word.
+	         * @type {Number}
+	         */
+	        this.offset = offset;
 
-	      return match;
+	        // interpret the field width within each word
+	        var charWidth = readBits(header, _constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD, _constants.CHAR_WIDTH_FIELD);
+
+	        var pointerWidth = readBits(header, _constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD + _constants.CHAR_WIDTH_FIELD, _constants.POINTER_WIDTH_FIELD, true);
+
+	        // Interpret the rest of the header as the charTable
+	        var headerFieldWidth = Math.ceil((_constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD + _constants.CHAR_WIDTH_FIELD + _constants.POINTER_WIDTH_FIELD) / 6);
+	        var charTable = header.substr(headerFieldWidth);
+
+	        /**
+	         * Character table, mapping character to an integer ID
+	         * @type {Object}
+	         */
+	        this.table = charTable.split('').reduce(function (agg, char, i) {
+	            agg[char] = i + 1;
+	            return agg;
+	        }, _defineProperty({}, _constants.TERMINAL, 0));
+
+	        /**
+	         * Number of bits in one word
+	         * @type {Number}
+	         */
+	        this.wordWidth = charWidth + pointerWidth + 1;
+
+	        /**
+	         * Mask for reading the "last block" flag in a word
+	         * @type {Number}
+	         */
+	        this.lastMask = 0x1;
+
+	        /**
+	         * Mask for reading the pointer value from a word
+	         * @type {Number}
+	         */
+	        this.pointerMask = (0x1 << pointerWidth) - 1;
+
+	        /**
+	         * Offset of pointer field in a word
+	         * @type {Number}
+	         */
+	        this.pointerShift = 1;
+
+	        /**
+	         * Mask for reading the charTable index in a word
+	         * @type {Number}
+	         */
+	        this.charMask = (0x1 << charWidth) - 1;
+
+	        /**
+	         * Offset of charTable index field in a word
+	         * @type {[type]}
+	         */
+	        this.charShift = 1 + pointerWidth;
 	    }
-	  }]);
 
-	  return PackedTrie;
+	    /**
+	     * Test whether trie contains the given string.
+	     * @param  {String} string
+	     * @return {Boolean}
+	     */
+
+	    _createClass(PackedTrie, [{
+	        key: 'test',
+	        value: function test(string) {
+	            var data = this.data;
+	            var offset = this.offset;
+	            var table = this.table;
+	            var wordWidth = this.wordWidth;
+	            var lastMask = this.lastMask;
+	            var pointerShift = this.pointerShift;
+	            var pointerMask = this.pointerMask;
+	            var charShift = this.charShift;
+	            var charMask = this.charMask;
+
+	            var wordPointer = 0;
+
+	            // Test every character, with a terminal at the end
+	            var match = string.split('').concat(_constants.TERMINAL).every(function (char) {
+	                // TODO is binary search possible within blocks? Not sure if the
+	                // encoder guarantees ordering, plus there's no indication how long
+	                // a block is, so it'd require extra overhead for each block.
+	                while (true) {
+	                    var queryCharId = table[char];
+
+	                    // Exit immediately if the char was not found in the table,
+	                    // (or if it was the TERMINAL character, which has a code of 0)
+	                    if (queryCharId === undefined) {
+	                        return false;
+	                    }
+
+	                    var bits = wordPointer * wordWidth;
+	                    var chunk = readBits(data, bits, wordWidth);
+
+	                    // Read the character index
+	                    var charIdx = chunk >> charShift & charMask;
+
+	                    // If this character is matched, jump to the pointer given in
+	                    // this node.
+	                    if (charIdx === queryCharId) {
+	                        var pointer = chunk >> pointerShift & pointerMask;
+	                        wordPointer += offset + pointer;
+	                        return true;
+	                    }
+
+	                    // If this wasn't a match, check if this was the last key in
+	                    // the block.
+	                    var last = chunk & lastMask;
+
+	                    // If this was the last node, the word was not found.
+	                    if (last) {
+	                        return false;
+	                    }
+	                    // Otherwise increment the pointer to the next sibling key
+	                    else {
+	                            wordPointer += 1;
+	                        }
+	                }
+	            });
+
+	            return match;
+	        }
+	    }]);
+
+	    return PackedTrie;
 	})();
 
 	exports.default = PackedTrie;
@@ -295,6 +313,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @type {Object}
 	 */
 	var TERMINUS = exports.TERMINUS = Object.create(null);
+
+	var HEADER_WIDTH_FIELD = exports.HEADER_WIDTH_FIELD = 10;
+	var OFFSET_SIGN_FIELD = exports.OFFSET_SIGN_FIELD = 1;
+	var OFFSET_VAL_FIELD = exports.OFFSET_VAL_FIELD = 21;
+	var CHAR_WIDTH_FIELD = exports.CHAR_WIDTH_FIELD = 8;
+	var POINTER_WIDTH_FIELD = exports.POINTER_WIDTH_FIELD = 8;
 
 /***/ }
 /******/ ])
