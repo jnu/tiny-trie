@@ -108,9 +108,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * virtually just as fast as a regular trie. The binary data never actually
 	 * have to be processed as a whole, so instantiation time and memory usage are
 	 * phenomenally low.
+	 * @class
 	 */
 
 	var PackedTrie = (function () {
+
+	    /**
+	     * Instantiate a packed binary trie, parsing its headers to configure the
+	     * instance for queries.
+	     * @constructor
+	     * @param  {String} binary - binary string from {@link Trie#encode}
+	     * @return {PackedTrie}
+	     */
+
 	    function PackedTrie(binary) {
 	        _classCallCheck(this, PackedTrie);
 
@@ -189,7 +199,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        /**
 	         * Offset of charTable index field in a word
-	         * @type {[type]}
+	         * @type {Number}
 	         */
 	        this.charShift = 1 + pointerWidth;
 	    }
@@ -277,16 +287,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	/**
+	 * @file Lookup tables for Base64 conversions
+	 */
+
+	/**
 	 * Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII
 	 * character.
-	 * @type {String[]}
+	 * @constant {String[]}
 	 */
 	var BASE64_INT_TO_CHAR = exports.BASE64_INT_TO_CHAR = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
 
 	/**
 	 * Inverse lookup table for transformating a Base-64 ASCII character into the
 	 * corresponding integer value.
-	 * @type {Object}
+	 * @constant {Object}
 	 */
 	var BASE64_CHAR_TO_INT = exports.BASE64_CHAR_TO_INT = BASE64_INT_TO_CHAR.reduce(function (agg, char, i) {
 	  agg[char] = i;
@@ -303,21 +317,50 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	/**
+	 * @file Parameters used for encoding
+	 */
+
+	/**
 	 * String terminal character
-	 * @type {String}
+	 * @constant {String}
 	 */
 	var TERMINAL = exports.TERMINAL = '\0';
 
 	/**
 	 * Terminal edge
-	 * @type {Object}
+	 * @constant {Object}
 	 */
 	var TERMINUS = exports.TERMINUS = Object.create(null);
 
+	/**
+	 * Width of header field storing entire header width (including char table).
+	 * Value is given in Base64 characters (i.e., every six bits)
+	 * @constant {Number}
+	 */
 	var HEADER_WIDTH_FIELD = exports.HEADER_WIDTH_FIELD = 10;
+
+	/**
+	 * Width of header field representing sign of offset
+	 * @constant {Number}
+	 */
 	var OFFSET_SIGN_FIELD = exports.OFFSET_SIGN_FIELD = 1;
+
+	/**
+	 * Width of header field representing unsigned value of offset
+	 * @constant {Number}
+	 */
 	var OFFSET_VAL_FIELD = exports.OFFSET_VAL_FIELD = 21;
+
+	/**
+	 * Width of header field representing the width of the char index in a word
+	 * @constant {Number}
+	 */
 	var CHAR_WIDTH_FIELD = exports.CHAR_WIDTH_FIELD = 8;
+
+	/**
+	 * Width of header field representing the width of the offset pointer in a word
+	 * @constant {Number}
+	 */
 	var POINTER_WIDTH_FIELD = exports.POINTER_WIDTH_FIELD = 8;
 
 /***/ }
