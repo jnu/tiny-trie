@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl">
+  <title data-ice="title">API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="git+https://github.com/jnu/tiny-tree.git">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/lib/BinaryString.js~BinaryString.html">BinaryString</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/lib/PackedTrie.js~PackedTrie.html">PackedTrie</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/lib/Trie.js~Trie.html">Trie</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-floor_log2">floor_log2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createFrozenSync">createFrozenSync</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createSync">createSync</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-binaryString">binaryString</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-packedTrie">packedTrie</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-trie">trie</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BASE64_CHAR_TO_INT">BASE64_CHAR_TO_INT</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BASE64_INT_TO_CHAR">BASE64_INT_TO_CHAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CHAR_WIDTH_FIELD">CHAR_WIDTH_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-HEADER_WIDTH_FIELD">HEADER_WIDTH_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-OFFSET_SIGN_FIELD">OFFSET_SIGN_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-OFFSET_VAL_FIELD">OFFSET_VAL_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-POINTER_WIDTH_FIELD">POINTER_WIDTH_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINAL">TERMINAL</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINUS">TERMINUS</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="tiny-trie">tiny-trie</h1>
+<p>Trie / DAWG implementation for JavaScript.</p>
+<p><a href="https://travis-ci.org/jnu/tiny-trie"><img src="https://travis-ci.org/jnu/tiny-trie.svg?branch=master" alt="Build Status"></a></p>
+<h2 id="about">About</h2>
+<p>Construct a trie out of a list of words for efficient searches. The trie
+provides a <code>#freeze</code> method to dedupe its suffixes, turning it into a directed
+acyclic word graph (DAWG).</p>
+<p>More excitingly, there is a <code>Trie#encode</code> method which outputs the trie in a
+succinct binary format. (The trie does not need to be DAWG-ified in order to
+encode it, but it usually makes sense to do so.) The binary format is output in
+Base-64 and can be transmitted as JSON.</p>
+<p>To use an encoded trie, there is a <code>PackedTrie</code> class. This class can make
+queries against the trie without ever having to parse the binary file. This
+class has virtually no initialization cost and low memory overhead without
+sacrificing lookup speed.</p>
+<p>There are no specific character or size constraints on the Trie input. Unicode
+input should work, provided you treat the encoded string as unicode (it will
+contain the unicode characters somewhere in it.)</p>
+<h2 id="usage">Usage</h2>
+<pre><code class="lang-js"><code class="source-code prettyprint">let words = [&apos;spit&apos;, &apos;spat&apos;, &apos;spot&apos;, &apos;spits&apos;, &apos;spats&apos;, &apos;spots&apos;];
+
+let trie = new Trie();
+
+words.forEach(word =&gt; trie.insert(word));
+
+// test membership
+trie.test(&apos;spit&apos;);
+// -&gt; true
+trie.test(&apos;split&apos;);
+// -&gt; false
+
+// finalize the trie, turning it into a DAWG
+trie.freeze();
+
+// encode the trie
+let encoded = trie.encode();
+// -&gt; &apos;A4AAAAMEspiaotI0NmhqfPzcsQLwwrCCcBAQE&apos;
+
+// This string describes the DAWG in a concise binary format. This format can
+// be interpreted by the `PackedTrie` class.
+let smallDawg = new PackedTrie(encoded);
+
+smallDawg.test(&apos;spit&apos;);
+// -&gt; true
+smallDawg.test(&apos;split&apos;);
+// -&gt; false</code>
+</code></pre>
+<h3 id="including-in-a-project">Including in a project</h3>
+<h4 id="installed-in-node_modules-">Installed in <code>node_modules</code>:</h4>
+<pre><code class="lang-js"><code class="source-code prettyprint">import {TinyTrie} from &apos;tiny-trie&apos;;
+import PackedTrie from &apos;tiny-trie/lib/PackedTrie&apos;;</code>
+</code></pre>
+<p>The default module export also provides some convenience functional tools:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">import tinyTrie from &apos;tiny-trie&apos;;
+
+tinyTrie.createSync([&apos;foo&apos;, &apos;bar&apos;]);
+// equivalent to:
+//  &gt; var t = new Trie();
+//  &gt; [&apos;foo&apos;, &apos;bar&apos;].forEach(word =&gt; t.insert(word));
+
+tinyTrie.createFrozenSync([&apos;foo&apos;, &apos;bar&apos;]);
+// equivalent to:
+//  &gt; var t = new Trie();
+//  &gt; [&apos;foo&apos;, &apos;bar&apos;].forEach(word =&gt; t.insert(word));
+//  &gt; t.freeze();</code>
+</code></pre>
+<h4 id="standalone-files">Standalone files</h4>
+<p>Bundled, ES5-compatible equivalents to the above are in <code>./dist</code>.</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">// tiny-trie[.min].js
+TinyTrie.Trie
+TinyTrie.createSync
+TinyTrie.createFrozenSync
+
+// packed-trie[.min].js
+PackedTrie</code>
+</code></pre>
+<h2 id="benchmarks">Benchmarks</h2>
+<p>Quick benchmarks with the initial implementation on an MBP, node v5.0.0.</p>
+<p>Using <code>dictionary.txt</code>, a Scrabble dictionary with 178,692 words.</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">var words = fs.readFileSync(&apos;./dictionary.txt&apos;, &apos;utf8&apos;).split(&apos;\n&apos;);</code>
+</code></pre>
+<h3 id="speed">Speed</h3>
+<p>Gives an idea roughly how long things take.</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">&gt; var trie = TinyTrie.createSync(words);
+// 846 milliseconds
+
+&gt; trie.test(...);
+// avg: 0.05 milliseconds
+
+&gt; trie.freeze();
+// 124 seconds
+
+&gt; var encoded = trie.encode();
+// 936 milliseconds
+
+&gt; var packed = new PackedTrie(encoded);
+// 0.06 milliseconds (compare `new Set(words)`, which takes about 1s)
+
+&gt; packed.test(...);
+// avg: 0.05 milliseconds (not significantly different from the unpacked trie!)</code>
+</code></pre>
+<p>The init time of almost 1s is not acceptable for a client-side application.
+The goal of running <code>Trie#freeze(); Trie#encode();</code> at build time is to
+produce a packed version of the DAWG that has virtually <em>no</em> init time - and it
+can still be queried directly, with speeds approaching the full <code>Trie</code>&apos;s very
+fast 50 microsecond times.</p>
+<h3 id="memory">Memory</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">&gt; words.join(&apos;&apos;).length
+// 1584476 (bytes)
+
+&gt; encoded.length
+// 698518 (bytes)
+
+&gt; encoded.length / words.join(&apos;&apos;).length
+// 0.44085110787414894</code>
+</code></pre>
+<p>The encoded trie uses just 44% of the bytes as the full dictionary. Gzipping
+gives a trie of 483kb, compared with 616kb for the dictionary.</p>
+<h2 id="todo">TODO</h2>
+<ul>
+<li><p>Tests for <code>PackedTrie</code></p>
+</li>
+<li><p>Real benchmarks, comparison with other implementations</p>
+</li>
+<li><p>Optimize in <code>PackedTrie</code> - reduce size, increase perf. Node order could
+probably be revised to shrink pointer field width.</p>
+</li>
+<li><p>Fuzzy-matching</p>
+</li>
+<li><p>Unicode support</p>
+</li>
+<li><p>Spec out limitations on encoding inputs</p>
+</li>
+<li><p>Version packages, version encoding</p>
+</li>
+</ul>
+</div>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.3)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

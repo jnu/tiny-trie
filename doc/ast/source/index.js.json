@@ -1,0 +1,1065 @@
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "ImportDeclaration",
+      "specifiers": [
+        {
+          "type": "ImportDefaultSpecifier",
+          "local": {
+            "type": "Identifier",
+            "name": "Trie",
+            "range": [
+              84,
+              88
+            ],
+            "loc": {
+              "start": {
+                "line": 5,
+                "column": 7
+              },
+              "end": {
+                "line": 5,
+                "column": 11
+              }
+            }
+          },
+          "range": [
+            84,
+            88
+          ],
+          "loc": {
+            "start": {
+              "line": 5,
+              "column": 7
+            },
+            "end": {
+              "line": 5,
+              "column": 11
+            }
+          }
+        }
+      ],
+      "source": {
+        "type": "Literal",
+        "value": "./Trie",
+        "raw": "'./Trie'",
+        "range": [
+          94,
+          102
+        ],
+        "loc": {
+          "start": {
+            "line": 5,
+            "column": 17
+          },
+          "end": {
+            "line": 5,
+            "column": 25
+          }
+        }
+      },
+      "range": [
+        77,
+        103
+      ],
+      "loc": {
+        "start": {
+          "line": 5,
+          "column": 0
+        },
+        "end": {
+          "line": 5,
+          "column": 26
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * @file Convenient functional tools for creating Tries from arrays\n ",
+          "range": [
+            0,
+            75
+          ],
+          "loc": {
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": null,
+      "specifiers": [
+        {
+          "type": "ExportSpecifier",
+          "exported": {
+            "type": "Identifier",
+            "name": "Trie",
+            "range": [
+              123,
+              127
+            ],
+            "loc": {
+              "start": {
+                "line": 6,
+                "column": 19
+              },
+              "end": {
+                "line": 6,
+                "column": 23
+              }
+            }
+          },
+          "local": {
+            "type": "Identifier",
+            "name": "default",
+            "range": [
+              112,
+              119
+            ],
+            "loc": {
+              "start": {
+                "line": 6,
+                "column": 8
+              },
+              "end": {
+                "line": 6,
+                "column": 15
+              }
+            }
+          },
+          "range": [
+            112,
+            127
+          ],
+          "loc": {
+            "start": {
+              "line": 6,
+              "column": 8
+            },
+            "end": {
+              "line": 6,
+              "column": 23
+            }
+          }
+        }
+      ],
+      "source": {
+        "type": "Literal",
+        "value": "./Trie",
+        "raw": "'./Trie'",
+        "range": [
+          134,
+          142
+        ],
+        "loc": {
+          "start": {
+            "line": 6,
+            "column": 30
+          },
+          "end": {
+            "line": 6,
+            "column": 38
+          }
+        }
+      },
+      "range": [
+        104,
+        143
+      ],
+      "loc": {
+        "start": {
+          "line": 6,
+          "column": 0
+        },
+        "end": {
+          "line": 6,
+          "column": 39
+        }
+      },
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Synchronously construct a new Trie out of the given strings.\n * @param  {String[]} words\n * @return {Trie}\n ",
+          "range": [
+            146,
+            263
+          ],
+          "loc": {
+            "start": {
+              "line": 9,
+              "column": 0
+            },
+            "end": {
+              "line": 13,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "FunctionDeclaration",
+        "id": {
+          "type": "Identifier",
+          "name": "createSync",
+          "range": [
+            280,
+            290
+          ],
+          "loc": {
+            "start": {
+              "line": 14,
+              "column": 16
+            },
+            "end": {
+              "line": 14,
+              "column": 26
+            }
+          }
+        },
+        "params": [
+          {
+            "type": "Identifier",
+            "name": "strings",
+            "range": [
+              291,
+              298
+            ],
+            "loc": {
+              "start": {
+                "line": 14,
+                "column": 27
+              },
+              "end": {
+                "line": 14,
+                "column": 34
+              }
+            }
+          }
+        ],
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "VariableDeclaration",
+              "declarations": [
+                {
+                  "type": "VariableDeclarator",
+                  "id": {
+                    "type": "Identifier",
+                    "name": "trie",
+                    "range": [
+                      310,
+                      314
+                    ],
+                    "loc": {
+                      "start": {
+                        "line": 15,
+                        "column": 8
+                      },
+                      "end": {
+                        "line": 15,
+                        "column": 12
+                      }
+                    }
+                  },
+                  "init": {
+                    "type": "NewExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "Trie",
+                      "range": [
+                        321,
+                        325
+                      ],
+                      "loc": {
+                        "start": {
+                          "line": 15,
+                          "column": 19
+                        },
+                        "end": {
+                          "line": 15,
+                          "column": 23
+                        }
+                      }
+                    },
+                    "arguments": [],
+                    "range": [
+                      317,
+                      327
+                    ],
+                    "loc": {
+                      "start": {
+                        "line": 15,
+                        "column": 15
+                      },
+                      "end": {
+                        "line": 15,
+                        "column": 25
+                      }
+                    }
+                  },
+                  "range": [
+                    310,
+                    327
+                  ],
+                  "loc": {
+                    "start": {
+                      "line": 15,
+                      "column": 8
+                    },
+                    "end": {
+                      "line": 15,
+                      "column": 25
+                    }
+                  }
+                }
+              ],
+              "kind": "let",
+              "range": [
+                306,
+                328
+              ],
+              "loc": {
+                "start": {
+                  "line": 15,
+                  "column": 4
+                },
+                "end": {
+                  "line": 15,
+                  "column": 26
+                }
+              }
+            },
+            {
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "CallExpression",
+                "callee": {
+                  "type": "MemberExpression",
+                  "computed": false,
+                  "object": {
+                    "type": "Identifier",
+                    "name": "strings",
+                    "range": [
+                      334,
+                      341
+                    ],
+                    "loc": {
+                      "start": {
+                        "line": 17,
+                        "column": 4
+                      },
+                      "end": {
+                        "line": 17,
+                        "column": 11
+                      }
+                    }
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "forEach",
+                    "range": [
+                      342,
+                      349
+                    ],
+                    "loc": {
+                      "start": {
+                        "line": 17,
+                        "column": 12
+                      },
+                      "end": {
+                        "line": 17,
+                        "column": 19
+                      }
+                    }
+                  },
+                  "range": [
+                    334,
+                    349
+                  ],
+                  "loc": {
+                    "start": {
+                      "line": 17,
+                      "column": 4
+                    },
+                    "end": {
+                      "line": 17,
+                      "column": 19
+                    }
+                  }
+                },
+                "arguments": [
+                  {
+                    "type": "ArrowFunctionExpression",
+                    "id": null,
+                    "params": [
+                      {
+                        "type": "Identifier",
+                        "name": "s",
+                        "range": [
+                          350,
+                          351
+                        ],
+                        "loc": {
+                          "start": {
+                            "line": 17,
+                            "column": 20
+                          },
+                          "end": {
+                            "line": 17,
+                            "column": 21
+                          }
+                        }
+                      }
+                    ],
+                    "body": {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "MemberExpression",
+                        "computed": false,
+                        "object": {
+                          "type": "Identifier",
+                          "name": "trie",
+                          "range": [
+                            355,
+                            359
+                          ],
+                          "loc": {
+                            "start": {
+                              "line": 17,
+                              "column": 25
+                            },
+                            "end": {
+                              "line": 17,
+                              "column": 29
+                            }
+                          }
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "insert",
+                          "range": [
+                            360,
+                            366
+                          ],
+                          "loc": {
+                            "start": {
+                              "line": 17,
+                              "column": 30
+                            },
+                            "end": {
+                              "line": 17,
+                              "column": 36
+                            }
+                          }
+                        },
+                        "range": [
+                          355,
+                          366
+                        ],
+                        "loc": {
+                          "start": {
+                            "line": 17,
+                            "column": 25
+                          },
+                          "end": {
+                            "line": 17,
+                            "column": 36
+                          }
+                        }
+                      },
+                      "arguments": [
+                        {
+                          "type": "Identifier",
+                          "name": "s",
+                          "range": [
+                            367,
+                            368
+                          ],
+                          "loc": {
+                            "start": {
+                              "line": 17,
+                              "column": 37
+                            },
+                            "end": {
+                              "line": 17,
+                              "column": 38
+                            }
+                          }
+                        }
+                      ],
+                      "range": [
+                        355,
+                        369
+                      ],
+                      "loc": {
+                        "start": {
+                          "line": 17,
+                          "column": 25
+                        },
+                        "end": {
+                          "line": 17,
+                          "column": 39
+                        }
+                      }
+                    },
+                    "generator": false,
+                    "expression": true,
+                    "range": [
+                      350,
+                      369
+                    ],
+                    "loc": {
+                      "start": {
+                        "line": 17,
+                        "column": 20
+                      },
+                      "end": {
+                        "line": 17,
+                        "column": 39
+                      }
+                    }
+                  }
+                ],
+                "range": [
+                  334,
+                  370
+                ],
+                "loc": {
+                  "start": {
+                    "line": 17,
+                    "column": 4
+                  },
+                  "end": {
+                    "line": 17,
+                    "column": 40
+                  }
+                }
+              },
+              "range": [
+                334,
+                371
+              ],
+              "loc": {
+                "start": {
+                  "line": 17,
+                  "column": 4
+                },
+                "end": {
+                  "line": 17,
+                  "column": 41
+                }
+              }
+            },
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Identifier",
+                "name": "trie",
+                "range": [
+                  384,
+                  388
+                ],
+                "loc": {
+                  "start": {
+                    "line": 19,
+                    "column": 11
+                  },
+                  "end": {
+                    "line": 19,
+                    "column": 15
+                  }
+                }
+              },
+              "range": [
+                377,
+                389
+              ],
+              "loc": {
+                "start": {
+                  "line": 19,
+                  "column": 4
+                },
+                "end": {
+                  "line": 19,
+                  "column": 16
+                }
+              }
+            }
+          ],
+          "range": [
+            300,
+            391
+          ],
+          "loc": {
+            "start": {
+              "line": 14,
+              "column": 36
+            },
+            "end": {
+              "line": 20,
+              "column": 1
+            }
+          }
+        },
+        "generator": false,
+        "expression": false,
+        "range": [
+          271,
+          391
+        ],
+        "loc": {
+          "start": {
+            "line": 14,
+            "column": 7
+          },
+          "end": {
+            "line": 20,
+            "column": 1
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Synchronously construct a new Trie out of the given strings.\n * @param  {String[]} words\n * @return {Trie}\n ",
+            "range": [
+              146,
+              263
+            ],
+            "loc": {
+              "start": {
+                "line": 9,
+                "column": 0
+              },
+              "end": {
+                "line": 13,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Create a frozen Trie out of given words\n * @param  {String[]} words\n * @return {Trie}\n ",
+            "range": [
+              393,
+              489
+            ],
+            "loc": {
+              "start": {
+                "line": 22,
+                "column": 0
+              },
+              "end": {
+                "line": 26,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        264,
+        391
+      ],
+      "loc": {
+        "start": {
+          "line": 14,
+          "column": 0
+        },
+        "end": {
+          "line": 20,
+          "column": 1
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Synchronously construct a new Trie out of the given strings.\n * @param  {String[]} words\n * @return {Trie}\n ",
+          "range": [
+            146,
+            263
+          ],
+          "loc": {
+            "start": {
+              "line": 9,
+              "column": 0
+            },
+            "end": {
+              "line": 13,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Create a frozen Trie out of given words\n * @param  {String[]} words\n * @return {Trie}\n ",
+          "range": [
+            393,
+            489
+          ],
+          "loc": {
+            "start": {
+              "line": 22,
+              "column": 0
+            },
+            "end": {
+              "line": 26,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "FunctionDeclaration",
+        "id": {
+          "type": "Identifier",
+          "name": "createFrozenSync",
+          "range": [
+            506,
+            522
+          ],
+          "loc": {
+            "start": {
+              "line": 27,
+              "column": 16
+            },
+            "end": {
+              "line": 27,
+              "column": 32
+            }
+          }
+        },
+        "params": [
+          {
+            "type": "Identifier",
+            "name": "string",
+            "range": [
+              523,
+              529
+            ],
+            "loc": {
+              "start": {
+                "line": 27,
+                "column": 33
+              },
+              "end": {
+                "line": 27,
+                "column": 39
+              }
+            }
+          }
+        ],
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "CallExpression",
+                "callee": {
+                  "type": "MemberExpression",
+                  "computed": false,
+                  "object": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "createSync",
+                      "range": [
+                        544,
+                        554
+                      ],
+                      "loc": {
+                        "start": {
+                          "line": 28,
+                          "column": 11
+                        },
+                        "end": {
+                          "line": 28,
+                          "column": 21
+                        }
+                      }
+                    },
+                    "arguments": [
+                      {
+                        "type": "Identifier",
+                        "name": "string",
+                        "range": [
+                          555,
+                          561
+                        ],
+                        "loc": {
+                          "start": {
+                            "line": 28,
+                            "column": 22
+                          },
+                          "end": {
+                            "line": 28,
+                            "column": 28
+                          }
+                        }
+                      }
+                    ],
+                    "range": [
+                      544,
+                      562
+                    ],
+                    "loc": {
+                      "start": {
+                        "line": 28,
+                        "column": 11
+                      },
+                      "end": {
+                        "line": 28,
+                        "column": 29
+                      }
+                    }
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "freeze",
+                    "range": [
+                      563,
+                      569
+                    ],
+                    "loc": {
+                      "start": {
+                        "line": 28,
+                        "column": 30
+                      },
+                      "end": {
+                        "line": 28,
+                        "column": 36
+                      }
+                    }
+                  },
+                  "range": [
+                    544,
+                    569
+                  ],
+                  "loc": {
+                    "start": {
+                      "line": 28,
+                      "column": 11
+                    },
+                    "end": {
+                      "line": 28,
+                      "column": 36
+                    }
+                  }
+                },
+                "arguments": [],
+                "range": [
+                  544,
+                  571
+                ],
+                "loc": {
+                  "start": {
+                    "line": 28,
+                    "column": 11
+                  },
+                  "end": {
+                    "line": 28,
+                    "column": 38
+                  }
+                }
+              },
+              "range": [
+                537,
+                572
+              ],
+              "loc": {
+                "start": {
+                  "line": 28,
+                  "column": 4
+                },
+                "end": {
+                  "line": 28,
+                  "column": 39
+                }
+              }
+            }
+          ],
+          "range": [
+            531,
+            574
+          ],
+          "loc": {
+            "start": {
+              "line": 27,
+              "column": 41
+            },
+            "end": {
+              "line": 29,
+              "column": 1
+            }
+          }
+        },
+        "generator": false,
+        "expression": false,
+        "range": [
+          497,
+          574
+        ],
+        "loc": {
+          "start": {
+            "line": 27,
+            "column": 7
+          },
+          "end": {
+            "line": 29,
+            "column": 1
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Create a frozen Trie out of given words\n * @param  {String[]} words\n * @return {Trie}\n ",
+            "range": [
+              393,
+              489
+            ],
+            "loc": {
+              "start": {
+                "line": 22,
+                "column": 0
+              },
+              "end": {
+                "line": 26,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": []
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        490,
+        574
+      ],
+      "loc": {
+        "start": {
+          "line": 27,
+          "column": 0
+        },
+        "end": {
+          "line": 29,
+          "column": 1
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Create a frozen Trie out of given words\n * @param  {String[]} words\n * @return {Trie}\n ",
+          "range": [
+            393,
+            489
+          ],
+          "loc": {
+            "start": {
+              "line": 22,
+              "column": 0
+            },
+            "end": {
+              "line": 26,
+              "column": 3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "sourceType": "module",
+  "range": [
+    77,
+    574
+  ],
+  "loc": {
+    "start": {
+      "line": 5,
+      "column": 0
+    },
+    "end": {
+      "line": 29,
+      "column": 1
+    }
+  },
+  "comments": [
+    {
+      "type": "Block",
+      "value": "*\n * @file Convenient functional tools for creating Tries from arrays\n ",
+      "range": [
+        0,
+        75
+      ],
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Synchronously construct a new Trie out of the given strings.\n * @param  {String[]} words\n * @return {Trie}\n ",
+      "range": [
+        146,
+        263
+      ],
+      "loc": {
+        "start": {
+          "line": 9,
+          "column": 0
+        },
+        "end": {
+          "line": 13,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Create a frozen Trie out of given words\n * @param  {String[]} words\n * @return {Trie}\n ",
+      "range": [
+        393,
+        489
+      ],
+      "loc": {
+        "start": {
+          "line": 22,
+          "column": 0
+        },
+        "end": {
+          "line": 26,
+          "column": 3
+        }
+      }
+    }
+  ]
+}

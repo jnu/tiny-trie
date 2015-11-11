@@ -1,0 +1,1447 @@
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "TERMINAL",
+              "range": [
+                119,
+                127
+              ],
+              "loc": {
+                "start": {
+                  "line": 9,
+                  "column": 13
+                },
+                "end": {
+                  "line": 9,
+                  "column": 21
+                }
+              }
+            },
+            "init": {
+              "type": "Literal",
+              "value": "\u0000",
+              "raw": "'\\0'",
+              "range": [
+                130,
+                134
+              ],
+              "loc": {
+                "start": {
+                  "line": 9,
+                  "column": 24
+                },
+                "end": {
+                  "line": 9,
+                  "column": 28
+                }
+              }
+            },
+            "range": [
+              119,
+              134
+            ],
+            "loc": {
+              "start": {
+                "line": 9,
+                "column": 13
+              },
+              "end": {
+                "line": 9,
+                "column": 28
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          113,
+          135
+        ],
+        "loc": {
+          "start": {
+            "line": 9,
+            "column": 7
+          },
+          "end": {
+            "line": 9,
+            "column": 29
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * @file Parameters used for encoding\n ",
+            "range": [
+              0,
+              45
+            ],
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 3
+              }
+            }
+          },
+          {
+            "type": "Block",
+            "value": "*\n * String terminal character\n * @constant {String}\n ",
+            "range": [
+              47,
+              105
+            ],
+            "loc": {
+              "start": {
+                "line": 5,
+                "column": 0
+              },
+              "end": {
+                "line": 8,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Terminal edge\n * @constant {Object}\n ",
+            "range": [
+              137,
+              183
+            ],
+            "loc": {
+              "start": {
+                "line": 11,
+                "column": 0
+              },
+              "end": {
+                "line": 14,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        106,
+        135
+      ],
+      "loc": {
+        "start": {
+          "line": 9,
+          "column": 0
+        },
+        "end": {
+          "line": 9,
+          "column": 29
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * @file Parameters used for encoding\n ",
+          "range": [
+            0,
+            45
+          ],
+          "loc": {
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 3
+            }
+          }
+        },
+        {
+          "type": "Block",
+          "value": "*\n * String terminal character\n * @constant {String}\n ",
+          "range": [
+            47,
+            105
+          ],
+          "loc": {
+            "start": {
+              "line": 5,
+              "column": 0
+            },
+            "end": {
+              "line": 8,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Terminal edge\n * @constant {Object}\n ",
+          "range": [
+            137,
+            183
+          ],
+          "loc": {
+            "start": {
+              "line": 11,
+              "column": 0
+            },
+            "end": {
+              "line": 14,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "TERMINUS",
+              "range": [
+                197,
+                205
+              ],
+              "loc": {
+                "start": {
+                  "line": 15,
+                  "column": 13
+                },
+                "end": {
+                  "line": 15,
+                  "column": 21
+                }
+              }
+            },
+            "init": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "computed": false,
+                "object": {
+                  "type": "Identifier",
+                  "name": "Object",
+                  "range": [
+                    208,
+                    214
+                  ],
+                  "loc": {
+                    "start": {
+                      "line": 15,
+                      "column": 24
+                    },
+                    "end": {
+                      "line": 15,
+                      "column": 30
+                    }
+                  }
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "create",
+                  "range": [
+                    215,
+                    221
+                  ],
+                  "loc": {
+                    "start": {
+                      "line": 15,
+                      "column": 31
+                    },
+                    "end": {
+                      "line": 15,
+                      "column": 37
+                    }
+                  }
+                },
+                "range": [
+                  208,
+                  221
+                ],
+                "loc": {
+                  "start": {
+                    "line": 15,
+                    "column": 24
+                  },
+                  "end": {
+                    "line": 15,
+                    "column": 37
+                  }
+                }
+              },
+              "arguments": [
+                {
+                  "type": "Literal",
+                  "value": null,
+                  "raw": "null",
+                  "range": [
+                    222,
+                    226
+                  ],
+                  "loc": {
+                    "start": {
+                      "line": 15,
+                      "column": 38
+                    },
+                    "end": {
+                      "line": 15,
+                      "column": 42
+                    }
+                  }
+                }
+              ],
+              "range": [
+                208,
+                227
+              ],
+              "loc": {
+                "start": {
+                  "line": 15,
+                  "column": 24
+                },
+                "end": {
+                  "line": 15,
+                  "column": 43
+                }
+              }
+            },
+            "range": [
+              197,
+              227
+            ],
+            "loc": {
+              "start": {
+                "line": 15,
+                "column": 13
+              },
+              "end": {
+                "line": 15,
+                "column": 43
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          191,
+          228
+        ],
+        "loc": {
+          "start": {
+            "line": 15,
+            "column": 7
+          },
+          "end": {
+            "line": 15,
+            "column": 44
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Terminal edge\n * @constant {Object}\n ",
+            "range": [
+              137,
+              183
+            ],
+            "loc": {
+              "start": {
+                "line": 11,
+                "column": 0
+              },
+              "end": {
+                "line": 14,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+            "range": [
+              230,
+              398
+            ],
+            "loc": {
+              "start": {
+                "line": 17,
+                "column": 0
+              },
+              "end": {
+                "line": 21,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        184,
+        228
+      ],
+      "loc": {
+        "start": {
+          "line": 15,
+          "column": 0
+        },
+        "end": {
+          "line": 15,
+          "column": 44
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Terminal edge\n * @constant {Object}\n ",
+          "range": [
+            137,
+            183
+          ],
+          "loc": {
+            "start": {
+              "line": 11,
+              "column": 0
+            },
+            "end": {
+              "line": 14,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+          "range": [
+            230,
+            398
+          ],
+          "loc": {
+            "start": {
+              "line": 17,
+              "column": 0
+            },
+            "end": {
+              "line": 21,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "HEADER_WIDTH_FIELD",
+              "range": [
+                412,
+                430
+              ],
+              "loc": {
+                "start": {
+                  "line": 22,
+                  "column": 13
+                },
+                "end": {
+                  "line": 22,
+                  "column": 31
+                }
+              }
+            },
+            "init": {
+              "type": "Literal",
+              "value": 10,
+              "raw": "10",
+              "range": [
+                433,
+                435
+              ],
+              "loc": {
+                "start": {
+                  "line": 22,
+                  "column": 34
+                },
+                "end": {
+                  "line": 22,
+                  "column": 36
+                }
+              }
+            },
+            "range": [
+              412,
+              435
+            ],
+            "loc": {
+              "start": {
+                "line": 22,
+                "column": 13
+              },
+              "end": {
+                "line": 22,
+                "column": 36
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          406,
+          436
+        ],
+        "loc": {
+          "start": {
+            "line": 22,
+            "column": 7
+          },
+          "end": {
+            "line": 22,
+            "column": 37
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+            "range": [
+              230,
+              398
+            ],
+            "loc": {
+              "start": {
+                "line": 17,
+                "column": 0
+              },
+              "end": {
+                "line": 21,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
+            "range": [
+              438,
+              520
+            ],
+            "loc": {
+              "start": {
+                "line": 24,
+                "column": 0
+              },
+              "end": {
+                "line": 27,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        399,
+        436
+      ],
+      "loc": {
+        "start": {
+          "line": 22,
+          "column": 0
+        },
+        "end": {
+          "line": 22,
+          "column": 37
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+          "range": [
+            230,
+            398
+          ],
+          "loc": {
+            "start": {
+              "line": 17,
+              "column": 0
+            },
+            "end": {
+              "line": 21,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
+          "range": [
+            438,
+            520
+          ],
+          "loc": {
+            "start": {
+              "line": 24,
+              "column": 0
+            },
+            "end": {
+              "line": 27,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "OFFSET_SIGN_FIELD",
+              "range": [
+                534,
+                551
+              ],
+              "loc": {
+                "start": {
+                  "line": 28,
+                  "column": 13
+                },
+                "end": {
+                  "line": 28,
+                  "column": 30
+                }
+              }
+            },
+            "init": {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1",
+              "range": [
+                554,
+                555
+              ],
+              "loc": {
+                "start": {
+                  "line": 28,
+                  "column": 33
+                },
+                "end": {
+                  "line": 28,
+                  "column": 34
+                }
+              }
+            },
+            "range": [
+              534,
+              555
+            ],
+            "loc": {
+              "start": {
+                "line": 28,
+                "column": 13
+              },
+              "end": {
+                "line": 28,
+                "column": 34
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          528,
+          556
+        ],
+        "loc": {
+          "start": {
+            "line": 28,
+            "column": 7
+          },
+          "end": {
+            "line": 28,
+            "column": 35
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
+            "range": [
+              438,
+              520
+            ],
+            "loc": {
+              "start": {
+                "line": 24,
+                "column": 0
+              },
+              "end": {
+                "line": 27,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
+            "range": [
+              558,
+              650
+            ],
+            "loc": {
+              "start": {
+                "line": 30,
+                "column": 0
+              },
+              "end": {
+                "line": 33,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        521,
+        556
+      ],
+      "loc": {
+        "start": {
+          "line": 28,
+          "column": 0
+        },
+        "end": {
+          "line": 28,
+          "column": 35
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
+          "range": [
+            438,
+            520
+          ],
+          "loc": {
+            "start": {
+              "line": 24,
+              "column": 0
+            },
+            "end": {
+              "line": 27,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
+          "range": [
+            558,
+            650
+          ],
+          "loc": {
+            "start": {
+              "line": 30,
+              "column": 0
+            },
+            "end": {
+              "line": 33,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "OFFSET_VAL_FIELD",
+              "range": [
+                664,
+                680
+              ],
+              "loc": {
+                "start": {
+                  "line": 34,
+                  "column": 13
+                },
+                "end": {
+                  "line": 34,
+                  "column": 29
+                }
+              }
+            },
+            "init": {
+              "type": "Literal",
+              "value": 21,
+              "raw": "21",
+              "range": [
+                683,
+                685
+              ],
+              "loc": {
+                "start": {
+                  "line": 34,
+                  "column": 32
+                },
+                "end": {
+                  "line": 34,
+                  "column": 34
+                }
+              }
+            },
+            "range": [
+              664,
+              685
+            ],
+            "loc": {
+              "start": {
+                "line": 34,
+                "column": 13
+              },
+              "end": {
+                "line": 34,
+                "column": 34
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          658,
+          686
+        ],
+        "loc": {
+          "start": {
+            "line": 34,
+            "column": 7
+          },
+          "end": {
+            "line": 34,
+            "column": 35
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
+            "range": [
+              558,
+              650
+            ],
+            "loc": {
+              "start": {
+                "line": 30,
+                "column": 0
+              },
+              "end": {
+                "line": 33,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
+            "range": [
+              688,
+              793
+            ],
+            "loc": {
+              "start": {
+                "line": 36,
+                "column": 0
+              },
+              "end": {
+                "line": 39,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        651,
+        686
+      ],
+      "loc": {
+        "start": {
+          "line": 34,
+          "column": 0
+        },
+        "end": {
+          "line": 34,
+          "column": 35
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
+          "range": [
+            558,
+            650
+          ],
+          "loc": {
+            "start": {
+              "line": 30,
+              "column": 0
+            },
+            "end": {
+              "line": 33,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
+          "range": [
+            688,
+            793
+          ],
+          "loc": {
+            "start": {
+              "line": 36,
+              "column": 0
+            },
+            "end": {
+              "line": 39,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "CHAR_WIDTH_FIELD",
+              "range": [
+                807,
+                823
+              ],
+              "loc": {
+                "start": {
+                  "line": 40,
+                  "column": 13
+                },
+                "end": {
+                  "line": 40,
+                  "column": 29
+                }
+              }
+            },
+            "init": {
+              "type": "Literal",
+              "value": 8,
+              "raw": "8",
+              "range": [
+                826,
+                827
+              ],
+              "loc": {
+                "start": {
+                  "line": 40,
+                  "column": 32
+                },
+                "end": {
+                  "line": 40,
+                  "column": 33
+                }
+              }
+            },
+            "range": [
+              807,
+              827
+            ],
+            "loc": {
+              "start": {
+                "line": 40,
+                "column": 13
+              },
+              "end": {
+                "line": 40,
+                "column": 33
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          801,
+          828
+        ],
+        "loc": {
+          "start": {
+            "line": 40,
+            "column": 7
+          },
+          "end": {
+            "line": 40,
+            "column": 34
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
+            "range": [
+              688,
+              793
+            ],
+            "loc": {
+              "start": {
+                "line": 36,
+                "column": 0
+              },
+              "end": {
+                "line": 39,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
+            "range": [
+              830,
+              939
+            ],
+            "loc": {
+              "start": {
+                "line": 42,
+                "column": 0
+              },
+              "end": {
+                "line": 45,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        794,
+        828
+      ],
+      "loc": {
+        "start": {
+          "line": 40,
+          "column": 0
+        },
+        "end": {
+          "line": 40,
+          "column": 34
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
+          "range": [
+            688,
+            793
+          ],
+          "loc": {
+            "start": {
+              "line": 36,
+              "column": 0
+            },
+            "end": {
+              "line": 39,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
+          "range": [
+            830,
+            939
+          ],
+          "loc": {
+            "start": {
+              "line": 42,
+              "column": 0
+            },
+            "end": {
+              "line": 45,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "POINTER_WIDTH_FIELD",
+              "range": [
+                953,
+                972
+              ],
+              "loc": {
+                "start": {
+                  "line": 46,
+                  "column": 13
+                },
+                "end": {
+                  "line": 46,
+                  "column": 32
+                }
+              }
+            },
+            "init": {
+              "type": "Literal",
+              "value": 8,
+              "raw": "8",
+              "range": [
+                975,
+                976
+              ],
+              "loc": {
+                "start": {
+                  "line": 46,
+                  "column": 35
+                },
+                "end": {
+                  "line": 46,
+                  "column": 36
+                }
+              }
+            },
+            "range": [
+              953,
+              976
+            ],
+            "loc": {
+              "start": {
+                "line": 46,
+                "column": 13
+              },
+              "end": {
+                "line": 46,
+                "column": 36
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          947,
+          977
+        ],
+        "loc": {
+          "start": {
+            "line": 46,
+            "column": 7
+          },
+          "end": {
+            "line": 46,
+            "column": 37
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
+            "range": [
+              830,
+              939
+            ],
+            "loc": {
+              "start": {
+                "line": 42,
+                "column": 0
+              },
+              "end": {
+                "line": 45,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": []
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        940,
+        977
+      ],
+      "loc": {
+        "start": {
+          "line": 46,
+          "column": 0
+        },
+        "end": {
+          "line": 46,
+          "column": 37
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
+          "range": [
+            830,
+            939
+          ],
+          "loc": {
+            "start": {
+              "line": 42,
+              "column": 0
+            },
+            "end": {
+              "line": 45,
+              "column": 3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "sourceType": "module",
+  "range": [
+    106,
+    977
+  ],
+  "loc": {
+    "start": {
+      "line": 9,
+      "column": 0
+    },
+    "end": {
+      "line": 46,
+      "column": 37
+    }
+  },
+  "comments": [
+    {
+      "type": "Block",
+      "value": "*\n * @file Parameters used for encoding\n ",
+      "range": [
+        0,
+        45
+      ],
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * String terminal character\n * @constant {String}\n ",
+      "range": [
+        47,
+        105
+      ],
+      "loc": {
+        "start": {
+          "line": 5,
+          "column": 0
+        },
+        "end": {
+          "line": 8,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Terminal edge\n * @constant {Object}\n ",
+      "range": [
+        137,
+        183
+      ],
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 0
+        },
+        "end": {
+          "line": 14,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+      "range": [
+        230,
+        398
+      ],
+      "loc": {
+        "start": {
+          "line": 17,
+          "column": 0
+        },
+        "end": {
+          "line": 21,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
+      "range": [
+        438,
+        520
+      ],
+      "loc": {
+        "start": {
+          "line": 24,
+          "column": 0
+        },
+        "end": {
+          "line": 27,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
+      "range": [
+        558,
+        650
+      ],
+      "loc": {
+        "start": {
+          "line": 30,
+          "column": 0
+        },
+        "end": {
+          "line": 33,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
+      "range": [
+        688,
+        793
+      ],
+      "loc": {
+        "start": {
+          "line": 36,
+          "column": 0
+        },
+        "end": {
+          "line": 39,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
+      "range": [
+        830,
+        939
+      ],
+      "loc": {
+        "start": {
+          "line": 42,
+          "column": 0
+        },
+        "end": {
+          "line": 45,
+          "column": 3
+        }
+      }
+    }
+  ]
+}

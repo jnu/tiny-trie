@@ -1,0 +1,50 @@
+{
+  "coverage": "88.88%",
+  "expectCount": 45,
+  "actualCount": 40,
+  "files": {
+    "lib/base64.js": {
+      "expectCount": 2,
+      "actualCount": 2,
+      "undocumentLines": []
+    },
+    "lib/BinaryString.js": {
+      "expectCount": 9,
+      "actualCount": 8,
+      "undocumentLines": [
+        121
+      ]
+    },
+    "lib/constants.js": {
+      "expectCount": 7,
+      "actualCount": 7,
+      "undocumentLines": []
+    },
+    "lib/PackedTrie.js": {
+      "expectCount": 13,
+      "actualCount": 12,
+      "undocumentLines": [
+        224
+      ]
+    },
+    "lib/Trie.js": {
+      "expectCount": 11,
+      "actualCount": 8,
+      "undocumentLines": [
+        34,
+        33,
+        370
+      ]
+    },
+    "lib/index.js": {
+      "expectCount": 2,
+      "actualCount": 2,
+      "undocumentLines": []
+    },
+    "lib/floor_log2.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    }
+  }
+}

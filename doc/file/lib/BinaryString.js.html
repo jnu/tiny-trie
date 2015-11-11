@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">lib/BinaryString.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="git+https://github.com/jnu/tiny-tree.git">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/lib/BinaryString.js~BinaryString.html">BinaryString</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/lib/PackedTrie.js~PackedTrie.html">PackedTrie</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/lib/Trie.js~Trie.html">Trie</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-floor_log2">floor_log2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createFrozenSync">createFrozenSync</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createSync">createSync</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-binaryString">binaryString</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-packedTrie">packedTrie</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-trie">trie</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BASE64_CHAR_TO_INT">BASE64_CHAR_TO_INT</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BASE64_INT_TO_CHAR">BASE64_INT_TO_CHAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CHAR_WIDTH_FIELD">CHAR_WIDTH_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-HEADER_WIDTH_FIELD">HEADER_WIDTH_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-OFFSET_SIGN_FIELD">OFFSET_SIGN_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-OFFSET_VAL_FIELD">OFFSET_VAL_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-POINTER_WIDTH_FIELD">POINTER_WIDTH_FIELD</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINAL">TERMINAL</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINUS">TERMINUS</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">lib/BinaryString.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/**
+ * @file Provide an interface for writing binary data into a Base64-encoded
+ * string.
+ */
+
+import floor_log2 from &apos;./floor_log2&apos;;
+import {BASE64_INT_TO_CHAR} from &apos;./base64&apos;;
+
+
+/**
+ * Interface for writing binary data into a Base64-encoded string
+ * @class
+ */
+class BinaryString {
+
+    /**
+     * No arguments are necessary.
+     * @constructor
+     * @return {BinaryString}
+     */
+    constructor() {
+        /**
+         * Data buffer
+         * @type {Number?}
+         */
+        this.buffer = 0;
+
+        /**
+         * Word pointer for buffer. With every entry into the buffer, the
+         * pointer gets incremented by the entry&apos;s width. Every six characters
+         * may be encoded, so when the pointer exceeds 6, the buffer can be
+         * emptied until the pointer is back under 6.
+         * @type {Number}
+         */
+        this.pointer = 0;
+
+        /**
+         * Encoded data as a string of base64 characters
+         * @type {String}
+         */
+        this.data = &apos;&apos;;
+    }
+
+    /**
+     * Write a value to the binary string. This value should be thought of as
+     * an integer representing the binary data to write.
+     * @param  {Integer} val - data to write
+     * @param  {Integer} [width] - optionally specify a width for this data.
+     *                             if none is given, width will be inferred
+     *                             automatically. An error will be thrown if
+     *                             the width is too small to contain the data.
+     */
+    write(val, width = null) {
+        let buf = this.buffer;
+        let len = width || floor_log2(val) + 1;
+
+        if (width &amp;&amp; val &gt;= (0x1 &lt;&lt; width)) {
+            throw new Error(`Can&apos;t write ${val} in only ${width} bits`);
+        }
+
+        this.buffer = (buf &lt;&lt; len) | val;
+        this.pointer += len;
+
+        this._digest();
+    }
+
+    /**
+     * Encode the remaining items in the buffer. Use this when the input stream
+     * is finished to ensure that all data has been encoded.
+     */
+    flush() {
+        let buffer = this.buffer;
+        let pointer = this.pointer;
+        // NB if pointer is at 0, there&apos;s nothing to flush.
+        while (pointer &amp;&amp; pointer &lt; 6) {
+            buffer &lt;&lt;= 1;
+            pointer += 1;
+        }
+        this.pointer = pointer;
+        this.buffer = buffer;
+        this._digest();
+    }
+
+    /**
+     * Get the binary data as base64. This output does not include padding
+     * characters. This procedure flushes the buffer.
+     * @return {String}
+     */
+    getData() {
+        this.flush();
+        return this.data;
+    }
+
+    /**
+     * Write values from the buffer into the binary encoded string until the
+     * pointer is below 6. Use @link BinaryString#flush to print out all values
+     * regardless of whether they are complete and return the pointer to 0.
+     *
+     * This method is used internally during writes and does not need to be
+     * called explicitly.
+     * @private
+     */
+    _digest() {
+        let buffer = this.buffer;
+        let pointer = this.pointer;
+        let newData = &apos;&apos;;
+        while (pointer &gt;= 6) {
+            let remainder = (pointer - 6);
+            let code = buffer &gt;&gt; remainder;
+            buffer = buffer ^ (code &lt;&lt; remainder);
+            pointer = remainder;
+            newData += BASE64_INT_TO_CHAR[code];
+        }
+        this.pointer = pointer;
+        this.buffer = buffer;
+        this.data += newData;
+    }
+
+}
+
+export default BinaryString;
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.3)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

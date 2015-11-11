@@ -1,0 +1,2237 @@
+[
+  {
+    "__docId__": 0,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/BinaryString.js",
+    "memberof": null,
+    "longname": "lib/BinaryString.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 6,
+    "content": "/**\n * @file Provide an interface for writing binary data into a Base64-encoded\n * string.\n */\n\nimport floor_log2 from './floor_log2';\nimport {BASE64_INT_TO_CHAR} from './base64';\n\n\n/**\n * Interface for writing binary data into a Base64-encoded string\n * @class\n */\nclass BinaryString {\n\n    /**\n     * No arguments are necessary.\n     * @constructor\n     * @return {BinaryString}\n     */\n    constructor() {\n        /**\n         * Data buffer\n         * @type {Number?}\n         */\n        this.buffer = 0;\n\n        /**\n         * Word pointer for buffer. With every entry into the buffer, the\n         * pointer gets incremented by the entry's width. Every six characters\n         * may be encoded, so when the pointer exceeds 6, the buffer can be\n         * emptied until the pointer is back under 6.\n         * @type {Number}\n         */\n        this.pointer = 0;\n\n        /**\n         * Encoded data as a string of base64 characters\n         * @type {String}\n         */\n        this.data = '';\n    }\n\n    /**\n     * Write a value to the binary string. This value should be thought of as\n     * an integer representing the binary data to write.\n     * @param  {Integer} val - data to write\n     * @param  {Integer} [width] - optionally specify a width for this data.\n     *                             if none is given, width will be inferred\n     *                             automatically. An error will be thrown if\n     *                             the width is too small to contain the data.\n     */\n    write(val, width = null) {\n        let buf = this.buffer;\n        let len = width || floor_log2(val) + 1;\n\n        if (width && val >= (0x1 << width)) {\n            throw new Error(`Can't write ${val} in only ${width} bits`);\n        }\n\n        this.buffer = (buf << len) | val;\n        this.pointer += len;\n\n        this._digest();\n    }\n\n    /**\n     * Encode the remaining items in the buffer. Use this when the input stream\n     * is finished to ensure that all data has been encoded.\n     */\n    flush() {\n        let buffer = this.buffer;\n        let pointer = this.pointer;\n        // NB if pointer is at 0, there's nothing to flush.\n        while (pointer && pointer < 6) {\n            buffer <<= 1;\n            pointer += 1;\n        }\n        this.pointer = pointer;\n        this.buffer = buffer;\n        this._digest();\n    }\n\n    /**\n     * Get the binary data as base64. This output does not include padding\n     * characters. This procedure flushes the buffer.\n     * @return {String}\n     */\n    getData() {\n        this.flush();\n        return this.data;\n    }\n\n    /**\n     * Write values from the buffer into the binary encoded string until the\n     * pointer is below 6. Use @link BinaryString#flush to print out all values\n     * regardless of whether they are complete and return the pointer to 0.\n     *\n     * This method is used internally during writes and does not need to be\n     * called explicitly.\n     * @private\n     */\n    _digest() {\n        let buffer = this.buffer;\n        let pointer = this.pointer;\n        let newData = '';\n        while (pointer >= 6) {\n            let remainder = (pointer - 6);\n            let code = buffer >> remainder;\n            buffer = buffer ^ (code << remainder);\n            pointer = remainder;\n            newData += BASE64_INT_TO_CHAR[code];\n        }\n        this.pointer = pointer;\n        this.buffer = buffer;\n        this.data += newData;\n    }\n\n}\n\nexport default BinaryString;\n"
+  },
+  {
+    "__docId__": 1,
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "BinaryString",
+    "memberof": "lib/BinaryString.js",
+    "longname": "lib/BinaryString.js~BinaryString",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/BinaryString.js",
+    "importStyle": "BinaryString",
+    "description": "Interface for writing binary data into a Base64-encoded string",
+    "lineNumber": 14,
+    "unknown": [
+      {
+        "tagName": "@class",
+        "tagValue": ""
+      }
+    ],
+    "interface": false
+  },
+  {
+    "__docId__": 2,
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#constructor",
+    "access": null,
+    "description": "No arguments are necessary.",
+    "lineNumber": 21,
+    "unknown": [
+      {
+        "tagName": "@constructor",
+        "tagValue": ""
+      }
+    ],
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "BinaryString"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 3,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "buffer",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#buffer",
+    "access": null,
+    "description": "Data buffer",
+    "lineNumber": 26,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number?"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 4,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "pointer",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#pointer",
+    "access": null,
+    "description": "Word pointer for buffer. With every entry into the buffer, the\npointer gets incremented by the entry's width. Every six characters\nmay be encoded, so when the pointer exceeds 6, the buffer can be\nemptied until the pointer is back under 6.",
+    "lineNumber": 35,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 5,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#data",
+    "access": null,
+    "description": "Encoded data as a string of base64 characters",
+    "lineNumber": 41,
+    "type": {
+      "nullable": null,
+      "types": [
+        "String"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 6,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "write",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#write",
+    "access": null,
+    "description": "Write a value to the binary string. This value should be thought of as\nan integer representing the binary data to write.",
+    "lineNumber": 53,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Integer"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "val",
+        "description": "data to write"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Integer"
+        ],
+        "spread": false,
+        "optional": true,
+        "name": "width",
+        "description": "optionally specify a width for this data.\n                            if none is given, width will be inferred\n                            automatically. An error will be thrown if\n                            the width is too small to contain the data."
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 7,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "buffer",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#buffer",
+    "access": null,
+    "description": null,
+    "lineNumber": 61,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 8,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "pointer",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#pointer",
+    "access": null,
+    "description": null,
+    "lineNumber": 62,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 9,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "flush",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#flush",
+    "access": null,
+    "description": "Encode the remaining items in the buffer. Use this when the input stream\nis finished to ensure that all data has been encoded.",
+    "lineNumber": 71,
+    "params": [],
+    "generator": false
+  },
+  {
+    "__docId__": 10,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "pointer",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#pointer",
+    "access": null,
+    "description": null,
+    "lineNumber": 79,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 11,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "buffer",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#buffer",
+    "access": null,
+    "description": null,
+    "lineNumber": 80,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 12,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getData",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#getData",
+    "access": null,
+    "description": "Get the binary data as base64. This output does not include padding\ncharacters. This procedure flushes the buffer.",
+    "lineNumber": 89,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "String"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 13,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_digest",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#_digest",
+    "access": "private",
+    "description": "Write values from the buffer into the binary encoded string until the\npointer is below 6. Use @link BinaryString#flush to print out all values\nregardless of whether they are complete and return the pointer to 0.\n\nThis method is used internally during writes and does not need to be\ncalled explicitly.",
+    "lineNumber": 103,
+    "params": [],
+    "generator": false
+  },
+  {
+    "__docId__": 14,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "pointer",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#pointer",
+    "access": null,
+    "description": null,
+    "lineNumber": 114,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 15,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "buffer",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#buffer",
+    "access": null,
+    "description": null,
+    "lineNumber": 115,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 16,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "lib/BinaryString.js~BinaryString",
+    "longname": "lib/BinaryString.js~BinaryString#data",
+    "access": null,
+    "description": null,
+    "lineNumber": 116,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 17,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "binaryString",
+    "memberof": "lib/BinaryString.js",
+    "longname": "lib/BinaryString.js~binaryString",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/BinaryString.js",
+    "importStyle": "binaryString",
+    "description": null,
+    "lineNumber": 121,
+    "undocument": true,
+    "type": {
+      "types": [
+        "lib/BinaryString.js~BinaryString"
+      ]
+    }
+  },
+  {
+    "__docId__": 18,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/BinaryString.test.js",
+    "memberof": null,
+    "longname": "lib/BinaryString.test.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 2,
+    "content": "/* eslint-env mocha */\nimport BinaryString from './BinaryString';\nimport assert from 'assert';\n\n\ndescribe('BinaryString', () => {\n\n    describe('constructor', () => {\n        it('creates an empty binary string', () => {\n            let bs = new BinaryString();\n\n            assert.strictEqual(bs.buffer, 0);\n            assert.strictEqual(bs.pointer, 0);\n            assert.strictEqual(bs.data, '');\n            assert.strictEqual(bs.getData(), '');\n        });\n    });\n\n    describe('write', () => {\n        it('should add an item to the buffer', () => {\n            let bs = new BinaryString();\n\n            bs.write(1);\n            assert.strictEqual(bs.buffer, 1);\n            assert.strictEqual(bs.pointer, 1);\n            assert.strictEqual(bs.data, '');\n\n            bs.write(0);\n            assert.strictEqual(bs.buffer, 2);\n            assert.strictEqual(bs.pointer, 2);\n            assert.strictEqual(bs.data, '');\n\n            bs.write(3);\n            assert.strictEqual(bs.buffer, 11);\n            assert.strictEqual(bs.pointer, 4);\n            assert.strictEqual(bs.data, '');\n        });\n\n        it('should write encoded data whenever buffer is sufficently full', () => {\n            let bs = new BinaryString();\n\n            bs.write(1);\n            bs.write(1);\n            bs.write(1);\n            bs.write(1);\n            bs.write(1);\n            assert.strictEqual(bs.buffer, 31);\n            assert.strictEqual(bs.pointer, 5);\n            assert.strictEqual(bs.data, '');\n            bs.write(1);\n            assert.strictEqual(bs.buffer, 0);\n            assert.strictEqual(bs.pointer, 0);\n            assert.strictEqual(bs.data, '/');\n\n            bs.write(64);\n            assert.strictEqual(bs.buffer, 0);\n            assert.strictEqual(bs.pointer, 1);\n            assert.strictEqual(bs.data, '/g');\n        });\n\n        it('should write data into a specified width', () => {\n            let bs = new BinaryString();\n\n            bs.write(0, 2);\n            assert.strictEqual(bs.buffer, 0);\n            assert.strictEqual(bs.pointer, 2);\n            assert.strictEqual(bs.data, '');\n\n            bs.write(1, 4);\n            assert.strictEqual(bs.buffer, 0);\n            assert.strictEqual(bs.pointer, 0);\n            assert.strictEqual(bs.data, 'B');\n        });\n\n        it('should throw an error if trying to write into too small a width', () => {\n            let bs = new BinaryString();\n\n            assert.throws(() => bs.write(2, 1));\n        });\n    });\n\n    describe('flush', () => {\n        it('should empty the buffer, padding remaining contents with 0', () => {\n            let bs = new BinaryString();\n\n            bs.write(2);\n\n            bs.flush();\n            assert.strictEqual(bs.buffer, 0);\n            assert.strictEqual(bs.pointer, 0);\n            assert.strictEqual(bs.data, 'g');\n            assert.strictEqual(bs.getData(), 'g');\n        });\n    });\n\n    describe('getData', () => {\n        it('should get the data as a base-64 encoded string', () => {\n            let bs = new BinaryString();\n\n            bs.write(1, 6);\n            assert.strictEqual(bs.buffer, 0);\n            assert.strictEqual(bs.pointer, 0);\n            assert.strictEqual(bs.data, 'B');\n            assert.strictEqual(bs.getData(), 'B');\n        });\n\n        it('should flush the buffer when getting data', () => {\n            let bs = new BinaryString();\n\n            bs.write(1, 2);\n            assert.strictEqual(bs.buffer, 1);\n            assert.strictEqual(bs.pointer, 2);\n            assert.strictEqual(bs.data, '');\n            assert.strictEqual(bs.getData(), 'Q');\n            assert.strictEqual(bs.data, 'Q');\n        });\n    });\n\n});\n"
+  },
+  {
+    "__docId__": 19,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/PackedTrie.js",
+    "memberof": null,
+    "longname": "lib/PackedTrie.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 8,
+    "content": "/**\n * @file Small class for querying a binary-encoded Trie\n *\n * TODO - rewrite as a native class. Babel adds a lot of overhead. This class\n * should be tiny and transparent.\n */\n\nimport {BASE64_CHAR_TO_INT} from './base64';\nimport {\n    TERMINAL,\n    HEADER_WIDTH_FIELD,\n    OFFSET_SIGN_FIELD,\n    OFFSET_VAL_FIELD,\n    CHAR_WIDTH_FIELD,\n    POINTER_WIDTH_FIELD\n} from './constants';\n\n\n/**\n * Extract a window of bits from a Base64 encoded sequence\n * @param  {String} binary - base64 encoded sequence\n * @param  {Number} start - first bit to read\n * @param  {Number} len - number of bits to read\n * @return {Number} - bits from string, as number\n */\nfunction readBits(binary, start, len) {\n    let startChar = ~~(start / 6);\n    let startBitOffset = start % 6;\n    let endBit = startBitOffset + len;\n    let charLen = Math.ceil(endBit / 6);\n    let mask = (0x1 << len) - 1;\n    let chunk = 0;\n\n    for (let i = 0; i < charLen; i++) {\n        chunk <<= 6;\n        chunk |= BASE64_CHAR_TO_INT[binary[startChar + i]];\n    }\n\n    let rightPadding = endBit % 6;\n    if (rightPadding) {\n        chunk >>= (6 - rightPadding);\n    }\n\n    return chunk & mask;\n}\n\n/**\n * Class for interacting with an encoded trie. The class performs lookups\n * virtually just as fast as a regular trie. The binary data never actually\n * have to be processed as a whole, so instantiation time and memory usage are\n * phenomenally low.\n * @class\n */\nclass PackedTrie {\n\n    /**\n     * Instantiate a packed binary trie, parsing its headers to configure the\n     * instance for queries.\n     * @constructor\n     * @param  {String} binary - binary string from {@link Trie#encode}\n     * @return {PackedTrie}\n     */\n    constructor(binary) {\n        // Split binary into header and content by checking first field\n        let headerCharCount = readBits(binary, 0, HEADER_WIDTH_FIELD);\n        let header = binary.substr(0, headerCharCount);\n\n        /**\n         * Binary string encoded as Base64 representing Trie\n         * @type {String}\n         */\n        this.data = binary.substr(headerCharCount);\n\n        // compute pointer offset\n        let offsetSign = readBits(header, HEADER_WIDTH_FIELD, OFFSET_SIGN_FIELD);\n        let offset = readBits(header, HEADER_WIDTH_FIELD + OFFSET_SIGN_FIELD, OFFSET_VAL_FIELD);\n\n        if (offsetSign) {\n            offset = -offset;\n        }\n        /**\n         * Pointer offset. Add this to every pointer read from every word in\n         * the trie to obtain the true value of the pointer. This offset is\n         * used to avoid signed integers in the word.\n         * @type {Number}\n         */\n        this.offset = offset;\n\n        // interpret the field width within each word\n        let charWidth = readBits(header,\n            HEADER_WIDTH_FIELD + OFFSET_SIGN_FIELD + OFFSET_VAL_FIELD,\n            CHAR_WIDTH_FIELD\n        );\n\n        let pointerWidth = readBits(header,\n            HEADER_WIDTH_FIELD + OFFSET_SIGN_FIELD + OFFSET_VAL_FIELD + CHAR_WIDTH_FIELD,\n            POINTER_WIDTH_FIELD, true\n        );\n\n        // Interpret the rest of the header as the charTable\n        let headerFieldWidth = Math.ceil((\n            HEADER_WIDTH_FIELD +\n            OFFSET_SIGN_FIELD +\n            OFFSET_VAL_FIELD +\n            CHAR_WIDTH_FIELD +\n            POINTER_WIDTH_FIELD\n        ) / 6);\n        let charTable = header.substr(headerFieldWidth);\n\n        /**\n         * Character table, mapping character to an integer ID\n         * @type {Object}\n         */\n        this.table = charTable.split('').reduce((agg, char, i) => {\n            agg[char] = i + 1;\n            return agg;\n        }, { [TERMINAL]: 0 });\n\n        /**\n         * Number of bits in one word\n         * @type {Number}\n         */\n        this.wordWidth = charWidth + pointerWidth + 1;\n\n        /**\n         * Mask for reading the \"last block\" flag in a word\n         * @type {Number}\n         */\n        this.lastMask = 0x1;\n\n        /**\n         * Mask for reading the pointer value from a word\n         * @type {Number}\n         */\n        this.pointerMask = (0x1 << pointerWidth) - 1;\n\n        /**\n         * Offset of pointer field in a word\n         * @type {Number}\n         */\n        this.pointerShift = 1;\n\n        /**\n         * Mask for reading the charTable index in a word\n         * @type {Number}\n         */\n        this.charMask = (0x1 << charWidth) - 1;\n\n        /**\n         * Offset of charTable index field in a word\n         * @type {Number}\n         */\n        this.charShift = 1 + pointerWidth;\n    }\n\n    /**\n     * Test whether trie contains the given string.\n     * @param  {String} string\n     * @return {Boolean}\n     */\n    test(string) {\n        let {\n            data,\n            offset,\n            table,\n            wordWidth,\n            lastMask,\n            pointerShift,\n            pointerMask,\n            charShift,\n            charMask\n        } = this;\n\n        let wordPointer = 0;\n\n        // Test every character, with a terminal at the end\n        let match = string.split('').concat(TERMINAL).every(char => {\n            // TODO is binary search possible within blocks? Not sure if the\n            // encoder guarantees ordering, plus there's no indication how long\n            // a block is, so it'd require extra overhead for each block.\n            while (true) {\n                let queryCharId = table[char];\n\n                // Exit immediately if the char was not found in the table,\n                // (or if it was the TERMINAL character, which has a code of 0)\n                if (queryCharId === undefined) {\n                    return false;\n                }\n\n                let bits = wordPointer * wordWidth;\n                let chunk = readBits(data, bits, wordWidth);\n\n                // Read the character index\n                let charIdx = (chunk >> charShift) & charMask;\n\n                // If this character is matched, jump to the pointer given in\n                // this node.\n                if (charIdx === queryCharId) {\n                    let pointer = (chunk >> pointerShift) & pointerMask;\n                    wordPointer += offset + pointer;\n                    return true;\n                }\n\n                // If this wasn't a match, check if this was the last key in\n                // the block.\n                let last = chunk & lastMask;\n\n                // If this was the last node, the word was not found.\n                if (last) {\n                    return false;\n                }\n                // Otherwise increment the pointer to the next sibling key\n                else {\n                    wordPointer += 1;\n                }\n            }\n        });\n\n        return match;\n    }\n\n}\n\nexport default PackedTrie;\n"
+  },
+  {
+    "__docId__": 20,
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "readBits",
+    "memberof": "lib/PackedTrie.js",
+    "longname": "lib/PackedTrie.js~readBits",
+    "access": null,
+    "export": false,
+    "importPath": "tiny-trie/lib/PackedTrie.js",
+    "importStyle": null,
+    "description": "Extract a window of bits from a Base64 encoded sequence",
+    "lineNumber": 26,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "binary",
+        "description": "base64 encoded sequence"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "start",
+        "description": "first bit to read"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "len",
+        "description": "number of bits to read"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": "bits from string, as number"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 21,
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "PackedTrie",
+    "memberof": "lib/PackedTrie.js",
+    "longname": "lib/PackedTrie.js~PackedTrie",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/PackedTrie.js",
+    "importStyle": "PackedTrie",
+    "description": "Class for interacting with an encoded trie. The class performs lookups\nvirtually just as fast as a regular trie. The binary data never actually\nhave to be processed as a whole, so instantiation time and memory usage are\nphenomenally low.",
+    "lineNumber": 54,
+    "unknown": [
+      {
+        "tagName": "@class",
+        "tagValue": ""
+      }
+    ],
+    "interface": false
+  },
+  {
+    "__docId__": 22,
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#constructor",
+    "access": null,
+    "description": "Instantiate a packed binary trie, parsing its headers to configure the\ninstance for queries.",
+    "lineNumber": 63,
+    "unknown": [
+      {
+        "tagName": "@constructor",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "binary",
+        "description": "binary string from {@link Trie#encode}"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "PackedTrie"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 23,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#data",
+    "access": null,
+    "description": "Binary string encoded as Base64 representing Trie",
+    "lineNumber": 72,
+    "type": {
+      "nullable": null,
+      "types": [
+        "String"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 24,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "offset",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#offset",
+    "access": null,
+    "description": "Pointer offset. Add this to every pointer read from every word in\nthe trie to obtain the true value of the pointer. This offset is\nused to avoid signed integers in the word.",
+    "lineNumber": 87,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 25,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "table",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#table",
+    "access": null,
+    "description": "Character table, mapping character to an integer ID",
+    "lineNumber": 114,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 26,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "wordWidth",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#wordWidth",
+    "access": null,
+    "description": "Number of bits in one word",
+    "lineNumber": 123,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 27,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "lastMask",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#lastMask",
+    "access": null,
+    "description": "Mask for reading the \"last block\" flag in a word",
+    "lineNumber": 129,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 28,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "pointerMask",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#pointerMask",
+    "access": null,
+    "description": "Mask for reading the pointer value from a word",
+    "lineNumber": 135,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 29,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "pointerShift",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#pointerShift",
+    "access": null,
+    "description": "Offset of pointer field in a word",
+    "lineNumber": 141,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 30,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "charMask",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#charMask",
+    "access": null,
+    "description": "Mask for reading the charTable index in a word",
+    "lineNumber": 147,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 31,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "charShift",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#charShift",
+    "access": null,
+    "description": "Offset of charTable index field in a word",
+    "lineNumber": 153,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 32,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "test",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#test",
+    "access": null,
+    "description": "Test whether trie contains the given string.",
+    "lineNumber": 161,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "string",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Boolean"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 33,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "packedTrie",
+    "memberof": "lib/PackedTrie.js",
+    "longname": "lib/PackedTrie.js~packedTrie",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/PackedTrie.js",
+    "importStyle": "packedTrie",
+    "description": null,
+    "lineNumber": 224,
+    "undocument": true,
+    "type": {
+      "types": [
+        "lib/PackedTrie.js~PackedTrie"
+      ]
+    }
+  },
+  {
+    "__docId__": 34,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/PackedTrie.test.js",
+    "memberof": null,
+    "longname": "lib/PackedTrie.test.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 6,
+    "content": "/* eslint-env mocha */\n//import PackedTrie from './PackedTrie';\n//import assert from 'assert';\n\n\ndescribe('PackedTrie', () => {\n\n    describe('constructor', () => {\n        it('should parse header fields on init');\n    });\n\n});\n"
+  },
+  {
+    "__docId__": 35,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/Trie.js",
+    "memberof": null,
+    "longname": "lib/Trie.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 5,
+    "content": "/**\n * @file Provides the Trie class\n */\n\nimport floor_log2 from './floor_log2';\nimport BinaryString from './BinaryString';\nimport {\n    TERMINAL,\n    TERMINUS,\n    HEADER_WIDTH_FIELD,\n    OFFSET_SIGN_FIELD,\n    OFFSET_VAL_FIELD,\n    CHAR_WIDTH_FIELD,\n    POINTER_WIDTH_FIELD\n} from './constants';\n\n\n/**\n * A structure to provide efficient membership tests for a set of strings\n * @class\n */\nclass Trie {\n\n    /**\n     * Typically no arguments are needed, but it's possible to instantiate a\n     * Trie from a JSON object that represents it (@see Trie#toJSON).\n     * @constructor\n     * @param  {Object} tree - a trie given as a vanilla JS tree. This will be\n     *                         used as the root node.\n     * @return {Trie}\n     */\n    constructor(tree = {}) {\n        this.root = tree;\n        this.frozen = false;\n    }\n\n    /**\n     * Insert a word into the trie. Insertions into a frozen trie will throw\n     * an error. The\n     * @param  {String} string - string to insert. Note the \\u0000 character is\n     *                           disallowed.\n     * @return {Trie} - this\n     */\n    insert(string) {\n        // This trie insert algorithm can't guarantee safe inserts on the DAWG\n        // produced by freezing.\n        if (this.frozen) {\n            throw new SyntaxError(\"Can't insert into frozen Trie\");\n        }\n\n        let lastNode = string.split('').reduce((node, char) => {\n            if (char === TERMINAL) {\n                throw new TypeError(`Illegal string character ${TERMINAL}`);\n            }\n            let nextNode = node.hasOwnProperty(char) ?\n                node[char] :\n                (node[char] = {});\n            return nextNode;\n        }, this.root);\n\n        // Terminate the string. Using a constant terminus is not necessary\n        // (and is not be possible in cloned tries), but it uses slightly less\n        // memory and could make certain bugs more obvious.\n        lastNode[TERMINAL] = TERMINUS;\n\n        return this;\n    }\n\n    /**\n     * Test membership in the trie\n     * @param  {String} string\n     * @return {Boolean}\n     */\n    test(string) {\n        let node = this.root;\n        let match = string.split('').every(char => node = node[char]);\n        return !!match && node.hasOwnProperty(TERMINAL);\n    }\n\n    /**\n     * Clone a Trie. This will unfreeze a frozen trie.\n     * @return {Trie}\n     */\n    clone() {\n        return new Trie(JSON.parse(JSON.stringify(this.root)));\n    }\n\n    /**\n     * Freeze the Trie, deduping suffixes. Given the assumption that there will\n     * not be new entries into a trie, redundant suffix branches can be merged.\n     * @return {Trie} - This trie (freezing modifies it in place)\n     */\n    freeze() {\n        // Freezing is idempotent\n        if (this.frozen) {\n            return this;\n        }\n\n        // Create a store for fast lookup of matching suffixes during walk\n        let suffixTree = {};\n\n        // Walk the entire trie depth first, de-duping suffixes\n        let node = this.root;\n        let stack = [];\n        let depthStack = [node];\n\n        // Iterate over tree nodes, pushing children onto the depthStack so\n        // that the items pushed on to the main `stack` are in the correct\n        // order for a second traversal.\n        while (depthStack.length) {\n            node = depthStack.pop();\n\n            Object.keys(node).forEach(char => {\n                if (char[1] === '_') {\n                    return;\n                }\n                let current = node[char];\n                stack.push({\n                    current: current,\n                    char: char,\n                    parent: node\n                });\n                depthStack.push(current);\n            });\n        }\n\n        // Now do node processing, joining / deduping suffix lines.\n        while (stack.length) {\n            let { char, parent, current } = stack.pop();\n\n            // Find potential suffix duplicates with a char lookup\n            if (suffixTree.hasOwnProperty(char)) {\n                let suffixMeta = suffixTree[char];\n\n                // Find a matching suffix by comparing children. Since\n                // deduping is depth-first, comparing children by identity\n                // is a valid way to check if this node is a duplicate.\n                let match = suffixMeta.find(other => {\n                    let oKeys = Object.keys(other);\n                    let cKeys = Object.keys(current);\n                    return (\n                        oKeys.length === cKeys.length &&\n                        oKeys.every(key => other[key] === current[key])\n                    );\n                });\n\n                // If this node is a dupe, update its parent reference to\n                // point to the cached match.\n                if (match) {\n                    parent[char] = match;\n                }\n                // If the node is novel, cache it for future checks.\n                else {\n                    suffixMeta.push(current);\n                }\n            }\n            // If this char is novel, create a new suffixMeta entry\n            else {\n                suffixTree[char] = [current];\n            }\n        }\n\n        // Flag the tree as frozen\n        this.frozen = true;\n\n        return this;\n    }\n\n    /**\n     * Encode the Trie in a binary format. This format stores the trie or DAWG\n     * efficiently and still allows for fast queries.\n     * @return {Object}\n     */\n    encode() {\n        let chunks = [];\n        let queue = [this.root];\n        let charTable = new Set();\n        let visitCode = Date.now();\n        let offsetMin = Infinity;\n        let offsetMax = -Infinity;\n\n\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n        // Encode trie\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n        while (queue.length) {\n            let node = queue.shift();\n            let keys = Object.keys(node).filter(k => k[1] !== '_');\n            let n = keys.length;\n\n            node.__visited__ = visitCode;\n            let nodeChunkIndex = node.__idx__ = chunks.length;\n\n            // Fill in the parent chunks that are waiting to find out what\n            // index this chunk gets assigned\n            if (node.__parents__) {\n                node.__parents__.forEach(chunk => {\n                    let offset = chunk.offset = nodeChunkIndex - chunk.idx;\n                    if (offset < offsetMin) {\n                        offsetMin = offset;\n                    }\n                    if (offset > offsetMax) {\n                        offsetMax = offset;\n                    }\n                });\n            }\n\n            keys.forEach((char, i) => {\n                let child = node[char];\n                let chunkIdx = chunks.length;\n                let lastInLevel = i === n - 1;\n\n                let newChunk = {\n                    char: char,\n                    idx: chunkIdx,\n                    offset: null,\n                    last: lastInLevel\n                };\n\n                // If the child has been visited, jump directly to that node\n                // instead of creating a new entry.\n                if (child.__visited__ === visitCode) {\n                    let idx = child.__idx__;\n                    let offset = newChunk.offset = idx - chunkIdx;\n                    if (offset < offsetMin) {\n                        offsetMin = offset;\n                    }\n                    if (offset > offsetMax) {\n                        offsetMax = offset;\n                    }\n                }\n                // If child is novel, add it to the process queue and add an\n                // instruction to jump there.\n                else {\n                    if (child.__willVisit__ === visitCode) {\n                        child.__parents__.push(newChunk);\n                    } else {\n                        child.__willVisit__ = visitCode;\n                        child.__parents__ = [newChunk];\n                    }\n                    queue.push(child);\n                }\n\n                // Add a new chunk to the array\n                chunks.push(newChunk);\n\n                // Ensure that the char is in the chartable\n                charTable.add(char);\n            });\n        }\n\n        // Assign a unique integer ID to each character. The actual ID is\n        // arbitrary. For the convenience of not having to serialize the \\0\n        // character, the TERMINAL is always encoded at the 0 index, and it is\n        // not included in the charTable.\n        let charTableAsArray = Array.from(charTable)\n            .filter(char => char !== TERMINAL);\n        let charMap = charTableAsArray.reduce((agg, char, i) => {\n            agg[char] = i + 1;\n            return agg;\n        }, { [TERMINAL]: 0 });\n        // Determine the number of bits that can index the entire charTable.\n        let charEncodingWidth = floor_log2(charTableAsArray.length) + 1;\n\n        let pointerRange = offsetMax - offsetMin;\n        let pointerEncodingWidth = floor_log2(pointerRange) + 1;\n\n        // The binary with of node encodings is variable. There are three parts\n        // that get encoded:\n        //\n        //  1) character index (corresponding to character table),\n        //  2) pointer (as offset from start of word to next node),\n        //  3) last (flag to indicate whether this is the last block in this\n        //     subtree)\n        //\n        // The width of the first two items are determined as the binary width\n        // of the unsigned integer representing the maximum in the range. The\n        // width of the third is a constant 1 binary digit.\n        //\n        // E.g., if the charTable is 28 characters in length, then the binary\n        // digit representing 27 (the last item in the array) is:\n        //\n        //   1 1011\n        //\n        // So the width is determined to be 5. If the pointer range has a\n        // maximum of 250, represented in binary as:\n        //\n        //   1111 1010\n        //\n        // Giving a width of 8. With these specifications, a node such as:\n        //\n        //   charIndex: 8, pointer: 100, last: false\n        //\n        // Would be encoded as:\n        //\n        //   --A---|----B-----|C|XXXXX\n        //   0100 0|011 0010 0|1|00 00\n        //\n        // Which can be represented in Base64 as:\n        //\n        //   QyQ==\n        //\n        // TODO could be more clever and combine the first two fields.\n\n        let encodedTrie = new BinaryString();\n\n        chunks.forEach(chunk => {\n            let { char, offset, last } = chunk;\n            encodedTrie.write(charMap[char], charEncodingWidth);\n            encodedTrie.write(offset - offsetMin, pointerEncodingWidth);\n            encodedTrie.write(+last, 1);\n        });\n\n        encodedTrie.flush();\n\n\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n        // Encode header\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n        let headerString = new BinaryString();\n        let outputCharTable = charTableAsArray.join('');\n\n        // Header width designates the ASCII-character count at the beginning\n        // of the file that encodes the header.\n        let headerWidth = Math.ceil((\n            HEADER_WIDTH_FIELD +\n            OFFSET_SIGN_FIELD +\n            OFFSET_VAL_FIELD +\n            CHAR_WIDTH_FIELD +\n            POINTER_WIDTH_FIELD\n        ) / 6) + outputCharTable.length;\n        // Mark the offset as positive or negative\n        let offsetSign = +(offsetMin < 0);\n\n        headerString.write(headerWidth, HEADER_WIDTH_FIELD);\n        headerString.write(offsetSign, OFFSET_SIGN_FIELD);\n        headerString.write(offsetSign ? -offsetMin : offsetMin, OFFSET_VAL_FIELD);\n        headerString.write(charEncodingWidth, CHAR_WIDTH_FIELD);\n        headerString.write(pointerEncodingWidth, POINTER_WIDTH_FIELD);\n        headerString.flush();\n\n        // Concat the header, charTable, and trie\n        return `${headerString.getData()}${outputCharTable}${encodedTrie.getData()}`;\n    }\n\n    /**\n     * Implement JSON API for serialization. Tries can be serialized and\n     * restored using JSON and the constructor. Note that tries (even frozen\n     * ones) *do not serialize efficiently in JSON*. For memory-efficient\n     * tries, @see Trie#encode.\n     *\n     * @example\n     *   > trie = new Trie();\n     *   > ['foo', 'fudge', 'nudge'].forEach(s => trie.insert(s));\n     *   > let jsonStr = JSON.stringify(trie);\n     *   > let restored = new Trie(JSON.parse(jsonStr));\n     *   > ['foo', 'fudge', 'nudge'].every(s => restored.test(s));\n     *   // -> true\n     *\n     * @return {Object} Vanilla JS object\n     */\n    toJSON() {\n        return JSON.parse(JSON.stringify(this.root));\n    }\n\n}\n\nexport default Trie;\n"
+  },
+  {
+    "__docId__": 36,
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Trie",
+    "memberof": "lib/Trie.js",
+    "longname": "lib/Trie.js~Trie",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/Trie.js",
+    "importStyle": "Trie",
+    "description": "A structure to provide efficient membership tests for a set of strings",
+    "lineNumber": 22,
+    "unknown": [
+      {
+        "tagName": "@class",
+        "tagValue": ""
+      }
+    ],
+    "interface": false
+  },
+  {
+    "__docId__": 37,
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#constructor",
+    "access": null,
+    "description": "Typically no arguments are needed, but it's possible to instantiate a\nTrie from a JSON object that represents it (@see Trie#toJSON).",
+    "lineNumber": 32,
+    "unknown": [
+      {
+        "tagName": "@constructor",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "tree",
+        "description": "a trie given as a vanilla JS tree. This will be\n                        used as the root node."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Trie"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 38,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "root",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#root",
+    "access": null,
+    "description": null,
+    "lineNumber": 33,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 39,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "frozen",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#frozen",
+    "access": null,
+    "description": null,
+    "lineNumber": 34,
+    "undocument": true,
+    "type": {
+      "types": [
+        "boolean"
+      ]
+    }
+  },
+  {
+    "__docId__": 40,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "insert",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#insert",
+    "access": null,
+    "description": "Insert a word into the trie. Insertions into a frozen trie will throw\nan error. The",
+    "lineNumber": 44,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "string",
+        "description": "string to insert. Note the \\u0000 character is\n                          disallowed."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Trie"
+      ],
+      "spread": false,
+      "description": "this"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 41,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "test",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#test",
+    "access": null,
+    "description": "Test membership in the trie",
+    "lineNumber": 74,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "string",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Boolean"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 42,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "clone",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#clone",
+    "access": null,
+    "description": "Clone a Trie. This will unfreeze a frozen trie.",
+    "lineNumber": 84,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Trie"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 43,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "freeze",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#freeze",
+    "access": null,
+    "description": "Freeze the Trie, deduping suffixes. Given the assumption that there will\nnot be new entries into a trie, redundant suffix branches can be merged.",
+    "lineNumber": 93,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Trie"
+      ],
+      "spread": false,
+      "description": "This trie (freezing modifies it in place)"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 44,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "frozen",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#frozen",
+    "access": null,
+    "description": null,
+    "lineNumber": 164,
+    "undocument": true,
+    "type": {
+      "types": [
+        "boolean"
+      ]
+    }
+  },
+  {
+    "__docId__": 45,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "encode",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#encode",
+    "access": null,
+    "description": "Encode the Trie in a binary format. This format stores the trie or DAWG\nefficiently and still allows for fast queries.",
+    "lineNumber": 174,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 46,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "toJSON",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#toJSON",
+    "access": null,
+    "description": "Implement JSON API for serialization. Tries can be serialized and\nrestored using JSON and the constructor. Note that tries (even frozen\nones) *do not serialize efficiently in JSON*. For memory-efficient\ntries, @see Trie#encode.",
+    "examples": [
+      "  > trie = new Trie();\n  > ['foo', 'fudge', 'nudge'].forEach(s => trie.insert(s));\n  > let jsonStr = JSON.stringify(trie);\n  > let restored = new Trie(JSON.parse(jsonStr));\n  > ['foo', 'fudge', 'nudge'].every(s => restored.test(s));\n  // -> true"
+    ],
+    "lineNumber": 364,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": "Vanilla JS object"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 47,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "trie",
+    "memberof": "lib/Trie.js",
+    "longname": "lib/Trie.js~trie",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/Trie.js",
+    "importStyle": "trie",
+    "description": null,
+    "lineNumber": 370,
+    "undocument": true,
+    "type": {
+      "types": [
+        "lib/Trie.js~Trie"
+      ]
+    }
+  },
+  {
+    "__docId__": 48,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/Trie.test.js",
+    "memberof": null,
+    "longname": "lib/Trie.test.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 3,
+    "content": "/* eslint-env mocha */\n\nimport Trie from './Trie';\nimport assert from 'assert';\n\n/**\n * Flatten the trie and output a list of keys representing the unique nodes.\n * This can be used to inspect how nodes have been deduped.\n * @param  {Trie} trie\n * @return {String[]}\n */\nfunction flatKeys(trie) {\n    let nodes = [];\n    let keys = [];\n\n    (function walk(node, i = 0) {\n        Object.keys(node).forEach(key => {\n            let current = node[key];\n            if (!nodes.find(x => x === current)) {\n                nodes.push(current);\n                keys.push(`${key}_${i}`);\n            }\n            walk(current, i + 1);\n        });\n    }(trie.root));\n\n    return keys;\n}\n\n\ndescribe('Trie', () => {\n\n    describe('constructor', () => {\n        it('creates an empty Trie', () => {\n            let trie = new Trie();\n            assert(JSON.stringify(trie.root), '{}');\n            assert(trie.frozen === false);\n        });\n    });\n\n    describe('insert', () => {\n        it('inserts a word into the trie', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            assert.strictEqual(\n                JSON.stringify(trie.root),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{}}}}}'\n            );\n        });\n\n        it('does not create redundant prefixes', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('food');\n            assert.strictEqual(\n                JSON.stringify(trie.root),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{},\"d\":{\"\\\\u0000\":{}}}}}}'\n            );\n        });\n\n        it('throws an error if trie is frozen', () => {\n            let trie = new Trie();\n            trie.freeze();\n            assert.throws(() => trie.insert('foo'));\n        });\n    });\n\n    describe('test', () => {\n        it('recalls strings entered into the trie', () => {\n            let trie = new Trie();\n\n            trie.insert('foo');\n            assert(trie.test('foo'));\n\n            trie.insert('bar');\n            assert(trie.test('foo'));\n            assert(trie.test('bar'));\n\n            trie.insert('food');\n            assert(trie.test('food'));\n            assert(trie.test('foo'));\n            assert(trie.test('bar'));\n        });\n    });\n\n    describe('freeze', () => {\n        const strings = ['foo', 'bar', 'bare', 'fool', 'goo', 'far', 'boo', 'gar'];\n        const strings2 = ['spit', 'spat', 'spot', 'spits', 'spats', 'spots'];\n\n        it('marks trie as frozen', () => {\n            let trie = new Trie();\n            trie.freeze();\n            assert(trie.frozen === true);\n        });\n\n        it('preserves stringification', () => {\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n\n            const expected = `{\\\n\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{},\"l\":{\"\\\\u0000\":{}}}},\"a\":{\"r\":{\"\\\\u0000\":{}}}},\\\n\"b\":{\"a\":{\"r\":{\"\\\\u0000\":{},\"e\":{\"\\\\u0000\":{}}}},\"o\":{\"o\":{\"\\\\u0000\":{}}}},\\\n\"g\":{\"o\":{\"o\":{\"\\\\u0000\":{}}},\"a\":{\"r\":{\"\\\\u0000\":{}}}}\\\n}`;\n            assert.strictEqual(JSON.stringify(trie.root), expected);\n\n            trie.freeze();\n\n            assert.strictEqual(JSON.stringify(trie.root), expected);\n        });\n\n        it('preserves lookup', () => {\n            let trie = new Trie();\n\n            strings.forEach(s => trie.insert(s));\n            strings.forEach(s => assert(trie.test(s)));\n\n            trie.freeze();\n\n            strings.forEach(s => assert(trie.test(s)));\n        });\n\n        it('converts internal structure into a DAWG', () => {\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n            assert(trie.root.b.o !== trie.root.g.o);\n            assert(trie.root.f.a !== trie.root.g.a);\n            assert.deepEqual(flatKeys(trie), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"l_3\",\n                \"a_1\",\n                \"r_2\",\n                \"b_0\",\n                \"a_1\",\n                \"r_2\",\n                \"e_3\",\n                \"o_1\",\n                \"o_2\",\n                \"g_0\",\n                \"o_1\",\n                \"o_2\",\n                \"a_1\",\n                \"r_2\"\n            ]);\n            trie.freeze();\n            assert(trie.root.b.o === trie.root.g.o);\n            assert(trie.root.f.a === trie.root.g.a);\n            assert.deepEqual(flatKeys(trie), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"l_3\",\n                \"a_1\",\n                \"r_2\",\n                \"b_0\",\n                \"a_1\",\n                \"r_2\",\n                \"e_3\",\n                \"o_1\",\n                \"o_2\",\n                \"g_0\"\n            ]);\n\n            let trie2 = new Trie();\n            strings2.forEach(s => trie2.insert(s));\n            assert.deepEqual(flatKeys(trie2), [\n                \"s_0\",\n                \"p_1\",\n                \"i_2\",\n                \"t_3\",\n                \"\\u0000_4\",\n                \"s_4\",\n                \"a_2\",\n                \"t_3\",\n                \"s_4\",\n                \"o_2\",\n                \"t_3\",\n                \"s_4\"\n            ]);\n            trie2.freeze();\n            assert.deepEqual(flatKeys(trie2), [\n                \"s_0\",\n                \"p_1\",\n                \"i_2\",\n                \"t_3\",\n                \"\\u0000_4\",\n                \"s_4\",\n                \"a_2\",\n                \"o_2\"\n            ]);\n            assert(trie2.root.s.p.a.t === trie2.root.s.p.i.t);\n            assert(trie2.root.s.p.a.t === trie2.root.s.p.o.t);\n        });\n\n        it('has no cycles', () => {\n            let trie = new Trie();\n\n            ['yo', 'yolo'].forEach(s => trie.insert(s));\n\n            trie.freeze();\n\n            assert(trie.test('yo'));\n            assert(trie.test('yolo'));\n            assert(trie.test('yololo') === false);\n\n            assert.strictEqual(\n                JSON.stringify(trie.root),\n                '{\"y\":{\"o\":{\"\\\\u0000\":{},\"l\":{\"o\":{\"\\\\u0000\":{}}}}}}'\n            );\n        });\n    });\n\n    describe('clone', () => {\n        const strings = ['foo', 'bar', 'boo', 'far', 'spot', 'spat', 'spots', 'spats'];\n\n        it('produces an identical copy of a trie', () => {\n            let trie = new Trie();\n            strings.forEach(string => trie.insert(string));\n\n            let clone = trie.clone();\n\n            assert.strictEqual(JSON.stringify(clone), JSON.stringify(trie));\n        });\n\n        it('produces a deep copy of the old trie', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('boo');\n\n            let clone = trie.clone();\n            clone.insert('fool');\n\n            assert(JSON.stringify(clone) !== JSON.stringify(trie));\n            assert(trie.test('fool') === false);\n            assert(clone.test('fool'));\n        });\n\n        it('preserves lookup', () => {\n            let trie = new Trie();\n            strings.forEach(string => trie.insert(string));\n\n            strings.forEach(string => assert(trie.test(string)));\n\n            let clone = trie.clone();\n\n            strings.forEach(string => assert(clone.test(string)));\n        });\n\n        it('thaws frozen tries', () => {\n            let trie = new Trie();\n            trie.freeze();\n            let clone = trie.clone();\n            assert.throws(() => trie.insert('foo'));\n            clone.insert('foo');\n            assert(clone.test('foo'));\n        });\n\n        it('does not affect ability to refreeze', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('boo');\n            let clone = trie.clone();\n            clone.freeze();\n            assert.deepEqual(flatKeys(clone), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"b_0\"\n            ]);\n        });\n    });\n\n    describe('toJSON', () => {\n        it('presents the root node for serialization', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('fob');\n            assert.deepEqual(trie.toJSON(), trie.root);\n            assert.strictEqual(\n                JSON.stringify(trie),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{}},\"b\":{\"\\\\u0000\":{}}}}}'\n            );\n        });\n\n        it('can restore a serialized trie with the constructor', () => {\n            let strings = ['foo', 'bar', 'zap', 'zoology', 'zoo'];\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n            let json = JSON.stringify(trie);\n            let trie2 = new Trie(JSON.parse(json));\n            strings.forEach(s => assert(trie2.test(s)));\n        });\n\n        it('should return a deep clone of the internal structure', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('bar');\n            let json = trie.toJSON();\n            assert(json !== trie.root);\n            json.b.hello = \"hi!\";\n            assert(trie.root.b.hello === undefined);\n        });\n    });\n\n});\n"
+  },
+  {
+    "__docId__": 49,
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "flatKeys",
+    "memberof": "lib/Trie.test.js",
+    "longname": "lib/Trie.test.js~flatKeys",
+    "access": null,
+    "export": false,
+    "importPath": "tiny-trie/lib/Trie.test.js",
+    "importStyle": null,
+    "description": "Flatten the trie and output a list of keys representing the unique nodes.\nThis can be used to inspect how nodes have been deduped.",
+    "lineNumber": 12,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Trie"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "trie",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "String[]"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 50,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/base64.js",
+    "memberof": null,
+    "longname": "lib/base64.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 10,
+    "content": "/**\n * @file Lookup tables for Base64 conversions\n */\n\n/**\n * Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII\n * character.\n * @constant {String[]}\n */\nexport const BASE64_INT_TO_CHAR = `\\\nABCDEFGHIJKLMNOPQRSTUVWXYZ\\\nabcdefghijklmnopqrstuvwxyz\\\n0123456789\\\n+/\\\n`.split('');\n\n/**\n * Inverse lookup table for transformating a Base-64 ASCII character into the\n * corresponding integer value.\n * @constant {Object}\n */\nexport const BASE64_CHAR_TO_INT = BASE64_INT_TO_CHAR.reduce((agg, char, i) => {\n    agg[char] = i;\n    return agg;\n}, {});\n"
+  },
+  {
+    "__docId__": 51,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "BASE64_INT_TO_CHAR",
+    "memberof": "lib/base64.js",
+    "longname": "lib/base64.js~BASE64_INT_TO_CHAR",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/base64.js",
+    "importStyle": "{BASE64_INT_TO_CHAR}",
+    "description": "Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII\ncharacter.",
+    "lineNumber": 10,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{String[]}"
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 52,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "BASE64_CHAR_TO_INT",
+    "memberof": "lib/base64.js",
+    "longname": "lib/base64.js~BASE64_CHAR_TO_INT",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/base64.js",
+    "importStyle": "{BASE64_CHAR_TO_INT}",
+    "description": "Inverse lookup table for transformating a Base-64 ASCII character into the\ncorresponding integer value.",
+    "lineNumber": 22,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{Object}"
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 53,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/constants.js",
+    "memberof": null,
+    "longname": "lib/constants.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 9,
+    "content": "/**\n * @file Parameters used for encoding\n */\n\n/**\n * String terminal character\n * @constant {String}\n */\nexport const TERMINAL = '\\0';\n\n/**\n * Terminal edge\n * @constant {Object}\n */\nexport const TERMINUS = Object.create(null);\n\n/**\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n */\nexport const HEADER_WIDTH_FIELD = 10;\n\n/**\n * Width of header field representing sign of offset\n * @constant {Number}\n */\nexport const OFFSET_SIGN_FIELD = 1;\n\n/**\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n */\nexport const OFFSET_VAL_FIELD = 21;\n\n/**\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n */\nexport const CHAR_WIDTH_FIELD = 8;\n\n/**\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n */\nexport const POINTER_WIDTH_FIELD = 8;\n"
+  },
+  {
+    "__docId__": 54,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "TERMINAL",
+    "memberof": "lib/constants.js",
+    "longname": "lib/constants.js~TERMINAL",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/constants.js",
+    "importStyle": "{TERMINAL}",
+    "description": "String terminal character",
+    "lineNumber": 9,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{String}"
+      }
+    ],
+    "type": {
+      "types": [
+        "string"
+      ]
+    }
+  },
+  {
+    "__docId__": 55,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "TERMINUS",
+    "memberof": "lib/constants.js",
+    "longname": "lib/constants.js~TERMINUS",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/constants.js",
+    "importStyle": "{TERMINUS}",
+    "description": "Terminal edge",
+    "lineNumber": 15,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{Object}"
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 56,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "HEADER_WIDTH_FIELD",
+    "memberof": "lib/constants.js",
+    "longname": "lib/constants.js~HEADER_WIDTH_FIELD",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/constants.js",
+    "importStyle": "{HEADER_WIDTH_FIELD}",
+    "description": "Width of header field storing entire header width (including char table).\nValue is given in Base64 characters (i.e., every six bits)",
+    "lineNumber": 22,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{Number}"
+      }
+    ],
+    "type": {
+      "types": [
+        "number"
+      ]
+    }
+  },
+  {
+    "__docId__": 57,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "OFFSET_SIGN_FIELD",
+    "memberof": "lib/constants.js",
+    "longname": "lib/constants.js~OFFSET_SIGN_FIELD",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/constants.js",
+    "importStyle": "{OFFSET_SIGN_FIELD}",
+    "description": "Width of header field representing sign of offset",
+    "lineNumber": 28,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{Number}"
+      }
+    ],
+    "type": {
+      "types": [
+        "number"
+      ]
+    }
+  },
+  {
+    "__docId__": 58,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "OFFSET_VAL_FIELD",
+    "memberof": "lib/constants.js",
+    "longname": "lib/constants.js~OFFSET_VAL_FIELD",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/constants.js",
+    "importStyle": "{OFFSET_VAL_FIELD}",
+    "description": "Width of header field representing unsigned value of offset",
+    "lineNumber": 34,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{Number}"
+      }
+    ],
+    "type": {
+      "types": [
+        "number"
+      ]
+    }
+  },
+  {
+    "__docId__": 59,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "CHAR_WIDTH_FIELD",
+    "memberof": "lib/constants.js",
+    "longname": "lib/constants.js~CHAR_WIDTH_FIELD",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/constants.js",
+    "importStyle": "{CHAR_WIDTH_FIELD}",
+    "description": "Width of header field representing the width of the char index in a word",
+    "lineNumber": 40,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{Number}"
+      }
+    ],
+    "type": {
+      "types": [
+        "number"
+      ]
+    }
+  },
+  {
+    "__docId__": 60,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "POINTER_WIDTH_FIELD",
+    "memberof": "lib/constants.js",
+    "longname": "lib/constants.js~POINTER_WIDTH_FIELD",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/constants.js",
+    "importStyle": "{POINTER_WIDTH_FIELD}",
+    "description": "Width of header field representing the width of the offset pointer in a word",
+    "lineNumber": 46,
+    "unknown": [
+      {
+        "tagName": "@constant",
+        "tagValue": "{Number}"
+      }
+    ],
+    "type": {
+      "types": [
+        "number"
+      ]
+    }
+  },
+  {
+    "__docId__": 61,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/floor_log2.js",
+    "memberof": null,
+    "longname": "lib/floor_log2.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 10,
+    "content": "/**\n * @file Provides a fast floor_log2 function\n */\n\n/**\n * Fast floor(log2(x)) operation\n * @param  {Number} x\n * @return {Number}\n */\nexport default function floor_log2(x) {\n    let n = 0;\n    while (x >>= 1) {\n        n++;\n    }\n    return n;\n}\n"
+  },
+  {
+    "__docId__": 62,
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "floor_log2",
+    "memberof": "lib/floor_log2.js",
+    "longname": "lib/floor_log2.js~floor_log2",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie/lib/floor_log2.js",
+    "importStyle": "floor_log2",
+    "description": "Fast floor(log2(x)) operation",
+    "lineNumber": 10,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "x",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 63,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/floor_log2.test.js",
+    "memberof": null,
+    "longname": "lib/floor_log2.test.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 2,
+    "content": "/* eslint-env mocha */\nimport floor_log2 from './floor_log2';\nimport assert from 'assert';\n\ndescribe('floor_log2', () => {\n    it('should compute the floored log base 2 of a number', () => {\n        assert.strictEqual(floor_log2(0), 0);\n        assert.strictEqual(floor_log2(1), 0);\n        assert.strictEqual(floor_log2(2), 1);\n        assert.strictEqual(floor_log2(3), 1);\n        assert.strictEqual(floor_log2(4), 2);\n        assert.strictEqual(floor_log2(5), 2);\n        assert.strictEqual(floor_log2(6), 2);\n        assert.strictEqual(floor_log2(7), 2);\n        assert.strictEqual(floor_log2(8), 3);\n        assert.strictEqual(floor_log2(15), 3);\n        assert.strictEqual(floor_log2(16), 4);\n    });\n});\n"
+  },
+  {
+    "__docId__": 64,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/index.js",
+    "memberof": null,
+    "longname": "lib/index.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 5,
+    "content": "/**\n * @file Convenient functional tools for creating Tries from arrays\n */\n\nimport Trie from './Trie';\nexport {default as Trie} from './Trie';\n\n\n/**\n * Synchronously construct a new Trie out of the given strings.\n * @param  {String[]} words\n * @return {Trie}\n */\nexport function createSync(strings) {\n    let trie = new Trie();\n\n    strings.forEach(s => trie.insert(s));\n\n    return trie;\n}\n\n/**\n * Create a frozen Trie out of given words\n * @param  {String[]} words\n * @return {Trie}\n */\nexport function createFrozenSync(string) {\n    return createSync(string).freeze();\n}\n"
+  },
+  {
+    "__docId__": 65,
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "createSync",
+    "memberof": "lib/index.js",
+    "longname": "lib/index.js~createSync",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie",
+    "importStyle": "{createSync}",
+    "description": "Synchronously construct a new Trie out of the given strings.",
+    "lineNumber": 14,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "words",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Trie"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 66,
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "createFrozenSync",
+    "memberof": "lib/index.js",
+    "longname": "lib/index.js~createFrozenSync",
+    "access": null,
+    "export": true,
+    "importPath": "tiny-trie",
+    "importStyle": "{createFrozenSync}",
+    "description": "Create a frozen Trie out of given words",
+    "lineNumber": 27,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "words",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Trie"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 67,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "lib/index.test.js",
+    "memberof": null,
+    "longname": "lib/index.test.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 3,
+    "content": "/* eslint-env mocha */\n\nimport {\n    createSync,\n    createFrozenSync\n} from './index';\nimport Trie from './Trie';\nimport assert from 'assert';\n\n\ndescribe('index', function() {\n\n    describe('createSync', function() {\n        it('creates a valid trie', function() {\n            let trie = createSync([\"foo\", \"bar\", \"zap\"]);\n            assert(trie instanceof Trie);\n            [\"foo\", \"bar\", \"zap\"].forEach(s => assert(trie.test(s)));\n        });\n    });\n\n    describe('createFrozenSync', function() {\n        it('creates a valid frozen trie', function() {\n            let frozenTrie = createFrozenSync([\"foo\", \"bar\", \"zap\"]);\n            assert(frozenTrie instanceof Trie);\n            assert(frozenTrie.frozen);\n            assert.throws(() => frozenTrie.insert('bop'));\n        });\n    });\n\n});\n"
+  },
+  {
+    "__docId__": 69,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Infinity",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Infinity",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 70,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NaN",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~NaN",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 71,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "undefined",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~undefined",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 72,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "null",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~null",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 73,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 74,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 75,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 76,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 77,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 78,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 79,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Symbol",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Symbol",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 80,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Error",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Error",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 81,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "EvalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~EvalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 82,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "InternalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/InternalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~InternalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 83,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RangeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RangeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 84,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ReferenceError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ReferenceError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 85,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "SyntaxError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~SyntaxError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 86,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "TypeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~TypeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 87,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "URIError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~URIError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 88,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 89,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 90,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Date",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Date",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 91,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "String",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~String",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 92,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "string",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~string",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 93,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RegExp",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RegExp",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 94,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 95,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 96,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 97,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8ClampedArray",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8ClampedArray",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 98,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 99,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 100,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 101,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 102,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 103,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float64Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float64Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 104,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Map",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Map",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 105,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Set",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Set",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 106,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakMap",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakMap",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 107,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakSet",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakSet",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 108,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ArrayBuffer",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ArrayBuffer",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 109,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DataView",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~DataView",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 110,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "JSON",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~JSON",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 111,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Promise",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Promise",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 112,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Generator",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Generator",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 113,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "GeneratorFunction",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~GeneratorFunction",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 114,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Reflect",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Reflect",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 115,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Proxy",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Proxy",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 117,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "CanvasRenderingContext2D",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~CanvasRenderingContext2D",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 118,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DocumentFragment",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~DocumentFragment",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 119,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Element",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Element",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Element",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 120,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Event",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Event",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Event",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 121,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Node",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Node",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 122,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NodeList",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/NodeList",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~NodeList",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 123,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "XMLHttpRequest",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~XMLHttpRequest",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 124,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "AudioContext",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/AudioContext",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~AudioContext",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  }
+]
