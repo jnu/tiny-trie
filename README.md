@@ -21,6 +21,10 @@ queries against the trie without ever having to parse the binary file. This
 class has virtually no initialization cost and low memory overhead without
 sacrificing lookup speed.
 
+There are no specific character or size constraints on the Trie input. Unicode
+input should work, provided you treat the encoded string as unicode (it will
+contain the unicode characters somewhere in it.)
+
 ## Usage
 
 ```js
@@ -95,11 +99,17 @@ PackedTrie
 
 Quick benchmarks with the initial implementation on an MBP, node v5.0.0.
 
+Using `dictionary.txt`, a Scrabble dictionary with 178,692 words.
+
+```js
+var words = fs.readFileSync('./dictionary.txt', 'utf8').split('\n');
+```
+
+### Speed
+
 Gives an idea roughly how long things take.
 
 ```js
-// words.txt = scrabble dictionary with 178,692 words. Chars A-Z
-
 > var trie = TinyTrie.createSync(words);
 // 846 milliseconds
 
@@ -109,10 +119,10 @@ Gives an idea roughly how long things take.
 > trie.freeze();
 // 124 seconds
 
-> var json = trie.encode();
+> var encoded = trie.encode();
 // 936 milliseconds
 
-> var packed = new PackedTrie(json);
+> var packed = new PackedTrie(encoded);
 // 0.06 milliseconds (compare `new Set(words)`, which takes about 1s)
 
 > packed.test(...);
@@ -125,12 +135,35 @@ produce a packed version of the DAWG that has virtually *no* init time - and it
 can still be queried directly, with speeds approaching the full `Trie`'s very
 fast 50 microsecond times.
 
+### Memory
+
+```js
+> words.join('').length
+// 1584476 (bytes)
+
+> encoded.length
+// 698518 (bytes)
+
+> encoded.length / words.join('').length
+// 0.44085110787414894
+```
+
+The encoded trie uses just 44% of the bytes as the full dictionary. Gzipping
+gives a trie of 483kb, compared with 616kb for the dictionary.
+
 ## TODO
 
 * Tests for `PackedTrie`
 
 * Real benchmarks, comparison with other implementations
 
-* Optimize in `PackedTrie` - reduce size, increase perf
+* Optimize in `PackedTrie` - reduce size, increase perf. Node order could
+probably be revised to shrink pointer field width.
 
 * Fuzzy-matching
+
+* Unicode support
+
+* Spec out limitations on encoding inputs
+
+* Version packages, version encoding
