@@ -153,16 +153,12 @@ gives a trie of 483kb, compared with 616kb for the dictionary.
 
 ## TODO
 
-* Tests for `PackedTrie`
-
 * Real benchmarks, comparison with other implementations
 
 * Optimize in `PackedTrie` - reduce size, increase perf. Node order could
 probably be revised to shrink pointer field width.
 
 * Fuzzy-matching
-
-* Unicode support
 
 * Spec out limitations on encoding inputs
 

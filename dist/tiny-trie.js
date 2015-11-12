@@ -298,7 +298,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, {
 	        key: 'clone',
 	        value: function clone() {
-	            return new Trie(JSON.parse(JSON.stringify(this.root)));
+	            return new Trie(this.toJSON());
 	        }
 
 	        /**
@@ -598,7 +598,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, {
 	        key: 'toJSON',
 	        value: function toJSON() {
-	            return JSON.parse(JSON.stringify(this.root));
+	            // Remove any private fields on serialization, e.g. __visited__
+	            var str = JSON.stringify(this.root, function (k, v) {
+	                if (k[1] === '_') {
+	                    return undefined;
+	                }
+	                return v;
+	            });
+	            return JSON.parse(str);
 	        }
 	    }]);
 
