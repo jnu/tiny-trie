@@ -50,20 +50,78 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-POINTER_WIDTH_FIELD">POINTER_WIDTH_FIELD</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINAL">TERMINAL</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINUS">TERMINUS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION">VERSION</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION_FIELD">VERSION_FIELD</a></span></span></li>
 </ul>
 </div>
 </nav>
 
 <div class="content" data-ice="content"><h1 data-ice="title">lib/PackedTrie.test.js</h1>
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/* eslint-env mocha */
-//import PackedTrie from &apos;./PackedTrie&apos;;
-//import assert from &apos;assert&apos;;
+import Trie from &apos;./Trie&apos;;
+import PackedTrie from &apos;./PackedTrie&apos;;
+import assert from &apos;assert&apos;;
 
 
 describe(&apos;PackedTrie&apos;, () =&gt; {
 
     describe(&apos;constructor&apos;, () =&gt; {
-        it(&apos;should parse header fields on init&apos;);
+        it(&apos;should parse header fields on init&apos;, () =&gt; {
+            let encoded = &apos;BAAAAABAwIfboarzKTbjds1FDB&apos;;
+            let trie = new PackedTrie(encoded);
+
+            assert.strictEqual(trie.offset, 1);
+            assert.deepEqual(trie.table, {
+                &apos;\0&apos;: 0,
+                f: 1,
+                b: 2,
+                o: 3,
+                a: 4,
+                r: 5,
+                z: 6
+            });
+            assert.strictEqual(trie.wordWidth, 6);
+            assert.strictEqual(trie.lastMask, parseInt(&apos;1&apos;, 2));
+            assert.strictEqual(trie.pointerMask, parseInt(&apos;11&apos;, 2));
+            assert.strictEqual(trie.pointerShift, 1);
+            assert.strictEqual(trie.charMask, parseInt(&apos;111&apos;, 2));
+            assert.strictEqual(trie.charShift, 3);
+            assert.strictEqual(trie.data, encoded.substr(16));
+        });
+
+        it(&apos;should throw a version mismatch error if encoded string differs from reader version&apos;, () =&gt; {
+            let encoded = &apos;BD/wAABAwIfboarzKTbjds1FDB&apos;;
+            assert.throws(() =&gt; new PackedTrie(encoded));
+        });
+    });
+
+    describe(&apos;test&apos;, () =&gt; {
+        it(&apos;should determine whether an item is in the Trie&apos;, () =&gt; {
+            let encoded = &apos;BAAAAABAwIfboarzKTbjds1FDB&apos;;
+            let trie = new PackedTrie(encoded);
+
+            [&apos;foo&apos;, &apos;bar&apos;, &apos;baz&apos;].forEach(w =&gt; assert(trie.test(w)));
+            [&apos;fu&apos;, &apos;boer&apos;, &apos;batz&apos;].forEach(w =&gt; assert(!trie.test(w)));
+        });
+
+        it(&apos;should provide the same answers as a full Trie&apos;, () =&gt; {
+            [
+                [&apos;Africa&apos;, &apos;Asia&apos;, &apos;North America&apos;, &apos;South America&apos;, &apos;Europe&apos;, &apos;Antarctica&apos;],
+                [&apos;red&apos;, &apos;yellow&apos;, &apos;green&apos;, &apos;aliceblue&apos;, &apos;pink&apos;, &apos;rose&apos;],
+                [&apos;agricola&apos;, &apos;agricolae&apos;, &apos;agricolae&apos;, &apos;agricolam&apos;, &apos;agricol&#x101;&apos;],
+                [&apos;&#x43B;&#x44E;&#x431;&#x438;&#x442;&#x44C;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x43B;&#x44E;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x438;&#x448;&#x44C;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x438;&#x442;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x438;&#x43C;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x438;&#x442;&#x435;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x44F;&#x442;&apos;]
+            ].forEach(words =&gt; {
+                let sdrow = words.slice().map(w =&gt; w.split(&apos;&apos;).reverse().join(&apos;&apos;));
+                let trie = new Trie();
+                words.forEach(w =&gt; trie.insert(w));
+                words.forEach(w =&gt; assert(trie.test(w)));
+                sdrow.forEach(s =&gt; assert(!trie.test(s)));
+                let encoded = trie.freeze().encode();
+                let packed = new PackedTrie(encoded);
+                words.forEach(w =&gt; assert(packed.test(w)));
+                sdrow.forEach(s =&gt; assert(!packed.test(s)));
+            });
+        });
     });
 
 });

@@ -50,6 +50,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-POINTER_WIDTH_FIELD">POINTER_WIDTH_FIELD</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINAL">TERMINAL</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINUS">TERMINUS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION">VERSION</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION_FIELD">VERSION_FIELD</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -65,7 +67,9 @@
 import {BASE64_CHAR_TO_INT} from &apos;./base64&apos;;
 import {
     TERMINAL,
+    VERSION,
     HEADER_WIDTH_FIELD,
+    VERSION_FIELD,
     OFFSET_SIGN_FIELD,
     OFFSET_VAL_FIELD,
     CHAR_WIDTH_FIELD,
@@ -118,9 +122,19 @@ class PackedTrie {
      * @return {PackedTrie}
      */
     constructor(binary) {
+        let ptr = 0;
+
         // Split binary into header and content by checking first field
-        let headerCharCount = readBits(binary, 0, HEADER_WIDTH_FIELD);
+        let headerCharCount = readBits(binary, ptr, HEADER_WIDTH_FIELD);
+        ptr += HEADER_WIDTH_FIELD;
         let header = binary.substr(0, headerCharCount);
+
+        let version = readBits(binary, ptr, VERSION_FIELD);
+        ptr += VERSION_FIELD;
+
+        if (version !== VERSION) {
+            throw new Error(`Version mismatch! Binary: ${version}, Reader: ${VERSION}`);
+        }
 
         /**
          * Binary string encoded as Base64 representing Trie
@@ -129,8 +143,11 @@ class PackedTrie {
         this.data = binary.substr(headerCharCount);
 
         // compute pointer offset
-        let offsetSign = readBits(header, HEADER_WIDTH_FIELD, OFFSET_SIGN_FIELD);
-        let offset = readBits(header, HEADER_WIDTH_FIELD + OFFSET_SIGN_FIELD, OFFSET_VAL_FIELD);
+
+        let offsetSign = readBits(header, ptr, OFFSET_SIGN_FIELD);
+        ptr += OFFSET_SIGN_FIELD;
+        let offset = readBits(header, ptr, OFFSET_VAL_FIELD);
+        ptr += OFFSET_VAL_FIELD;
 
         if (offsetSign) {
             offset = -offset;
@@ -144,25 +161,15 @@ class PackedTrie {
         this.offset = offset;
 
         // interpret the field width within each word
-        let charWidth = readBits(header,
-            HEADER_WIDTH_FIELD + OFFSET_SIGN_FIELD + OFFSET_VAL_FIELD,
-            CHAR_WIDTH_FIELD
-        );
+        let charWidth = readBits(header, ptr, CHAR_WIDTH_FIELD);
+        ptr += CHAR_WIDTH_FIELD;
 
-        let pointerWidth = readBits(header,
-            HEADER_WIDTH_FIELD + OFFSET_SIGN_FIELD + OFFSET_VAL_FIELD + CHAR_WIDTH_FIELD,
-            POINTER_WIDTH_FIELD, true
-        );
+        let pointerWidth = readBits(header, ptr, POINTER_WIDTH_FIELD);
+        ptr += POINTER_WIDTH_FIELD;
 
         // Interpret the rest of the header as the charTable
-        let headerFieldWidth = Math.ceil((
-            HEADER_WIDTH_FIELD +
-            OFFSET_SIGN_FIELD +
-            OFFSET_VAL_FIELD +
-            CHAR_WIDTH_FIELD +
-            POINTER_WIDTH_FIELD
-        ) / 6);
-        let charTable = header.substr(headerFieldWidth);
+        let headerFieldChars = Math.ceil(ptr / 6);
+        let charTable = header.substr(headerFieldChars);
 
         /**
          * Character table, mapping character to an integer ID

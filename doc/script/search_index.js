@@ -72,6 +72,18 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "tiny-trie/lib/constants.js~version",
+    "variable/index.html#static-variable-VERSION",
+    "<span>VERSION</span> <span class=\"search-result-import-path\">tiny-trie/lib/constants.js</span>",
+    "variable"
+  ],
+  [
+    "tiny-trie/lib/constants.js~version_field",
+    "variable/index.html#static-variable-VERSION_FIELD",
+    "<span>VERSION_FIELD</span> <span class=\"search-result-import-path\">tiny-trie/lib/constants.js</span>",
+    "variable"
+  ],
+  [
     "tiny-trie/lib/binarystring.js~binarystring",
     "variable/index.html#static-variable-binaryString",
     "<span>binaryString</span> <span class=\"search-result-import-path\">tiny-trie/lib/BinaryString.js</span>",

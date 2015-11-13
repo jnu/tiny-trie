@@ -161,5 +161,3 @@ probably be revised to shrink pointer field width.
 * Fuzzy-matching
 
 * Spec out limitations on encoding inputs
-
-* Version packages, version encoding

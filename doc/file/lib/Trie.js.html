@@ -50,6 +50,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-POINTER_WIDTH_FIELD">POINTER_WIDTH_FIELD</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINAL">TERMINAL</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINUS">TERMINUS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION">VERSION</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION_FIELD">VERSION_FIELD</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -64,7 +66,9 @@ import BinaryString from &apos;./BinaryString&apos;;
 import {
     TERMINAL,
     TERMINUS,
+    VERSION,
     HEADER_WIDTH_FIELD,
+    VERSION_FIELD,
     OFFSET_SIGN_FIELD,
     OFFSET_VAL_FIELD,
     CHAR_WIDTH_FIELD,
@@ -139,7 +143,7 @@ class Trie {
      * @return {Trie}
      */
     clone() {
-        return new Trie(JSON.parse(JSON.stringify(this.root)));
+        return new Trie(this.toJSON());
     }
 
     /**
@@ -383,6 +387,7 @@ class Trie {
         // of the file that encodes the header.
         let headerWidth = Math.ceil((
             HEADER_WIDTH_FIELD +
+            VERSION_FIELD +
             OFFSET_SIGN_FIELD +
             OFFSET_VAL_FIELD +
             CHAR_WIDTH_FIELD +
@@ -392,6 +397,7 @@ class Trie {
         let offsetSign = +(offsetMin &lt; 0);
 
         headerString.write(headerWidth, HEADER_WIDTH_FIELD);
+        headerString.write(VERSION, VERSION_FIELD);
         headerString.write(offsetSign, OFFSET_SIGN_FIELD);
         headerString.write(offsetSign ? -offsetMin : offsetMin, OFFSET_VAL_FIELD);
         headerString.write(charEncodingWidth, CHAR_WIDTH_FIELD);
@@ -419,7 +425,14 @@ class Trie {
      * @return {Object} Vanilla JS object
      */
     toJSON() {
-        return JSON.parse(JSON.stringify(this.root));
+        // Remove any private fields on serialization, e.g. __visited__
+        let str = JSON.stringify(this.root, (k, v) =&gt; {
+             if (k[1] === &apos;_&apos;) {
+                return undefined;
+            }
+            return v;
+        });
+        return JSON.parse(str);
     }
 
 }

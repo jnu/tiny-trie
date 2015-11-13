@@ -50,6 +50,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-POINTER_WIDTH_FIELD">POINTER_WIDTH_FIELD</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINAL">TERMINAL</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINUS">TERMINUS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION">VERSION</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION_FIELD">VERSION_FIELD</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -72,11 +74,23 @@ export const TERMINAL = &apos;\0&apos;;
 export const TERMINUS = Object.create(null);
 
 /**
+ * Encoding version. Bump when breaking encoding changes are introduced.
+ * @constant {Number}
+ */
+export const VERSION = 0;
+
+/**
  * Width of header field storing entire header width (including char table).
  * Value is given in Base64 characters (i.e., every six bits)
  * @constant {Number}
  */
 export const HEADER_WIDTH_FIELD = 10;
+
+/**
+ * Width of version field
+ * @type {Number}
+ */
+export const VERSION_FIELD = 10;
 
 /**
  * Width of header field representing sign of offset

@@ -50,6 +50,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-POINTER_WIDTH_FIELD">POINTER_WIDTH_FIELD</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINAL">TERMINAL</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINUS">TERMINUS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION">VERSION</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION_FIELD">VERSION_FIELD</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -72,6 +74,9 @@ function flatKeys(trie) {
 
     (function walk(node, i = 0) {
         Object.keys(node).forEach(key =&gt; {
+            if (key.substr(0, 2) === &apos;__&apos;) {
+                return;
+            }
             let current = node[key];
             if (!nodes.find(x =&gt; x === current)) {
                 nodes.push(current);
@@ -84,13 +89,23 @@ function flatKeys(trie) {
     return keys;
 }
 
+/**
+ * Stringify an object dropping &quot;private&quot; prefixes, i.e. those that start with
+ * the prefix &quot;__&quot;.
+ * @param  {Object} obj
+ * @return {String}
+ */
+function stringifyNoPrivate(obj) {
+    return JSON.stringify(obj, (k, v) =&gt;
+        k.substr(0, 2) === &apos;__&apos; ? undefined : v);
+}
 
 describe(&apos;Trie&apos;, () =&gt; {
 
     describe(&apos;constructor&apos;, () =&gt; {
         it(&apos;creates an empty Trie&apos;, () =&gt; {
             let trie = new Trie();
-            assert(JSON.stringify(trie.root), &apos;{}&apos;);
+            assert(stringifyNoPrivate(trie.root), &apos;{}&apos;);
             assert(trie.frozen === false);
         });
     });
@@ -100,7 +115,7 @@ describe(&apos;Trie&apos;, () =&gt; {
             let trie = new Trie();
             trie.insert(&apos;foo&apos;);
             assert.strictEqual(
-                JSON.stringify(trie.root),
+                stringifyNoPrivate(trie.root),
                 &apos;{&quot;f&quot;:{&quot;o&quot;:{&quot;o&quot;:{&quot;\\u0000&quot;:{}}}}}&apos;
             );
         });
@@ -110,7 +125,7 @@ describe(&apos;Trie&apos;, () =&gt; {
             trie.insert(&apos;foo&apos;);
             trie.insert(&apos;food&apos;);
             assert.strictEqual(
-                JSON.stringify(trie.root),
+                stringifyNoPrivate(trie.root),
                 &apos;{&quot;f&quot;:{&quot;o&quot;:{&quot;o&quot;:{&quot;\\u0000&quot;:{},&quot;d&quot;:{&quot;\\u0000&quot;:{}}}}}}&apos;
             );
         });
@@ -159,11 +174,11 @@ describe(&apos;Trie&apos;, () =&gt; {
 &quot;b&quot;:{&quot;a&quot;:{&quot;r&quot;:{&quot;\\u0000&quot;:{},&quot;e&quot;:{&quot;\\u0000&quot;:{}}}},&quot;o&quot;:{&quot;o&quot;:{&quot;\\u0000&quot;:{}}}},\
 &quot;g&quot;:{&quot;o&quot;:{&quot;o&quot;:{&quot;\\u0000&quot;:{}}},&quot;a&quot;:{&quot;r&quot;:{&quot;\\u0000&quot;:{}}}}\
 }`;
-            assert.strictEqual(JSON.stringify(trie.root), expected);
+            assert.strictEqual(stringifyNoPrivate(trie.root), expected);
 
             trie.freeze();
 
-            assert.strictEqual(JSON.stringify(trie.root), expected);
+            assert.strictEqual(stringifyNoPrivate(trie.root), expected);
         });
 
         it(&apos;preserves lookup&apos;, () =&gt; {
@@ -265,7 +280,7 @@ describe(&apos;Trie&apos;, () =&gt; {
             assert(trie.test(&apos;yololo&apos;) === false);
 
             assert.strictEqual(
-                JSON.stringify(trie.root),
+                stringifyNoPrivate(trie.root),
                 &apos;{&quot;y&quot;:{&quot;o&quot;:{&quot;\\u0000&quot;:{},&quot;l&quot;:{&quot;o&quot;:{&quot;\\u0000&quot;:{}}}}}}&apos;
             );
         });
@@ -280,7 +295,7 @@ describe(&apos;Trie&apos;, () =&gt; {
 
             let clone = trie.clone();
 
-            assert.strictEqual(JSON.stringify(clone), JSON.stringify(trie));
+            assert.strictEqual(stringifyNoPrivate(clone), stringifyNoPrivate(trie));
         });
 
         it(&apos;produces a deep copy of the old trie&apos;, () =&gt; {
@@ -291,7 +306,7 @@ describe(&apos;Trie&apos;, () =&gt; {
             let clone = trie.clone();
             clone.insert(&apos;fool&apos;);
 
-            assert(JSON.stringify(clone) !== JSON.stringify(trie));
+            assert(stringifyNoPrivate(clone) !== stringifyNoPrivate(trie));
             assert(trie.test(&apos;fool&apos;) === false);
             assert(clone.test(&apos;fool&apos;));
         });
@@ -337,9 +352,9 @@ describe(&apos;Trie&apos;, () =&gt; {
             let trie = new Trie();
             trie.insert(&apos;foo&apos;);
             trie.insert(&apos;fob&apos;);
-            assert.deepEqual(trie.toJSON(), trie.root);
+            assert.deepEqual(trie.toJSON(), JSON.parse(stringifyNoPrivate(trie.root)));
             assert.strictEqual(
-                JSON.stringify(trie),
+                stringifyNoPrivate(trie),
                 &apos;{&quot;f&quot;:{&quot;o&quot;:{&quot;o&quot;:{&quot;\\u0000&quot;:{}},&quot;b&quot;:{&quot;\\u0000&quot;:{}}}}}&apos;
             );
         });
@@ -348,7 +363,7 @@ describe(&apos;Trie&apos;, () =&gt; {
             let strings = [&apos;foo&apos;, &apos;bar&apos;, &apos;zap&apos;, &apos;zoology&apos;, &apos;zoo&apos;];
             let trie = new Trie();
             strings.forEach(s =&gt; trie.insert(s));
-            let json = JSON.stringify(trie);
+            let json = stringifyNoPrivate(trie);
             let trie2 = new Trie(JSON.parse(json));
             strings.forEach(s =&gt; assert(trie2.test(s)));
         });

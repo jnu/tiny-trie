@@ -381,10 +381,10 @@
         "trailingComments": [
           {
             "type": "Block",
-            "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+            "value": "*\n * Encoding version. Bump when breaking encoding changes are introduced.\n * @constant {Number}\n ",
             "range": [
               230,
-              398
+              332
             ],
             "loc": {
               "start": {
@@ -392,7 +392,7 @@
                 "column": 0
               },
               "end": {
-                "line": 21,
+                "line": 20,
                 "column": 3
               }
             }
@@ -438,10 +438,10 @@
       "trailingComments": [
         {
           "type": "Block",
-          "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+          "value": "*\n * Encoding version. Bump when breaking encoding changes are introduced.\n * @constant {Number}\n ",
           "range": [
             230,
-            398
+            332
           ],
           "loc": {
             "start": {
@@ -449,7 +449,180 @@
               "column": 0
             },
             "end": {
-              "line": 21,
+              "line": 20,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "VERSION",
+              "range": [
+                346,
+                353
+              ],
+              "loc": {
+                "start": {
+                  "line": 21,
+                  "column": 13
+                },
+                "end": {
+                  "line": 21,
+                  "column": 20
+                }
+              }
+            },
+            "init": {
+              "type": "Literal",
+              "value": 0,
+              "raw": "0",
+              "range": [
+                356,
+                357
+              ],
+              "loc": {
+                "start": {
+                  "line": 21,
+                  "column": 23
+                },
+                "end": {
+                  "line": 21,
+                  "column": 24
+                }
+              }
+            },
+            "range": [
+              346,
+              357
+            ],
+            "loc": {
+              "start": {
+                "line": 21,
+                "column": 13
+              },
+              "end": {
+                "line": 21,
+                "column": 24
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          340,
+          358
+        ],
+        "loc": {
+          "start": {
+            "line": 21,
+            "column": 7
+          },
+          "end": {
+            "line": 21,
+            "column": 25
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Encoding version. Bump when breaking encoding changes are introduced.\n * @constant {Number}\n ",
+            "range": [
+              230,
+              332
+            ],
+            "loc": {
+              "start": {
+                "line": 17,
+                "column": 0
+              },
+              "end": {
+                "line": 20,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+            "range": [
+              360,
+              528
+            ],
+            "loc": {
+              "start": {
+                "line": 23,
+                "column": 0
+              },
+              "end": {
+                "line": 27,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        333,
+        358
+      ],
+      "loc": {
+        "start": {
+          "line": 21,
+          "column": 0
+        },
+        "end": {
+          "line": 21,
+          "column": 25
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Encoding version. Bump when breaking encoding changes are introduced.\n * @constant {Number}\n ",
+          "range": [
+            230,
+            332
+          ],
+          "loc": {
+            "start": {
+              "line": 17,
+              "column": 0
+            },
+            "end": {
+              "line": 20,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+          "range": [
+            360,
+            528
+          ],
+          "loc": {
+            "start": {
+              "line": 23,
+              "column": 0
+            },
+            "end": {
+              "line": 27,
               "column": 3
             }
           }
@@ -467,16 +640,16 @@
               "type": "Identifier",
               "name": "HEADER_WIDTH_FIELD",
               "range": [
-                412,
-                430
+                542,
+                560
               ],
               "loc": {
                 "start": {
-                  "line": 22,
+                  "line": 28,
                   "column": 13
                 },
                 "end": {
-                  "line": 22,
+                  "line": 28,
                   "column": 31
                 }
               }
@@ -486,31 +659,31 @@
               "value": 10,
               "raw": "10",
               "range": [
-                433,
-                435
+                563,
+                565
               ],
               "loc": {
                 "start": {
-                  "line": 22,
+                  "line": 28,
                   "column": 34
                 },
                 "end": {
-                  "line": 22,
+                  "line": 28,
                   "column": 36
                 }
               }
             },
             "range": [
-              412,
-              435
+              542,
+              565
             ],
             "loc": {
               "start": {
-                "line": 22,
+                "line": 28,
                 "column": 13
               },
               "end": {
-                "line": 22,
+                "line": 28,
                 "column": 36
               }
             }
@@ -518,16 +691,16 @@
         ],
         "kind": "const",
         "range": [
-          406,
-          436
+          536,
+          566
         ],
         "loc": {
           "start": {
-            "line": 22,
+            "line": 28,
             "column": 7
           },
           "end": {
-            "line": 22,
+            "line": 28,
             "column": 37
           }
         },
@@ -536,16 +709,189 @@
             "type": "Block",
             "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
             "range": [
-              230,
-              398
+              360,
+              528
             ],
             "loc": {
               "start": {
-                "line": 17,
+                "line": 23,
                 "column": 0
               },
               "end": {
-                "line": 21,
+                "line": 27,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of version field\n * @type {Number}\n ",
+            "range": [
+              568,
+              619
+            ],
+            "loc": {
+              "start": {
+                "line": 30,
+                "column": 0
+              },
+              "end": {
+                "line": 33,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "range": [
+        529,
+        566
+      ],
+      "loc": {
+        "start": {
+          "line": 28,
+          "column": 0
+        },
+        "end": {
+          "line": 28,
+          "column": 37
+        }
+      },
+      "leadingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+          "range": [
+            360,
+            528
+          ],
+          "loc": {
+            "start": {
+              "line": 23,
+              "column": 0
+            },
+            "end": {
+              "line": 27,
+              "column": 3
+            }
+          }
+        }
+      ],
+      "trailingComments": [
+        {
+          "type": "Block",
+          "value": "*\n * Width of version field\n * @type {Number}\n ",
+          "range": [
+            568,
+            619
+          ],
+          "loc": {
+            "start": {
+              "line": 30,
+              "column": 0
+            },
+            "end": {
+              "line": 33,
+              "column": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "VERSION_FIELD",
+              "range": [
+                633,
+                646
+              ],
+              "loc": {
+                "start": {
+                  "line": 34,
+                  "column": 13
+                },
+                "end": {
+                  "line": 34,
+                  "column": 26
+                }
+              }
+            },
+            "init": {
+              "type": "Literal",
+              "value": 10,
+              "raw": "10",
+              "range": [
+                649,
+                651
+              ],
+              "loc": {
+                "start": {
+                  "line": 34,
+                  "column": 29
+                },
+                "end": {
+                  "line": 34,
+                  "column": 31
+                }
+              }
+            },
+            "range": [
+              633,
+              651
+            ],
+            "loc": {
+              "start": {
+                "line": 34,
+                "column": 13
+              },
+              "end": {
+                "line": 34,
+                "column": 31
+              }
+            }
+          }
+        ],
+        "kind": "const",
+        "range": [
+          627,
+          652
+        ],
+        "loc": {
+          "start": {
+            "line": 34,
+            "column": 7
+          },
+          "end": {
+            "line": 34,
+            "column": 32
+          }
+        },
+        "leadingComments": [
+          {
+            "type": "Block",
+            "value": "*\n * Width of version field\n * @type {Number}\n ",
+            "range": [
+              568,
+              619
+            ],
+            "loc": {
+              "start": {
+                "line": 30,
+                "column": 0
+              },
+              "end": {
+                "line": 33,
                 "column": 3
               }
             }
@@ -556,16 +902,16 @@
             "type": "Block",
             "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
             "range": [
-              438,
-              520
+              654,
+              736
             ],
             "loc": {
               "start": {
-                "line": 24,
+                "line": 36,
                 "column": 0
               },
               "end": {
-                "line": 27,
+                "line": 39,
                 "column": 3
               }
             }
@@ -575,34 +921,34 @@
       "specifiers": [],
       "source": null,
       "range": [
-        399,
-        436
+        620,
+        652
       ],
       "loc": {
         "start": {
-          "line": 22,
+          "line": 34,
           "column": 0
         },
         "end": {
-          "line": 22,
-          "column": 37
+          "line": 34,
+          "column": 32
         }
       },
       "leadingComments": [
         {
           "type": "Block",
-          "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+          "value": "*\n * Width of version field\n * @type {Number}\n ",
           "range": [
-            230,
-            398
+            568,
+            619
           ],
           "loc": {
             "start": {
-              "line": 17,
+              "line": 30,
               "column": 0
             },
             "end": {
-              "line": 21,
+              "line": 33,
               "column": 3
             }
           }
@@ -613,16 +959,16 @@
           "type": "Block",
           "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
           "range": [
-            438,
-            520
+            654,
+            736
           ],
           "loc": {
             "start": {
-              "line": 24,
+              "line": 36,
               "column": 0
             },
             "end": {
-              "line": 27,
+              "line": 39,
               "column": 3
             }
           }
@@ -640,16 +986,16 @@
               "type": "Identifier",
               "name": "OFFSET_SIGN_FIELD",
               "range": [
-                534,
-                551
+                750,
+                767
               ],
               "loc": {
                 "start": {
-                  "line": 28,
+                  "line": 40,
                   "column": 13
                 },
                 "end": {
-                  "line": 28,
+                  "line": 40,
                   "column": 30
                 }
               }
@@ -659,31 +1005,31 @@
               "value": 1,
               "raw": "1",
               "range": [
-                554,
-                555
+                770,
+                771
               ],
               "loc": {
                 "start": {
-                  "line": 28,
+                  "line": 40,
                   "column": 33
                 },
                 "end": {
-                  "line": 28,
+                  "line": 40,
                   "column": 34
                 }
               }
             },
             "range": [
-              534,
-              555
+              750,
+              771
             ],
             "loc": {
               "start": {
-                "line": 28,
+                "line": 40,
                 "column": 13
               },
               "end": {
-                "line": 28,
+                "line": 40,
                 "column": 34
               }
             }
@@ -691,16 +1037,16 @@
         ],
         "kind": "const",
         "range": [
-          528,
-          556
+          744,
+          772
         ],
         "loc": {
           "start": {
-            "line": 28,
+            "line": 40,
             "column": 7
           },
           "end": {
-            "line": 28,
+            "line": 40,
             "column": 35
           }
         },
@@ -709,16 +1055,16 @@
             "type": "Block",
             "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
             "range": [
-              438,
-              520
+              654,
+              736
             ],
             "loc": {
               "start": {
-                "line": 24,
+                "line": 36,
                 "column": 0
               },
               "end": {
-                "line": 27,
+                "line": 39,
                 "column": 3
               }
             }
@@ -729,16 +1075,16 @@
             "type": "Block",
             "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
             "range": [
-              558,
-              650
+              774,
+              866
             ],
             "loc": {
               "start": {
-                "line": 30,
+                "line": 42,
                 "column": 0
               },
               "end": {
-                "line": 33,
+                "line": 45,
                 "column": 3
               }
             }
@@ -748,16 +1094,16 @@
       "specifiers": [],
       "source": null,
       "range": [
-        521,
-        556
+        737,
+        772
       ],
       "loc": {
         "start": {
-          "line": 28,
+          "line": 40,
           "column": 0
         },
         "end": {
-          "line": 28,
+          "line": 40,
           "column": 35
         }
       },
@@ -766,16 +1112,16 @@
           "type": "Block",
           "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
           "range": [
-            438,
-            520
+            654,
+            736
           ],
           "loc": {
             "start": {
-              "line": 24,
+              "line": 36,
               "column": 0
             },
             "end": {
-              "line": 27,
+              "line": 39,
               "column": 3
             }
           }
@@ -786,16 +1132,16 @@
           "type": "Block",
           "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
           "range": [
-            558,
-            650
+            774,
+            866
           ],
           "loc": {
             "start": {
-              "line": 30,
+              "line": 42,
               "column": 0
             },
             "end": {
-              "line": 33,
+              "line": 45,
               "column": 3
             }
           }
@@ -813,16 +1159,16 @@
               "type": "Identifier",
               "name": "OFFSET_VAL_FIELD",
               "range": [
-                664,
-                680
+                880,
+                896
               ],
               "loc": {
                 "start": {
-                  "line": 34,
+                  "line": 46,
                   "column": 13
                 },
                 "end": {
-                  "line": 34,
+                  "line": 46,
                   "column": 29
                 }
               }
@@ -832,31 +1178,31 @@
               "value": 21,
               "raw": "21",
               "range": [
-                683,
-                685
+                899,
+                901
               ],
               "loc": {
                 "start": {
-                  "line": 34,
+                  "line": 46,
                   "column": 32
                 },
                 "end": {
-                  "line": 34,
+                  "line": 46,
                   "column": 34
                 }
               }
             },
             "range": [
-              664,
-              685
+              880,
+              901
             ],
             "loc": {
               "start": {
-                "line": 34,
+                "line": 46,
                 "column": 13
               },
               "end": {
-                "line": 34,
+                "line": 46,
                 "column": 34
               }
             }
@@ -864,16 +1210,16 @@
         ],
         "kind": "const",
         "range": [
-          658,
-          686
+          874,
+          902
         ],
         "loc": {
           "start": {
-            "line": 34,
+            "line": 46,
             "column": 7
           },
           "end": {
-            "line": 34,
+            "line": 46,
             "column": 35
           }
         },
@@ -882,16 +1228,16 @@
             "type": "Block",
             "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
             "range": [
-              558,
-              650
+              774,
+              866
             ],
             "loc": {
               "start": {
-                "line": 30,
+                "line": 42,
                 "column": 0
               },
               "end": {
-                "line": 33,
+                "line": 45,
                 "column": 3
               }
             }
@@ -902,16 +1248,16 @@
             "type": "Block",
             "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
             "range": [
-              688,
-              793
+              904,
+              1009
             ],
             "loc": {
               "start": {
-                "line": 36,
+                "line": 48,
                 "column": 0
               },
               "end": {
-                "line": 39,
+                "line": 51,
                 "column": 3
               }
             }
@@ -921,16 +1267,16 @@
       "specifiers": [],
       "source": null,
       "range": [
-        651,
-        686
+        867,
+        902
       ],
       "loc": {
         "start": {
-          "line": 34,
+          "line": 46,
           "column": 0
         },
         "end": {
-          "line": 34,
+          "line": 46,
           "column": 35
         }
       },
@@ -939,16 +1285,16 @@
           "type": "Block",
           "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
           "range": [
-            558,
-            650
+            774,
+            866
           ],
           "loc": {
             "start": {
-              "line": 30,
+              "line": 42,
               "column": 0
             },
             "end": {
-              "line": 33,
+              "line": 45,
               "column": 3
             }
           }
@@ -959,16 +1305,16 @@
           "type": "Block",
           "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
           "range": [
-            688,
-            793
+            904,
+            1009
           ],
           "loc": {
             "start": {
-              "line": 36,
+              "line": 48,
               "column": 0
             },
             "end": {
-              "line": 39,
+              "line": 51,
               "column": 3
             }
           }
@@ -986,16 +1332,16 @@
               "type": "Identifier",
               "name": "CHAR_WIDTH_FIELD",
               "range": [
-                807,
-                823
+                1023,
+                1039
               ],
               "loc": {
                 "start": {
-                  "line": 40,
+                  "line": 52,
                   "column": 13
                 },
                 "end": {
-                  "line": 40,
+                  "line": 52,
                   "column": 29
                 }
               }
@@ -1005,31 +1351,31 @@
               "value": 8,
               "raw": "8",
               "range": [
-                826,
-                827
+                1042,
+                1043
               ],
               "loc": {
                 "start": {
-                  "line": 40,
+                  "line": 52,
                   "column": 32
                 },
                 "end": {
-                  "line": 40,
+                  "line": 52,
                   "column": 33
                 }
               }
             },
             "range": [
-              807,
-              827
+              1023,
+              1043
             ],
             "loc": {
               "start": {
-                "line": 40,
+                "line": 52,
                 "column": 13
               },
               "end": {
-                "line": 40,
+                "line": 52,
                 "column": 33
               }
             }
@@ -1037,16 +1383,16 @@
         ],
         "kind": "const",
         "range": [
-          801,
-          828
+          1017,
+          1044
         ],
         "loc": {
           "start": {
-            "line": 40,
+            "line": 52,
             "column": 7
           },
           "end": {
-            "line": 40,
+            "line": 52,
             "column": 34
           }
         },
@@ -1055,16 +1401,16 @@
             "type": "Block",
             "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
             "range": [
-              688,
-              793
+              904,
+              1009
             ],
             "loc": {
               "start": {
-                "line": 36,
+                "line": 48,
                 "column": 0
               },
               "end": {
-                "line": 39,
+                "line": 51,
                 "column": 3
               }
             }
@@ -1075,16 +1421,16 @@
             "type": "Block",
             "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
             "range": [
-              830,
-              939
+              1046,
+              1155
             ],
             "loc": {
               "start": {
-                "line": 42,
+                "line": 54,
                 "column": 0
               },
               "end": {
-                "line": 45,
+                "line": 57,
                 "column": 3
               }
             }
@@ -1094,16 +1440,16 @@
       "specifiers": [],
       "source": null,
       "range": [
-        794,
-        828
+        1010,
+        1044
       ],
       "loc": {
         "start": {
-          "line": 40,
+          "line": 52,
           "column": 0
         },
         "end": {
-          "line": 40,
+          "line": 52,
           "column": 34
         }
       },
@@ -1112,16 +1458,16 @@
           "type": "Block",
           "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
           "range": [
-            688,
-            793
+            904,
+            1009
           ],
           "loc": {
             "start": {
-              "line": 36,
+              "line": 48,
               "column": 0
             },
             "end": {
-              "line": 39,
+              "line": 51,
               "column": 3
             }
           }
@@ -1132,16 +1478,16 @@
           "type": "Block",
           "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
           "range": [
-            830,
-            939
+            1046,
+            1155
           ],
           "loc": {
             "start": {
-              "line": 42,
+              "line": 54,
               "column": 0
             },
             "end": {
-              "line": 45,
+              "line": 57,
               "column": 3
             }
           }
@@ -1159,16 +1505,16 @@
               "type": "Identifier",
               "name": "POINTER_WIDTH_FIELD",
               "range": [
-                953,
-                972
+                1169,
+                1188
               ],
               "loc": {
                 "start": {
-                  "line": 46,
+                  "line": 58,
                   "column": 13
                 },
                 "end": {
-                  "line": 46,
+                  "line": 58,
                   "column": 32
                 }
               }
@@ -1178,31 +1524,31 @@
               "value": 8,
               "raw": "8",
               "range": [
-                975,
-                976
+                1191,
+                1192
               ],
               "loc": {
                 "start": {
-                  "line": 46,
+                  "line": 58,
                   "column": 35
                 },
                 "end": {
-                  "line": 46,
+                  "line": 58,
                   "column": 36
                 }
               }
             },
             "range": [
-              953,
-              976
+              1169,
+              1192
             ],
             "loc": {
               "start": {
-                "line": 46,
+                "line": 58,
                 "column": 13
               },
               "end": {
-                "line": 46,
+                "line": 58,
                 "column": 36
               }
             }
@@ -1210,16 +1556,16 @@
         ],
         "kind": "const",
         "range": [
-          947,
-          977
+          1163,
+          1193
         ],
         "loc": {
           "start": {
-            "line": 46,
+            "line": 58,
             "column": 7
           },
           "end": {
-            "line": 46,
+            "line": 58,
             "column": 37
           }
         },
@@ -1228,16 +1574,16 @@
             "type": "Block",
             "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
             "range": [
-              830,
-              939
+              1046,
+              1155
             ],
             "loc": {
               "start": {
-                "line": 42,
+                "line": 54,
                 "column": 0
               },
               "end": {
-                "line": 45,
+                "line": 57,
                 "column": 3
               }
             }
@@ -1248,16 +1594,16 @@
       "specifiers": [],
       "source": null,
       "range": [
-        940,
-        977
+        1156,
+        1193
       ],
       "loc": {
         "start": {
-          "line": 46,
+          "line": 58,
           "column": 0
         },
         "end": {
-          "line": 46,
+          "line": 58,
           "column": 37
         }
       },
@@ -1266,16 +1612,16 @@
           "type": "Block",
           "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
           "range": [
-            830,
-            939
+            1046,
+            1155
           ],
           "loc": {
             "start": {
-              "line": 42,
+              "line": 54,
               "column": 0
             },
             "end": {
-              "line": 45,
+              "line": 57,
               "column": 3
             }
           }
@@ -1286,7 +1632,7 @@
   "sourceType": "module",
   "range": [
     106,
-    977
+    1193
   ],
   "loc": {
     "start": {
@@ -1294,7 +1640,7 @@
       "column": 0
     },
     "end": {
-      "line": 46,
+      "line": 58,
       "column": 37
     }
   },
@@ -1355,10 +1701,10 @@
     },
     {
       "type": "Block",
-      "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
+      "value": "*\n * Encoding version. Bump when breaking encoding changes are introduced.\n * @constant {Number}\n ",
       "range": [
         230,
-        398
+        332
       ],
       "loc": {
         "start": {
@@ -1366,21 +1712,21 @@
           "column": 0
         },
         "end": {
-          "line": 21,
+          "line": 20,
           "column": 3
         }
       }
     },
     {
       "type": "Block",
-      "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
+      "value": "*\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n ",
       "range": [
-        438,
-        520
+        360,
+        528
       ],
       "loc": {
         "start": {
-          "line": 24,
+          "line": 23,
           "column": 0
         },
         "end": {
@@ -1391,10 +1737,10 @@
     },
     {
       "type": "Block",
-      "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
+      "value": "*\n * Width of version field\n * @type {Number}\n ",
       "range": [
-        558,
-        650
+        568,
+        619
       ],
       "loc": {
         "start": {
@@ -1409,10 +1755,10 @@
     },
     {
       "type": "Block",
-      "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
+      "value": "*\n * Width of header field representing sign of offset\n * @constant {Number}\n ",
       "range": [
-        688,
-        793
+        654,
+        736
       ],
       "loc": {
         "start": {
@@ -1427,10 +1773,10 @@
     },
     {
       "type": "Block",
-      "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
+      "value": "*\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n ",
       "range": [
-        830,
-        939
+        774,
+        866
       ],
       "loc": {
         "start": {
@@ -1439,6 +1785,42 @@
         },
         "end": {
           "line": 45,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n ",
+      "range": [
+        904,
+        1009
+      ],
+      "loc": {
+        "start": {
+          "line": 48,
+          "column": 0
+        },
+        "end": {
+          "line": 51,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "Block",
+      "value": "*\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n ",
+      "range": [
+        1046,
+        1155
+      ],
+      "loc": {
+        "start": {
+          "line": 54,
+          "column": 0
+        },
+        "end": {
+          "line": 57,
           "column": 3
         }
       }

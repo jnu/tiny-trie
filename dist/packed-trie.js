@@ -124,9 +124,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    function PackedTrie(binary) {
 	        _classCallCheck(this, PackedTrie);
 
+	        var ptr = 0;
+
 	        // Split binary into header and content by checking first field
-	        var headerCharCount = readBits(binary, 0, _constants.HEADER_WIDTH_FIELD);
+	        var headerCharCount = readBits(binary, ptr, _constants.HEADER_WIDTH_FIELD);
+	        ptr += _constants.HEADER_WIDTH_FIELD;
 	        var header = binary.substr(0, headerCharCount);
+
+	        var version = readBits(binary, ptr, _constants.VERSION_FIELD);
+	        ptr += _constants.VERSION_FIELD;
+
+	        if (version !== _constants.VERSION) {
+	            throw new Error('Version mismatch! Binary: ' + version + ', Reader: ' + _constants.VERSION);
+	        }
 
 	        /**
 	         * Binary string encoded as Base64 representing Trie
@@ -135,8 +145,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.data = binary.substr(headerCharCount);
 
 	        // compute pointer offset
-	        var offsetSign = readBits(header, _constants.HEADER_WIDTH_FIELD, _constants.OFFSET_SIGN_FIELD);
-	        var offset = readBits(header, _constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD, _constants.OFFSET_VAL_FIELD);
+
+	        var offsetSign = readBits(header, ptr, _constants.OFFSET_SIGN_FIELD);
+	        ptr += _constants.OFFSET_SIGN_FIELD;
+	        var offset = readBits(header, ptr, _constants.OFFSET_VAL_FIELD);
+	        ptr += _constants.OFFSET_VAL_FIELD;
 
 	        if (offsetSign) {
 	            offset = -offset;
@@ -150,13 +163,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.offset = offset;
 
 	        // interpret the field width within each word
-	        var charWidth = readBits(header, _constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD, _constants.CHAR_WIDTH_FIELD);
+	        var charWidth = readBits(header, ptr, _constants.CHAR_WIDTH_FIELD);
+	        ptr += _constants.CHAR_WIDTH_FIELD;
 
-	        var pointerWidth = readBits(header, _constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD + _constants.CHAR_WIDTH_FIELD, _constants.POINTER_WIDTH_FIELD, true);
+	        var pointerWidth = readBits(header, ptr, _constants.POINTER_WIDTH_FIELD);
+	        ptr += _constants.POINTER_WIDTH_FIELD;
 
 	        // Interpret the rest of the header as the charTable
-	        var headerFieldWidth = Math.ceil((_constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD + _constants.CHAR_WIDTH_FIELD + _constants.POINTER_WIDTH_FIELD) / 6);
-	        var charTable = header.substr(headerFieldWidth);
+	        var headerFieldChars = Math.ceil(ptr / 6);
+	        var charTable = header.substr(headerFieldChars);
 
 	        /**
 	         * Character table, mapping character to an integer ID
@@ -333,11 +348,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	var TERMINUS = exports.TERMINUS = Object.create(null);
 
 	/**
+	 * Encoding version. Bump when breaking encoding changes are introduced.
+	 * @constant {Number}
+	 */
+	var VERSION = exports.VERSION = 0;
+
+	/**
 	 * Width of header field storing entire header width (including char table).
 	 * Value is given in Base64 characters (i.e., every six bits)
 	 * @constant {Number}
 	 */
 	var HEADER_WIDTH_FIELD = exports.HEADER_WIDTH_FIELD = 10;
+
+	/**
+	 * Width of version field
+	 * @type {Number}
+	 */
+	var VERSION_FIELD = exports.VERSION_FIELD = 10;
 
 	/**
 	 * Width of header field representing sign of offset

@@ -50,6 +50,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-POINTER_WIDTH_FIELD">POINTER_WIDTH_FIELD</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINAL">TERMINAL</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TERMINUS">TERMINUS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION">VERSION</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION_FIELD">VERSION_FIELD</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -306,6 +308,58 @@ character.</p>
     <td>
       <div>
         <p>
+           <span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION">VERSION</a></span></span><span data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        <div data-ice="description"><p>Encoding version.</p>
+</div>
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+           <span data-ice="name"><span><a href="variable/index.html#static-variable-VERSION_FIELD">VERSION_FIELD</a></span></span><span data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        <div data-ice="description"><p>Width of version field</p>
+</div>
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
            <span data-ice="name"><span><a href="variable/index.html#static-variable-binaryString">binaryString</a></span></span><span data-ice="signature">: <span><a href="class/lib/BinaryString.js~BinaryString.html">BinaryString</a></span></span>
         </p>
       </div>
@@ -470,11 +524,11 @@ character.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber40">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber52">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {CHAR_WIDTH_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber40">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {CHAR_WIDTH_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber52">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>Width of header field representing the width of the char index in a word</p>
@@ -511,11 +565,11 @@ character.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber22">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber28">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {HEADER_WIDTH_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber22">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {HEADER_WIDTH_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber28">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>Width of header field storing entire header width (including char table).
@@ -553,11 +607,11 @@ Value is given in Base64 characters (i.e., every six bits)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber28">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber40">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {OFFSET_SIGN_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber28">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {OFFSET_SIGN_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber40">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>Width of header field representing sign of offset</p>
@@ -594,11 +648,11 @@ Value is given in Base64 characters (i.e., every six bits)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber34">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber46">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {OFFSET_VAL_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber34">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {OFFSET_VAL_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber46">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>Width of header field representing unsigned value of offset</p>
@@ -635,11 +689,11 @@ Value is given in Base64 characters (i.e., every six bits)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber46">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber58">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {POINTER_WIDTH_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber46">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {POINTER_WIDTH_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber58">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>Width of header field representing the width of the offset pointer in a word</p>
@@ -748,6 +802,88 @@ Value is given in Base64 characters (i.e., every six bits)</p>
   
 </div>
 <div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="static-variable-VERSION">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    <span data-ice="name">VERSION</span><span data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber21">source</a></span></span>
+    </span>
+  </h3>
+
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {VERSION} from &apos;<span><a href="file/lib/constants.js.html#lineNumber21">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
+  
+  
+  <div data-ice="description"><p>Encoding version. Bump when breaking encoding changes are introduced.</p>
+</div>
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="static-variable-VERSION_FIELD">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    <span data-ice="name">VERSION_FIELD</span><span data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/lib/constants.js.html#lineNumber34">source</a></span></span>
+    </span>
+  </h3>
+
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {VERSION_FIELD} from &apos;<span><a href="file/lib/constants.js.html#lineNumber34">tiny-trie/lib/constants.js</a></span>&apos;</code></pre></div>
+  
+  
+  <div data-ice="description"><p>Width of version field</p>
+</div>
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="static-variable-binaryString">
     <span class="access" data-ice="access">public</span>
     
@@ -798,11 +934,11 @@ Value is given in Base64 characters (i.e., every six bits)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/PackedTrie.js.html#lineNumber224">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/PackedTrie.js.html#lineNumber229">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import packedTrie from &apos;<span><a href="file/lib/PackedTrie.js.html#lineNumber224">tiny-trie/lib/PackedTrie.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import packedTrie from &apos;<span><a href="file/lib/PackedTrie.js.html#lineNumber229">tiny-trie/lib/PackedTrie.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -838,11 +974,11 @@ Value is given in Base64 characters (i.e., every six bits)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber370">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber381">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import trie from &apos;<span><a href="file/lib/Trie.js.html#lineNumber370">tiny-trie/lib/Trie.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import trie from &apos;<span><a href="file/lib/Trie.js.html#lineNumber381">tiny-trie/lib/Trie.js</a></span>&apos;</code></pre></div>
   
   
   

@@ -1,7 +1,7 @@
 {
-  "coverage": "88.88%",
-  "expectCount": 45,
-  "actualCount": 40,
+  "coverage": "89.36%",
+  "expectCount": 47,
+  "actualCount": 42,
   "files": {
     "lib/base64.js": {
       "expectCount": 2,
@@ -16,24 +16,24 @@
       ]
     },
     "lib/constants.js": {
-      "expectCount": 7,
-      "actualCount": 7,
+      "expectCount": 9,
+      "actualCount": 9,
       "undocumentLines": []
     },
     "lib/PackedTrie.js": {
       "expectCount": 13,
       "actualCount": 12,
       "undocumentLines": [
-        224
+        229
       ]
     },
     "lib/Trie.js": {
       "expectCount": 11,
       "actualCount": 8,
       "undocumentLines": [
-        34,
-        33,
-        370
+        36,
+        35,
+        381
       ]
     },
     "lib/index.js": {

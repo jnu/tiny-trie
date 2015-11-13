@@ -156,11 +156,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	var TERMINUS = exports.TERMINUS = Object.create(null);
 
 	/**
+	 * Encoding version. Bump when breaking encoding changes are introduced.
+	 * @constant {Number}
+	 */
+	var VERSION = exports.VERSION = 0;
+
+	/**
 	 * Width of header field storing entire header width (including char table).
 	 * Value is given in Base64 characters (i.e., every six bits)
 	 * @constant {Number}
 	 */
 	var HEADER_WIDTH_FIELD = exports.HEADER_WIDTH_FIELD = 10;
+
+	/**
+	 * Width of version field
+	 * @type {Number}
+	 */
+	var VERSION_FIELD = exports.VERSION_FIELD = 10;
 
 	/**
 	 * Width of header field representing sign of offset
@@ -563,11 +575,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            // Header width designates the ASCII-character count at the beginning
 	            // of the file that encodes the header.
-	            var headerWidth = Math.ceil((_constants.HEADER_WIDTH_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD + _constants.CHAR_WIDTH_FIELD + _constants.POINTER_WIDTH_FIELD) / 6) + outputCharTable.length;
+	            var headerWidth = Math.ceil((_constants.HEADER_WIDTH_FIELD + _constants.VERSION_FIELD + _constants.OFFSET_SIGN_FIELD + _constants.OFFSET_VAL_FIELD + _constants.CHAR_WIDTH_FIELD + _constants.POINTER_WIDTH_FIELD) / 6) + outputCharTable.length;
 	            // Mark the offset as positive or negative
 	            var offsetSign = +(offsetMin < 0);
 
 	            headerString.write(headerWidth, _constants.HEADER_WIDTH_FIELD);
+	            headerString.write(_constants.VERSION, _constants.VERSION_FIELD);
 	            headerString.write(offsetSign, _constants.OFFSET_SIGN_FIELD);
 	            headerString.write(offsetSign ? -offsetMin : offsetMin, _constants.OFFSET_VAL_FIELD);
 	            headerString.write(charEncodingWidth, _constants.CHAR_WIDTH_FIELD);
