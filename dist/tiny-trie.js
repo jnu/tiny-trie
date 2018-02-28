@@ -226,6 +226,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+	function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	/**
@@ -287,19 +289,130 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        /**
-	         * Test membership in the trie
-	         * @param  {String} string
+	         * Test membership in the trie.
+	         * @param  {String} string - Search query
+	         * @param  {String?} opts.wildcard - See Trie#search wildcard doc
+	         * @param  {Boolean?} opts.prefix - See Trie#search prefix doc
 	         * @return {Boolean}
 	         */
 
 	    }, {
 	        key: 'test',
 	        value: function test(string) {
-	            var node = this.root;
-	            var match = string.split('').every(function (char) {
-	                return node = node[char];
-	            });
-	            return !!match && node.hasOwnProperty(_constants.TERMINAL);
+	            var _this = this;
+
+	            var _ref = arguments.length <= 1 || arguments[1] === undefined ? { wildcard: null, prefix: false } : arguments[1];
+
+	            var wildcard = _ref.wildcard;
+	            var prefix = _ref.prefix;
+
+	            // When there are no wildcards we can use an optimized search.
+	            if (!wildcard) {
+	                var _ret = (function () {
+	                    var node = _this.root;
+	                    var match = string.split('').every(function (char) {
+	                        return node = node[char];
+	                    });
+	                    return {
+	                        v: !!match && (prefix || node.hasOwnProperty(_constants.TERMINAL))
+	                    };
+	                })();
+
+	                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+	            }
+
+	            // Unoptimized path: delegate to #search with short-circuiting.
+	            return !!this.search(string, { wildcard: wildcard, prefix: prefix, first: true });
+	        }
+
+	        /**
+	         * Query for matching words in the trie.
+	         * @param  {String} string - Search query
+	         * @param  {String?} opts.wildcard - Wildcard to use for fuzzy matching.
+	         *                                   Default is no wildcard; only match
+	         *                                   literal query.
+	         * @param  {Boolean?} opts.prefix - Perform prefix search (returns true if
+	         *                                  any word exists in the trie starts with
+	         *                                  the search query). Default is false;
+	         *                                  only match the full query.
+	         * @param  {Boolean} opts.first - Return only first match that is found,
+	         *                                short-circuiting the search. Default is
+	         *                                false; return all matches.
+	         * @return {String?|String[]} - Return an optional string result when in
+	         *                              first-only mode; otherwise return a list
+	         *                              of strings that match the query.
+	         */
+
+	    }, {
+	        key: 'search',
+	        value: function search(string) {
+	            var _ref2 = arguments.length <= 1 || arguments[1] === undefined ? { wildcard: null, prefix: false, first: false } : arguments[1];
+
+	            var wildcard = _ref2.wildcard;
+	            var prefix = _ref2.prefix;
+	            var first = _ref2.first;
+
+	            // Validate wildcard matching.
+	            if (wildcard && wildcard.length !== 1) {
+	                throw new Error('Wildcard length must be 1; got ' + wildcard.length);
+	            }
+
+	            // List of search hits. Note: not used in `first` mode.
+	            var matches = [];
+
+	            // Do a BFS over nodes to with fuzzy-matching on the wildcard.
+	            var queue = [{ data: this.root, depth: 0, memo: '' }];
+	            var lastDepth = string.length;
+
+	            while (queue.length) {
+	                var node = queue.shift();
+	                // The search is a hit if we've reached the proper depth and the
+	                // node is terminal. The search can break if the query was for
+	                // first-only.
+	                if (node.depth >= lastDepth) {
+	                    if (node.data.hasOwnProperty(_constants.TERMINAL)) {
+	                        if (first) {
+	                            return node.memo;
+	                        }
+	                        // Otherwise store this result and continue searching.
+	                        matches.push(node.memo);
+	                    }
+	                    // Discard the node and move on if we can; prefix matches need
+	                    // to traverse everything.
+	                    if (!prefix) {
+	                        continue;
+	                    }
+	                }
+	                // Special case: prefix searches overflow the length of the search
+	                // queries. Treat these overflowing chars as wildcards.
+	                var isPfXOverflow = prefix && node.depth >= lastDepth;
+	                // Add any candidate children nodes to the search queue.
+	                var token = string[node.depth];
+	                // Wildcard could be any child (except terminal).
+	                if (token === wildcard || isPfXOverflow) {
+	                    Object.keys(node.data).forEach(function (n) {
+	                        if (n !== _constants.TERMINAL) {
+	                            queue.push({
+	                                data: node.data[n],
+	                                depth: node.depth + 1,
+	                                memo: node.memo + n
+	                            });
+	                        }
+	                    });
+	                } else {
+	                    if (node.data.hasOwnProperty(token)) {
+	                        queue.push({
+	                            data: node.data[token],
+	                            depth: node.depth + 1,
+	                            memo: node.memo + token
+	                        });
+	                    }
+	                }
+	            }
+
+	            // A `first` search will have broken out and returned a literal by now;
+	            // other searches just return whatever is in matches.
+	            return first ? null : matches;
 	        }
 
 	        /**

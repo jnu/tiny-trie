@@ -25,12 +25,16 @@ There are no specific character or size constraints on the Trie input. Unicode
 input should work, provided you treat the encoded string as unicode (it will
 contain the unicode characters somewhere in it.)
 
+### Features
+Both `Trie` and `PackedTrie` support `test` and `search` methods which support
+fuzzy-matching (i.e., wildcards) and prefix search.
+
 ## Usage
 
 ```js
-let words = ['spit', 'spat', 'spot', 'spits', 'spats', 'spots'];
+const words = ['spit', 'spat', 'spot', 'spits', 'spats', 'spots'];
 
-let trie = new Trie();
+const trie = new Trie();
 
 words.forEach(word => trie.insert(word));
 
@@ -39,6 +43,10 @@ trie.test('spit');
 // -> true
 trie.test('split');
 // -> false
+trie.search('sp*t', {wildcard: '*'});
+// -> ['spit', 'spat', 'spot']
+trie.search('spi', {prefix: true});
+// -> ['spit', 'spits']
 
 // finalize the trie, turning it into a DAWG
 trie.freeze();
@@ -49,12 +57,16 @@ let encoded = trie.encode();
 
 // This string describes the DAWG in a concise binary format. This format can
 // be interpreted by the `PackedTrie` class.
-let smallDawg = new PackedTrie(encoded);
+const smallDawg = new PackedTrie(encoded);
 
 smallDawg.test('spit');
 // -> true
 smallDawg.test('split');
 // -> false
+smallDawg.search('sp*t', {wildcard: '*'});
+// -> ['spit', 'spat', 'spot']
+smallDawg.search('spi', {prefix: true});
+// -> ['spit', 'spits']
 ```
 
 ### Including in a project
@@ -157,7 +169,5 @@ gives a trie of 483kb, compared with 616kb for the dictionary.
 
 * Optimize in `PackedTrie` - reduce size, increase perf. Node order could
 probably be revised to shrink pointer field width.
-
-* Fuzzy-matching
 
 * Spec out limitations on encoding inputs

@@ -378,7 +378,7 @@
     "access": null,
     "description": null,
     "lineNumber": 8,
-    "content": "/**\n * @file Small class for querying a binary-encoded Trie\n *\n * TODO - rewrite as a native class. Babel adds a lot of overhead. This class\n * should be tiny and transparent.\n */\n\nimport {BASE64_CHAR_TO_INT} from './base64';\nimport {\n    TERMINAL,\n    VERSION,\n    HEADER_WIDTH_FIELD,\n    VERSION_FIELD,\n    OFFSET_SIGN_FIELD,\n    OFFSET_VAL_FIELD,\n    CHAR_WIDTH_FIELD,\n    POINTER_WIDTH_FIELD\n} from './constants';\n\n\n/**\n * Extract a window of bits from a Base64 encoded sequence\n * @param  {String} binary - base64 encoded sequence\n * @param  {Number} start - first bit to read\n * @param  {Number} len - number of bits to read\n * @return {Number} - bits from string, as number\n */\nfunction readBits(binary, start, len) {\n    let startChar = ~~(start / 6);\n    let startBitOffset = start % 6;\n    let endBit = startBitOffset + len;\n    let charLen = Math.ceil(endBit / 6);\n    let mask = (0x1 << len) - 1;\n    let chunk = 0;\n\n    for (let i = 0; i < charLen; i++) {\n        chunk <<= 6;\n        chunk |= BASE64_CHAR_TO_INT[binary[startChar + i]];\n    }\n\n    let rightPadding = endBit % 6;\n    if (rightPadding) {\n        chunk >>= (6 - rightPadding);\n    }\n\n    return chunk & mask;\n}\n\n/**\n * Class for interacting with an encoded trie. The class performs lookups\n * virtually just as fast as a regular trie. The binary data never actually\n * have to be processed as a whole, so instantiation time and memory usage are\n * phenomenally low.\n * @class\n */\nclass PackedTrie {\n\n    /**\n     * Instantiate a packed binary trie, parsing its headers to configure the\n     * instance for queries.\n     * @constructor\n     * @param  {String} binary - binary string from {@link Trie#encode}\n     * @return {PackedTrie}\n     */\n    constructor(binary) {\n        let ptr = 0;\n\n        // Split binary into header and content by checking first field\n        let headerCharCount = readBits(binary, ptr, HEADER_WIDTH_FIELD);\n        ptr += HEADER_WIDTH_FIELD;\n        let header = binary.substr(0, headerCharCount);\n\n        let version = readBits(binary, ptr, VERSION_FIELD);\n        ptr += VERSION_FIELD;\n\n        if (version !== VERSION) {\n            throw new Error(`Version mismatch! Binary: ${version}, Reader: ${VERSION}`);\n        }\n\n        /**\n         * Binary string encoded as Base64 representing Trie\n         * @type {String}\n         */\n        this.data = binary.substr(headerCharCount);\n\n        // compute pointer offset\n\n        let offsetSign = readBits(header, ptr, OFFSET_SIGN_FIELD);\n        ptr += OFFSET_SIGN_FIELD;\n        let offset = readBits(header, ptr, OFFSET_VAL_FIELD);\n        ptr += OFFSET_VAL_FIELD;\n\n        if (offsetSign) {\n            offset = -offset;\n        }\n        /**\n         * Pointer offset. Add this to every pointer read from every word in\n         * the trie to obtain the true value of the pointer. This offset is\n         * used to avoid signed integers in the word.\n         * @type {Number}\n         */\n        this.offset = offset;\n\n        // interpret the field width within each word\n        let charWidth = readBits(header, ptr, CHAR_WIDTH_FIELD);\n        ptr += CHAR_WIDTH_FIELD;\n\n        let pointerWidth = readBits(header, ptr, POINTER_WIDTH_FIELD);\n        ptr += POINTER_WIDTH_FIELD;\n\n        // Interpret the rest of the header as the charTable\n        let headerFieldChars = Math.ceil(ptr / 6);\n        let charTable = header.substr(headerFieldChars);\n\n        /**\n         * Character table, mapping character to an integer ID\n         * @type {Object}\n         */\n        this.table = charTable.split('').reduce((agg, char, i) => {\n            agg[char] = i + 1;\n            return agg;\n        }, { [TERMINAL]: 0 });\n\n        /**\n         * Number of bits in one word\n         * @type {Number}\n         */\n        this.wordWidth = charWidth + pointerWidth + 1;\n\n        /**\n         * Mask for reading the \"last block\" flag in a word\n         * @type {Number}\n         */\n        this.lastMask = 0x1;\n\n        /**\n         * Mask for reading the pointer value from a word\n         * @type {Number}\n         */\n        this.pointerMask = (0x1 << pointerWidth) - 1;\n\n        /**\n         * Offset of pointer field in a word\n         * @type {Number}\n         */\n        this.pointerShift = 1;\n\n        /**\n         * Mask for reading the charTable index in a word\n         * @type {Number}\n         */\n        this.charMask = (0x1 << charWidth) - 1;\n\n        /**\n         * Offset of charTable index field in a word\n         * @type {Number}\n         */\n        this.charShift = 1 + pointerWidth;\n    }\n\n    /**\n     * Test whether trie contains the given string.\n     * @param  {String} string\n     * @return {Boolean}\n     */\n    test(string) {\n        let {\n            data,\n            offset,\n            table,\n            wordWidth,\n            lastMask,\n            pointerShift,\n            pointerMask,\n            charShift,\n            charMask\n        } = this;\n\n        let wordPointer = 0;\n\n        // Test every character, with a terminal at the end\n        let match = string.split('').concat(TERMINAL).every(char => {\n            // TODO is binary search possible within blocks? Not sure if the\n            // encoder guarantees ordering, plus there's no indication how long\n            // a block is, so it'd require extra overhead for each block.\n            while (true) {\n                let queryCharId = table[char];\n\n                // Exit immediately if the char was not found in the table,\n                // (or if it was the TERMINAL character, which has a code of 0)\n                if (queryCharId === undefined) {\n                    return false;\n                }\n\n                let bits = wordPointer * wordWidth;\n                let chunk = readBits(data, bits, wordWidth);\n\n                // Read the character index\n                let charIdx = (chunk >> charShift) & charMask;\n\n                // If this character is matched, jump to the pointer given in\n                // this node.\n                if (charIdx === queryCharId) {\n                    let pointer = (chunk >> pointerShift) & pointerMask;\n                    wordPointer += offset + pointer;\n                    return true;\n                }\n\n                // If this wasn't a match, check if this was the last key in\n                // the block.\n                let last = chunk & lastMask;\n\n                // If this was the last node, the word was not found.\n                if (last) {\n                    return false;\n                }\n                // Otherwise increment the pointer to the next sibling key\n                else {\n                    wordPointer += 1;\n                }\n            }\n        });\n\n        return match;\n    }\n\n}\n\nexport default PackedTrie;\n"
+    "content": "/**\n * @file Small class for querying a binary-encoded Trie\n *\n * TODO - rewrite as a native class. Babel adds a lot of overhead. This class\n * should be tiny and transparent.\n */\n\nimport {BASE64_CHAR_TO_INT} from './base64';\nimport {\n    TERMINAL,\n    VERSION,\n    HEADER_WIDTH_FIELD,\n    VERSION_FIELD,\n    OFFSET_SIGN_FIELD,\n    OFFSET_VAL_FIELD,\n    CHAR_WIDTH_FIELD,\n    POINTER_WIDTH_FIELD\n} from './constants';\n\n\n/**\n * Extract a window of bits from a Base64 encoded sequence\n * @param  {String} binary - base64 encoded sequence\n * @param  {Number} start - first bit to read\n * @param  {Number} len - number of bits to read\n * @return {Number} - bits from string, as number\n */\nfunction readBits(binary, start, len) {\n    let startChar = ~~(start / 6);\n    let startBitOffset = start % 6;\n    let endBit = startBitOffset + len;\n    let charLen = Math.ceil(endBit / 6);\n    let mask = (0x1 << len) - 1;\n    let chunk = 0;\n\n    for (let i = 0; i < charLen; i++) {\n        chunk <<= 6;\n        chunk |= BASE64_CHAR_TO_INT[binary[startChar + i]];\n    }\n\n    let rightPadding = endBit % 6;\n    if (rightPadding) {\n        chunk >>= (6 - rightPadding);\n    }\n\n    return chunk & mask;\n}\n\n/**\n * Class for interacting with an encoded trie. The class performs lookups\n * virtually just as fast as a regular trie. The binary data never actually\n * have to be processed as a whole, so instantiation time and memory usage are\n * phenomenally low.\n * @class\n */\nclass PackedTrie {\n\n    /**\n     * Instantiate a packed binary trie, parsing its headers to configure the\n     * instance for queries.\n     * @constructor\n     * @param  {String} binary - binary string from {@link Trie#encode}\n     * @return {PackedTrie}\n     */\n    constructor(binary) {\n        let ptr = 0;\n\n        // Split binary into header and content by checking first field\n        let headerCharCount = readBits(binary, ptr, HEADER_WIDTH_FIELD);\n        ptr += HEADER_WIDTH_FIELD;\n        let header = binary.substr(0, headerCharCount);\n\n        let version = readBits(binary, ptr, VERSION_FIELD);\n        ptr += VERSION_FIELD;\n\n        if (version !== VERSION) {\n            throw new Error(`Version mismatch! Binary: ${version}, Reader: ${VERSION}`);\n        }\n\n        /**\n         * Binary string encoded as Base64 representing Trie\n         * @type {String}\n         */\n        this.data = binary.substr(headerCharCount);\n\n        // compute pointer offset\n\n        let offsetSign = readBits(header, ptr, OFFSET_SIGN_FIELD);\n        ptr += OFFSET_SIGN_FIELD;\n        let offset = readBits(header, ptr, OFFSET_VAL_FIELD);\n        ptr += OFFSET_VAL_FIELD;\n\n        if (offsetSign) {\n            offset = -offset;\n        }\n        /**\n         * Pointer offset. Add this to every pointer read from every word in\n         * the trie to obtain the true value of the pointer. This offset is\n         * used to avoid signed integers in the word.\n         * @type {Number}\n         */\n        this.offset = offset;\n\n        // interpret the field width within each word\n        let charWidth = readBits(header, ptr, CHAR_WIDTH_FIELD);\n        ptr += CHAR_WIDTH_FIELD;\n\n        let pointerWidth = readBits(header, ptr, POINTER_WIDTH_FIELD);\n        ptr += POINTER_WIDTH_FIELD;\n\n        // Interpret the rest of the header as the charTable\n        let headerFieldChars = Math.ceil(ptr / 6);\n        let charTable = header.substr(headerFieldChars);\n\n        /**\n         * Character table, mapping character to an integer ID\n         * @type {Object}\n         */\n        this.table = charTable.split('').reduce((agg, char, i) => {\n            agg[char] = i + 1;\n            return agg;\n        }, { [TERMINAL]: 0 });\n\n        /**\n         * Inverse of character table, mapping integer ID to character.\n         * @type {Array}\n         */\n        this.inverseTable = [TERMINAL].concat(charTable.split(''));\n\n        /**\n         * Number of bits in one word\n         * @type {Number}\n         */\n        this.wordWidth = charWidth + pointerWidth + 1;\n\n        /**\n         * Mask for reading the \"last block\" flag in a word\n         * @type {Number}\n         */\n        this.lastMask = 0x1;\n\n        /**\n         * Mask for reading the pointer value from a word\n         * @type {Number}\n         */\n        this.pointerMask = (0x1 << pointerWidth) - 1;\n\n        /**\n         * Offset of pointer field in a word\n         * @type {Number}\n         */\n        this.pointerShift = 1;\n\n        /**\n         * Mask for reading the charTable index in a word\n         * @type {Number}\n         */\n        this.charMask = (0x1 << charWidth) - 1;\n\n        /**\n         * Offset of charTable index field in a word\n         * @type {Number}\n         */\n        this.charShift = 1 + pointerWidth;\n    }\n\n    /**\n     * Test membership in the trie.\n     * @param  {String} string - Search query\n     * @param  {String?} opts.wildcard - See PackedTrie#search wildcard doc\n     * @param  {Boolean?} opts.prefix - See PackedTrie#search prefix doc\n     * @return {Boolean}\n     */\n    test(string, {wildcard, prefix} = {wildcard: null, prefix: false}) {\n        // Delegate to #search with early exit. Could write an optimized path,\n        // especially for the prefix search case.\n        return this.search(string, {wildcard, prefix, first: true}) !== null;\n    }\n\n    /**\n     * Query for matching words in the trie.\n     * @param  {String} string - Search query\n     * @param  {String?} opts.wildcard - Wildcard to use for fuzzy matching.\n     *                                   Default is no wildcard; only match\n     *                                   literal query.\n     * @param  {Boolean?} opts.prefix - Perform prefix search (returns true if\n     *                                  any word exists in the trie starts with\n     *                                  the search query). Default is false;\n     *                                  only match the full query.\n     * @param  {Boolean} opts.first - Return only first match that is found,\n     *                                short-circuiting the search. Default is\n     *                                false; return all matches.\n     * @return {String?|String[]} - Return an optional string result when in\n     *                              first-only mode; otherwise return a list\n     *                              of strings that match the query.\n     */\n    search(string, {wildcard, prefix, first} = {wildcard: null, prefix: false, first: false}) {\n        if (wildcard && wildcard.length !== 1) {\n            throw new Error(`Wilcard must be a single character; got ${wildcard}`);\n        }\n\n        const {\n            data,\n            offset,\n            table,\n            inverseTable,\n            wordWidth,\n            lastMask,\n            pointerShift,\n            pointerMask,\n            charShift,\n            charMask\n        } = this;\n\n        // List of matches found in the search.\n        const matches = [];\n\n        // Search queue.\n        const queue = [{pointer: 0, memo: '', depth: 0}];\n        const lastDepth = string.length;\n\n        // Do a BFS over nodes for the search query.\n        while (queue.length) {\n            const node = queue.shift();\n            const isLast = node.depth >= lastDepth;\n            const token = isLast ? TERMINAL : string[node.depth];\n            // Flag for matching anything. Note that the overflow beyond the\n            // length of the query in a prefix search behaves as a wildcard.\n            const isWild = token === wildcard || (prefix && isLast);\n            // We're committed to an O(N) scan over the entire node even in\n            // the simple literal-search case, since our structure doesn't\n            // currently guarantee any child ordering.\n            // TODO(joen) ordering is a potential future format optimization.\n            let wordPointer = node.pointer;\n            while (true) {\n                // Optimization: Exit immediately if the char was not found in\n                // the table (meaning there can't be any children in the trie\n                // with this character). Exception is wildcards.\n                if (!isWild && !table.hasOwnProperty(token)) {\n                    break;\n                }\n\n                const bits = wordPointer * wordWidth;\n                const chunk = readBits(data, bits, wordWidth);\n\n                // Read the character index\n                const charIdx = (chunk >> charShift) & charMask;\n\n                // If this character is matched, jump to the pointer given in\n                // this node.\n                if (isWild || charIdx === table[token]) {\n                    const pointer = (chunk >> pointerShift) & pointerMask;\n                    // Find the next char with an inverse map, since we might\n                    // be using a wildcard search.\n                    const newChar = inverseTable[charIdx];\n                    // Stopping condition: searching last block and we hit a terminal\n                    if (isLast && newChar === TERMINAL) {\n                        // Optimization: early exit if we only need first match.\n                        if (first) {\n                            return node.memo;\n                        }\n                        // Store this match.\n                        matches.push(node.memo);\n                        // If we're not matching everything, break out of the\n                        // inner loop.\n                        if (!isWild) {\n                            break;\n                        }\n                    }\n\n                    // Push next node for search, if it's non-terminal.\n                    if (newChar !== TERMINAL) {\n                        queue.push({\n                            pointer: wordPointer + offset + pointer,\n                            depth: node.depth + 1,\n                            memo: node.memo + newChar,\n                        });\n                    }\n                }\n\n                // If this wasn't a match, check if this was the last key in\n                // the block.\n                const last = chunk & lastMask;\n\n                // If this was the last node, the word was not found.\n                if (last) {\n                    break;\n                }\n                // Otherwise increment the pointer to the next sibling key\n                else {\n                    wordPointer += 1;\n                }\n            }\n        }\n\n        // If first was requested it should have returned by now. Otherwise\n        // return the matches list, which may be empty.\n        return first ? null : matches;\n    }\n\n}\n\nexport default PackedTrie;\n"
   },
   {
     "__docId__": 20,
@@ -562,16 +562,16 @@
     "kind": "member",
     "static": false,
     "variation": null,
-    "name": "wordWidth",
+    "name": "inverseTable",
     "memberof": "lib/PackedTrie.js~PackedTrie",
-    "longname": "lib/PackedTrie.js~PackedTrie#wordWidth",
+    "longname": "lib/PackedTrie.js~PackedTrie#inverseTable",
     "access": null,
-    "description": "Number of bits in one word",
+    "description": "Inverse of character table, mapping integer ID to character.",
     "lineNumber": 128,
     "type": {
       "nullable": null,
       "types": [
-        "Number"
+        "Array"
       ],
       "spread": false,
       "description": null
@@ -582,11 +582,11 @@
     "kind": "member",
     "static": false,
     "variation": null,
-    "name": "lastMask",
+    "name": "wordWidth",
     "memberof": "lib/PackedTrie.js~PackedTrie",
-    "longname": "lib/PackedTrie.js~PackedTrie#lastMask",
+    "longname": "lib/PackedTrie.js~PackedTrie#wordWidth",
     "access": null,
-    "description": "Mask for reading the \"last block\" flag in a word",
+    "description": "Number of bits in one word",
     "lineNumber": 134,
     "type": {
       "nullable": null,
@@ -602,11 +602,11 @@
     "kind": "member",
     "static": false,
     "variation": null,
-    "name": "pointerMask",
+    "name": "lastMask",
     "memberof": "lib/PackedTrie.js~PackedTrie",
-    "longname": "lib/PackedTrie.js~PackedTrie#pointerMask",
+    "longname": "lib/PackedTrie.js~PackedTrie#lastMask",
     "access": null,
-    "description": "Mask for reading the pointer value from a word",
+    "description": "Mask for reading the \"last block\" flag in a word",
     "lineNumber": 140,
     "type": {
       "nullable": null,
@@ -622,11 +622,11 @@
     "kind": "member",
     "static": false,
     "variation": null,
-    "name": "pointerShift",
+    "name": "pointerMask",
     "memberof": "lib/PackedTrie.js~PackedTrie",
-    "longname": "lib/PackedTrie.js~PackedTrie#pointerShift",
+    "longname": "lib/PackedTrie.js~PackedTrie#pointerMask",
     "access": null,
-    "description": "Offset of pointer field in a word",
+    "description": "Mask for reading the pointer value from a word",
     "lineNumber": 146,
     "type": {
       "nullable": null,
@@ -642,11 +642,11 @@
     "kind": "member",
     "static": false,
     "variation": null,
-    "name": "charMask",
+    "name": "pointerShift",
     "memberof": "lib/PackedTrie.js~PackedTrie",
-    "longname": "lib/PackedTrie.js~PackedTrie#charMask",
+    "longname": "lib/PackedTrie.js~PackedTrie#pointerShift",
     "access": null,
-    "description": "Mask for reading the charTable index in a word",
+    "description": "Offset of pointer field in a word",
     "lineNumber": 152,
     "type": {
       "nullable": null,
@@ -662,11 +662,11 @@
     "kind": "member",
     "static": false,
     "variation": null,
-    "name": "charShift",
+    "name": "charMask",
     "memberof": "lib/PackedTrie.js~PackedTrie",
-    "longname": "lib/PackedTrie.js~PackedTrie#charShift",
+    "longname": "lib/PackedTrie.js~PackedTrie#charMask",
     "access": null,
-    "description": "Offset of charTable index field in a word",
+    "description": "Mask for reading the charTable index in a word",
     "lineNumber": 158,
     "type": {
       "nullable": null,
@@ -679,6 +679,26 @@
   },
   {
     "__docId__": 32,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "charShift",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#charShift",
+    "access": null,
+    "description": "Offset of charTable index field in a word",
+    "lineNumber": 164,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 33,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -686,8 +706,8 @@
     "memberof": "lib/PackedTrie.js~PackedTrie",
     "longname": "lib/PackedTrie.js~PackedTrie#test",
     "access": null,
-    "description": "Test whether trie contains the given string.",
-    "lineNumber": 166,
+    "description": "Test membership in the trie.",
+    "lineNumber": 174,
     "params": [
       {
         "nullable": null,
@@ -697,7 +717,27 @@
         "spread": false,
         "optional": false,
         "name": "string",
-        "description": ""
+        "description": "Search query"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "String?"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.wildcard",
+        "description": "See PackedTrie#search wildcard doc"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Boolean?"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.prefix",
+        "description": "See PackedTrie#search prefix doc"
       }
     ],
     "return": {
@@ -711,7 +751,71 @@
     "generator": false
   },
   {
-    "__docId__": 33,
+    "__docId__": 34,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "search",
+    "memberof": "lib/PackedTrie.js~PackedTrie",
+    "longname": "lib/PackedTrie.js~PackedTrie#search",
+    "access": null,
+    "description": "Query for matching words in the trie.",
+    "lineNumber": 197,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "string",
+        "description": "Search query"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "String?"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.wildcard",
+        "description": "Wildcard to use for fuzzy matching.\n                                  Default is no wildcard; only match\n                                  literal query."
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Boolean?"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.prefix",
+        "description": "Perform prefix search (returns true if\n                                 any word exists in the trie starts with\n                                 the search query). Default is false;\n                                 only match the full query."
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Boolean"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.first",
+        "description": "Return only first match that is found,\n                               short-circuiting the search. Default is\n                               false; return all matches."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "String?",
+        "String[]"
+      ],
+      "spread": false,
+      "description": "Return an optional string result when in\n                             first-only mode; otherwise return a list\n                             of strings that match the query."
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 35,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -723,7 +827,7 @@
     "importPath": "tiny-trie/lib/PackedTrie.js",
     "importStyle": "packedTrie",
     "description": null,
-    "lineNumber": 229,
+    "lineNumber": 303,
     "undocument": true,
     "type": {
       "types": [
@@ -732,7 +836,7 @@
     }
   },
   {
-    "__docId__": 34,
+    "__docId__": 36,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -742,10 +846,10 @@
     "access": null,
     "description": null,
     "lineNumber": 2,
-    "content": "/* eslint-env mocha */\nimport Trie from './Trie';\nimport PackedTrie from './PackedTrie';\nimport assert from 'assert';\n\n\ndescribe('PackedTrie', () => {\n\n    describe('constructor', () => {\n        it('should parse header fields on init', () => {\n            let encoded = 'BAAAAABAwIfboarzKTbjds1FDB';\n            let trie = new PackedTrie(encoded);\n\n            assert.strictEqual(trie.offset, 1);\n            assert.deepEqual(trie.table, {\n                '\\0': 0,\n                f: 1,\n                b: 2,\n                o: 3,\n                a: 4,\n                r: 5,\n                z: 6\n            });\n            assert.strictEqual(trie.wordWidth, 6);\n            assert.strictEqual(trie.lastMask, parseInt('1', 2));\n            assert.strictEqual(trie.pointerMask, parseInt('11', 2));\n            assert.strictEqual(trie.pointerShift, 1);\n            assert.strictEqual(trie.charMask, parseInt('111', 2));\n            assert.strictEqual(trie.charShift, 3);\n            assert.strictEqual(trie.data, encoded.substr(16));\n        });\n\n        it('should throw a version mismatch error if encoded string differs from reader version', () => {\n            let encoded = 'BD/wAABAwIfboarzKTbjds1FDB';\n            assert.throws(() => new PackedTrie(encoded));\n        });\n    });\n\n    describe('test', () => {\n        it('should determine whether an item is in the Trie', () => {\n            let encoded = 'BAAAAABAwIfboarzKTbjds1FDB';\n            let trie = new PackedTrie(encoded);\n\n            ['foo', 'bar', 'baz'].forEach(w => assert(trie.test(w)));\n            ['fu', 'boer', 'batz'].forEach(w => assert(!trie.test(w)));\n        });\n\n        it('should provide the same answers as a full Trie', () => {\n            [\n                ['Africa', 'Asia', 'North America', 'South America', 'Europe', 'Antarctica'],\n                ['red', 'yellow', 'green', 'aliceblue', 'pink', 'rose'],\n                ['agricola', 'agricolae', 'agricolae', 'agricolam', 'agricolā'],\n                ['любить', 'люблю', 'любишь', 'любит', 'любим', 'любите', 'любят']\n            ].forEach(words => {\n                let sdrow = words.slice().map(w => w.split('').reverse().join(''));\n                let trie = new Trie();\n                words.forEach(w => trie.insert(w));\n                words.forEach(w => assert(trie.test(w)));\n                sdrow.forEach(s => assert(!trie.test(s)));\n                let encoded = trie.freeze().encode();\n                let packed = new PackedTrie(encoded);\n                words.forEach(w => assert(packed.test(w)));\n                sdrow.forEach(s => assert(!packed.test(s)));\n            });\n        });\n    });\n\n});\n"
+    "content": "/* eslint-env mocha */\nimport Trie from './Trie';\nimport PackedTrie from './PackedTrie';\nimport assert from 'assert';\n\n\ndescribe('PackedTrie', () => {\n\n    describe('constructor', () => {\n        it('should parse header fields on init', () => {\n            const encoded = 'BAAAAABAwIfboarzKTbjds1FDB';\n            const trie = new PackedTrie(encoded);\n\n            assert.strictEqual(trie.offset, 1);\n            assert.deepEqual(trie.table, {\n                '\\0': 0,\n                f: 1,\n                b: 2,\n                o: 3,\n                a: 4,\n                r: 5,\n                z: 6\n            });\n            assert.strictEqual(trie.wordWidth, 6);\n            assert.strictEqual(trie.lastMask, parseInt('1', 2));\n            assert.strictEqual(trie.pointerMask, parseInt('11', 2));\n            assert.strictEqual(trie.pointerShift, 1);\n            assert.strictEqual(trie.charMask, parseInt('111', 2));\n            assert.strictEqual(trie.charShift, 3);\n            assert.strictEqual(trie.data, encoded.substr(16));\n        });\n\n        it('should throw a version mismatch error if encoded string differs from reader version', () => {\n            const encoded = 'BD/wAABAwIfboarzKTbjds1FDB';\n            assert.throws(() => new PackedTrie(encoded));\n        });\n    });\n\n    describe('test', () => {\n        it('should determine whether an item is in the Trie', () => {\n            const encoded = 'BAAAAABAwIfboarzKTbjds1FDB';\n            const trie = new PackedTrie(encoded);\n\n            ['foo', 'bar', 'baz'].forEach(w => assert(trie.test(w)));\n            ['fu', 'boer', 'batz'].forEach(w => assert(!trie.test(w)));\n        });\n\n        it('should provide the same answers as a full Trie', () => {\n            [\n                ['Africa', 'Asia', 'North America', 'South America', 'Europe', 'Antarctica'],\n                ['red', 'yellow', 'green', 'aliceblue', 'pink', 'rose'],\n                ['agricola', 'agricolae', 'agricolae', 'agricolam', 'agricolā'],\n                ['любить', 'люблю', 'любишь', 'любит', 'любим', 'любите', 'любят']\n            ].forEach(words => {\n                const sdrow = words.slice().map(w => w.split('').reverse().join(''));\n                const trie = new Trie();\n                words.forEach(w => trie.insert(w));\n                words.forEach(w => assert(trie.test(w)));\n                sdrow.forEach(s => assert(!trie.test(s)));\n                const encoded = trie.freeze().encode();\n                const packed = new PackedTrie(encoded);\n                words.forEach(w => assert(packed.test(w)));\n                sdrow.forEach(s => assert(!packed.test(s)));\n            });\n        });\n\n        it('returns true for fuzzy matches when wildcard is given', () => {\n            const trie = new Trie();\n            trie.insert('foo');\n            trie.insert('bar');\n            trie.insert('bop');\n            trie.insert('baz');\n            const packed = new PackedTrie(trie.freeze().encode());\n\n            assert(packed.test('***', {wildcard: '*'}));\n            assert(packed.test('**r', {wildcard: '*'}));\n            assert(packed.test('*az', {wildcard: '*'}));\n            assert(packed.test('f**', {wildcard: '*'}));\n            assert(packed.test('f*o', {wildcard: '*'}));\n            assert(!packed.test('**x', {wildcard: '*'}));\n        });\n\n        it('returns true for partial matches when searching over prefixes', () => {\n            const trie = new Trie();\n            trie.insert('foo');\n            trie.insert('food');\n            trie.insert('foodology');\n            const packed = new PackedTrie(trie.freeze().encode());\n\n            assert(packed.test('fo', {prefix: true}));\n            assert(packed.test('foodolog', {prefix: true}));\n            assert(!packed.test('fob', {prefix: true}));\n        });\n\n        it('returns correct value for complex options cases', () => {\n            const trie = new Trie();\n            trie.insert('foo');\n            trie.insert('bar');\n            trie.insert('foobar');\n            const packed = new PackedTrie(trie.freeze().encode());\n\n            assert(packed.test('foo', {wildcard: '*'}));\n            assert(packed.test('bar', {wildcard: '*'}));\n            assert(!packed.test('foob', {wildcard: '*', prefix: false}));\n            assert(packed.test('foobar', {wildcard: '*', prefix: false}));\n            assert(packed.test('foob*', {wildcard: '*', prefix: true}));\n            assert(!packed.test('foob*', {wildcard: '*', prefix: false}));\n            assert(packed.test('**ob*', {wildcard: '*', prefix: true}));\n        });\n    });\n\n    describe('search', () => {\n        const encoded = 'BMAAAAABAQfbgtoarleFBKNiPVzXZyxVzPV6vfbxWqzeazC0VCYQloNBYJg4BAIB';\n        const trie = new PackedTrie(encoded);\n\n        it('returns all matching values with wildcard', () => {\n            assert.deepEqual(trie.search('*oo', {wildcard: '*'}), ['foo', 'boo', 'goo']);\n            assert.deepEqual(trie.search('*oo', {wildcard: '*', prefix: true}), [\n                'foo', 'boo', 'goo', 'fool', 'tool']);\n            assert.deepEqual(trie.search('f**', {wildcard: '*'}), ['foo', 'far']);\n            assert.deepEqual(trie.search('*x*', {wildcard: '*'}), []);\n        });\n\n        it('returns first match with wildcard', () => {\n            assert(trie.search('f**', {wildcard: '*', first: true}) === 'foo');\n            assert(trie.search('**x', {wildcard: '*', first: true}) === null);\n            assert(trie.search('*', {wildcard: '*', prefix: true}), [\n                'foo', 'bar', 'bare', 'fool', 'goo', 'far', 'boo', 'gar', 'tool']);\n        });\n    });\n\n});\n"
   },
   {
-    "__docId__": 35,
+    "__docId__": 37,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -755,10 +859,10 @@
     "access": null,
     "description": null,
     "lineNumber": 5,
-    "content": "/**\n * @file Provides the Trie class\n */\n\nimport floor_log2 from './floor_log2';\nimport BinaryString from './BinaryString';\nimport {\n    TERMINAL,\n    TERMINUS,\n    VERSION,\n    HEADER_WIDTH_FIELD,\n    VERSION_FIELD,\n    OFFSET_SIGN_FIELD,\n    OFFSET_VAL_FIELD,\n    CHAR_WIDTH_FIELD,\n    POINTER_WIDTH_FIELD\n} from './constants';\n\n\n/**\n * A structure to provide efficient membership tests for a set of strings\n * @class\n */\nclass Trie {\n\n    /**\n     * Typically no arguments are needed, but it's possible to instantiate a\n     * Trie from a JSON object that represents it (@see Trie#toJSON).\n     * @constructor\n     * @param  {Object} tree - a trie given as a vanilla JS tree. This will be\n     *                         used as the root node.\n     * @return {Trie}\n     */\n    constructor(tree = {}) {\n        this.root = tree;\n        this.frozen = false;\n    }\n\n    /**\n     * Insert a word into the trie. Insertions into a frozen trie will throw\n     * an error. The\n     * @param  {String} string - string to insert. Note the \\u0000 character is\n     *                           disallowed.\n     * @return {Trie} - this\n     */\n    insert(string) {\n        // This trie insert algorithm can't guarantee safe inserts on the DAWG\n        // produced by freezing.\n        if (this.frozen) {\n            throw new SyntaxError(\"Can't insert into frozen Trie\");\n        }\n\n        let lastNode = string.split('').reduce((node, char) => {\n            if (char === TERMINAL) {\n                throw new TypeError(`Illegal string character ${TERMINAL}`);\n            }\n            let nextNode = node.hasOwnProperty(char) ?\n                node[char] :\n                (node[char] = {});\n            return nextNode;\n        }, this.root);\n\n        // Terminate the string. Using a constant terminus is not necessary\n        // (and is not be possible in cloned tries), but it uses slightly less\n        // memory and could make certain bugs more obvious.\n        lastNode[TERMINAL] = TERMINUS;\n\n        return this;\n    }\n\n    /**\n     * Test membership in the trie\n     * @param  {String} string\n     * @return {Boolean}\n     */\n    test(string) {\n        let node = this.root;\n        let match = string.split('').every(char => node = node[char]);\n        return !!match && node.hasOwnProperty(TERMINAL);\n    }\n\n    /**\n     * Clone a Trie. This will unfreeze a frozen trie.\n     * @return {Trie}\n     */\n    clone() {\n        return new Trie(this.toJSON());\n    }\n\n    /**\n     * Freeze the Trie, deduping suffixes. Given the assumption that there will\n     * not be new entries into a trie, redundant suffix branches can be merged.\n     * @return {Trie} - This trie (freezing modifies it in place)\n     */\n    freeze() {\n        // Freezing is idempotent\n        if (this.frozen) {\n            return this;\n        }\n\n        // Create a store for fast lookup of matching suffixes during walk\n        let suffixTree = {};\n\n        // Walk the entire trie depth first, de-duping suffixes\n        let node = this.root;\n        let stack = [];\n        let depthStack = [node];\n\n        // Iterate over tree nodes, pushing children onto the depthStack so\n        // that the items pushed on to the main `stack` are in the correct\n        // order for a second traversal.\n        while (depthStack.length) {\n            node = depthStack.pop();\n\n            Object.keys(node).forEach(char => {\n                if (char[1] === '_') {\n                    return;\n                }\n                let current = node[char];\n                stack.push({\n                    current: current,\n                    char: char,\n                    parent: node\n                });\n                depthStack.push(current);\n            });\n        }\n\n        // Now do node processing, joining / deduping suffix lines.\n        while (stack.length) {\n            let { char, parent, current } = stack.pop();\n\n            // Find potential suffix duplicates with a char lookup\n            if (suffixTree.hasOwnProperty(char)) {\n                let suffixMeta = suffixTree[char];\n\n                // Find a matching suffix by comparing children. Since\n                // deduping is depth-first, comparing children by identity\n                // is a valid way to check if this node is a duplicate.\n                let match = suffixMeta.find(other => {\n                    let oKeys = Object.keys(other);\n                    let cKeys = Object.keys(current);\n                    return (\n                        oKeys.length === cKeys.length &&\n                        oKeys.every(key => other[key] === current[key])\n                    );\n                });\n\n                // If this node is a dupe, update its parent reference to\n                // point to the cached match.\n                if (match) {\n                    parent[char] = match;\n                }\n                // If the node is novel, cache it for future checks.\n                else {\n                    suffixMeta.push(current);\n                }\n            }\n            // If this char is novel, create a new suffixMeta entry\n            else {\n                suffixTree[char] = [current];\n            }\n        }\n\n        // Flag the tree as frozen\n        this.frozen = true;\n\n        return this;\n    }\n\n    /**\n     * Encode the Trie in a binary format. This format stores the trie or DAWG\n     * efficiently and still allows for fast queries.\n     * @return {Object}\n     */\n    encode() {\n        let chunks = [];\n        let queue = [this.root];\n        let charTable = new Set();\n        let visitCode = Date.now();\n        let offsetMin = Infinity;\n        let offsetMax = -Infinity;\n\n\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n        // Encode trie\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n        while (queue.length) {\n            let node = queue.shift();\n            let keys = Object.keys(node).filter(k => k[1] !== '_');\n            let n = keys.length;\n\n            node.__visited__ = visitCode;\n            let nodeChunkIndex = node.__idx__ = chunks.length;\n\n            // Fill in the parent chunks that are waiting to find out what\n            // index this chunk gets assigned\n            if (node.__parents__) {\n                node.__parents__.forEach(chunk => {\n                    let offset = chunk.offset = nodeChunkIndex - chunk.idx;\n                    if (offset < offsetMin) {\n                        offsetMin = offset;\n                    }\n                    if (offset > offsetMax) {\n                        offsetMax = offset;\n                    }\n                });\n            }\n\n            keys.forEach((char, i) => {\n                let child = node[char];\n                let chunkIdx = chunks.length;\n                let lastInLevel = i === n - 1;\n\n                let newChunk = {\n                    char: char,\n                    idx: chunkIdx,\n                    offset: null,\n                    last: lastInLevel\n                };\n\n                // If the child has been visited, jump directly to that node\n                // instead of creating a new entry.\n                if (child.__visited__ === visitCode) {\n                    let idx = child.__idx__;\n                    let offset = newChunk.offset = idx - chunkIdx;\n                    if (offset < offsetMin) {\n                        offsetMin = offset;\n                    }\n                    if (offset > offsetMax) {\n                        offsetMax = offset;\n                    }\n                }\n                // If child is novel, add it to the process queue and add an\n                // instruction to jump there.\n                else {\n                    if (child.__willVisit__ === visitCode) {\n                        child.__parents__.push(newChunk);\n                    } else {\n                        child.__willVisit__ = visitCode;\n                        child.__parents__ = [newChunk];\n                    }\n                    queue.push(child);\n                }\n\n                // Add a new chunk to the array\n                chunks.push(newChunk);\n\n                // Ensure that the char is in the chartable\n                charTable.add(char);\n            });\n        }\n\n        // Assign a unique integer ID to each character. The actual ID is\n        // arbitrary. For the convenience of not having to serialize the \\0\n        // character, the TERMINAL is always encoded at the 0 index, and it is\n        // not included in the charTable.\n        let charTableAsArray = Array.from(charTable)\n            .filter(char => char !== TERMINAL);\n        let charMap = charTableAsArray.reduce((agg, char, i) => {\n            agg[char] = i + 1;\n            return agg;\n        }, { [TERMINAL]: 0 });\n        // Determine the number of bits that can index the entire charTable.\n        let charEncodingWidth = floor_log2(charTableAsArray.length) + 1;\n\n        let pointerRange = offsetMax - offsetMin;\n        let pointerEncodingWidth = floor_log2(pointerRange) + 1;\n\n        // The binary with of node encodings is variable. There are three parts\n        // that get encoded:\n        //\n        //  1) character index (corresponding to character table),\n        //  2) pointer (as offset from start of word to next node),\n        //  3) last (flag to indicate whether this is the last block in this\n        //     subtree)\n        //\n        // The width of the first two items are determined as the binary width\n        // of the unsigned integer representing the maximum in the range. The\n        // width of the third is a constant 1 binary digit.\n        //\n        // E.g., if the charTable is 28 characters in length, then the binary\n        // digit representing 27 (the last item in the array) is:\n        //\n        //   1 1011\n        //\n        // So the width is determined to be 5. If the pointer range has a\n        // maximum of 250, represented in binary as:\n        //\n        //   1111 1010\n        //\n        // Giving a width of 8. With these specifications, a node such as:\n        //\n        //   charIndex: 8, pointer: 100, last: false\n        //\n        // Would be encoded as:\n        //\n        //   --A---|----B-----|C|XXXXX\n        //   0100 0|011 0010 0|1|00 00\n        //\n        // Which can be represented in Base64 as:\n        //\n        //   QyQ==\n        //\n        // TODO could be more clever and combine the first two fields.\n\n        let encodedTrie = new BinaryString();\n\n        chunks.forEach(chunk => {\n            let { char, offset, last } = chunk;\n            encodedTrie.write(charMap[char], charEncodingWidth);\n            encodedTrie.write(offset - offsetMin, pointerEncodingWidth);\n            encodedTrie.write(+last, 1);\n        });\n\n        encodedTrie.flush();\n\n\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n        // Encode header\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n        let headerString = new BinaryString();\n        let outputCharTable = charTableAsArray.join('');\n\n        // Header width designates the ASCII-character count at the beginning\n        // of the file that encodes the header.\n        let headerWidth = Math.ceil((\n            HEADER_WIDTH_FIELD +\n            VERSION_FIELD +\n            OFFSET_SIGN_FIELD +\n            OFFSET_VAL_FIELD +\n            CHAR_WIDTH_FIELD +\n            POINTER_WIDTH_FIELD\n        ) / 6) + outputCharTable.length;\n        // Mark the offset as positive or negative\n        let offsetSign = +(offsetMin < 0);\n\n        headerString.write(headerWidth, HEADER_WIDTH_FIELD);\n        headerString.write(VERSION, VERSION_FIELD);\n        headerString.write(offsetSign, OFFSET_SIGN_FIELD);\n        headerString.write(offsetSign ? -offsetMin : offsetMin, OFFSET_VAL_FIELD);\n        headerString.write(charEncodingWidth, CHAR_WIDTH_FIELD);\n        headerString.write(pointerEncodingWidth, POINTER_WIDTH_FIELD);\n        headerString.flush();\n\n        // Concat the header, charTable, and trie\n        return `${headerString.getData()}${outputCharTable}${encodedTrie.getData()}`;\n    }\n\n    /**\n     * Implement JSON API for serialization. Tries can be serialized and\n     * restored using JSON and the constructor. Note that tries (even frozen\n     * ones) *do not serialize efficiently in JSON*. For memory-efficient\n     * tries, @see Trie#encode.\n     *\n     * @example\n     *   > trie = new Trie();\n     *   > ['foo', 'fudge', 'nudge'].forEach(s => trie.insert(s));\n     *   > let jsonStr = JSON.stringify(trie);\n     *   > let restored = new Trie(JSON.parse(jsonStr));\n     *   > ['foo', 'fudge', 'nudge'].every(s => restored.test(s));\n     *   // -> true\n     *\n     * @return {Object} Vanilla JS object\n     */\n    toJSON() {\n        // Remove any private fields on serialization, e.g. __visited__\n        let str = JSON.stringify(this.root, (k, v) => {\n             if (k[1] === '_') {\n                return undefined;\n            }\n            return v;\n        });\n        return JSON.parse(str);\n    }\n\n}\n\nexport default Trie;\n"
+    "content": "/**\n * @file Provides the Trie class\n */\n\nimport floor_log2 from './floor_log2';\nimport BinaryString from './BinaryString';\nimport {\n    TERMINAL,\n    TERMINUS,\n    VERSION,\n    HEADER_WIDTH_FIELD,\n    VERSION_FIELD,\n    OFFSET_SIGN_FIELD,\n    OFFSET_VAL_FIELD,\n    CHAR_WIDTH_FIELD,\n    POINTER_WIDTH_FIELD\n} from './constants';\n\n\n/**\n * A structure to provide efficient membership tests for a set of strings\n * @class\n */\nclass Trie {\n\n    /**\n     * Typically no arguments are needed, but it's possible to instantiate a\n     * Trie from a JSON object that represents it (@see Trie#toJSON).\n     * @constructor\n     * @param  {Object} tree - a trie given as a vanilla JS tree. This will be\n     *                         used as the root node.\n     * @return {Trie}\n     */\n    constructor(tree = {}) {\n        this.root = tree;\n        this.frozen = false;\n    }\n\n    /**\n     * Insert a word into the trie. Insertions into a frozen trie will throw\n     * an error. The\n     * @param  {String} string - string to insert. Note the \\u0000 character is\n     *                           disallowed.\n     * @return {Trie} - this\n     */\n    insert(string) {\n        // This trie insert algorithm can't guarantee safe inserts on the DAWG\n        // produced by freezing.\n        if (this.frozen) {\n            throw new SyntaxError(\"Can't insert into frozen Trie\");\n        }\n\n        let lastNode = string.split('').reduce((node, char) => {\n            if (char === TERMINAL) {\n                throw new TypeError(`Illegal string character ${TERMINAL}`);\n            }\n            let nextNode = node.hasOwnProperty(char) ?\n                node[char] :\n                (node[char] = {});\n            return nextNode;\n        }, this.root);\n\n        // Terminate the string. Using a constant terminus is not necessary\n        // (and is not be possible in cloned tries), but it uses slightly less\n        // memory and could make certain bugs more obvious.\n        lastNode[TERMINAL] = TERMINUS;\n\n        return this;\n    }\n\n    /**\n     * Test membership in the trie.\n     * @param  {String} string - Search query\n     * @param  {String?} opts.wildcard - See Trie#search wildcard doc\n     * @param  {Boolean?} opts.prefix - See Trie#search prefix doc\n     * @return {Boolean}\n     */\n    test(string, {wildcard, prefix} = {wildcard: null, prefix: false}) {\n        // When there are no wildcards we can use an optimized search.\n        if (!wildcard) {\n            let node = this.root;\n            const match = string.split('').every(char => node = node[char]);\n            return !!match && (prefix || node.hasOwnProperty(TERMINAL));\n        }\n\n        // Unoptimized path: delegate to #search with short-circuiting.\n        return !!this.search(string, {wildcard, prefix, first: true});\n    }\n\n    /**\n     * Query for matching words in the trie.\n     * @param  {String} string - Search query\n     * @param  {String?} opts.wildcard - Wildcard to use for fuzzy matching.\n     *                                   Default is no wildcard; only match\n     *                                   literal query.\n     * @param  {Boolean?} opts.prefix - Perform prefix search (returns true if\n     *                                  any word exists in the trie starts with\n     *                                  the search query). Default is false;\n     *                                  only match the full query.\n     * @param  {Boolean} opts.first - Return only first match that is found,\n     *                                short-circuiting the search. Default is\n     *                                false; return all matches.\n     * @return {String?|String[]} - Return an optional string result when in\n     *                              first-only mode; otherwise return a list\n     *                              of strings that match the query.\n     */\n    search(string, {wildcard, prefix, first} = {wildcard: null, prefix: false, first: false}) {\n        // Validate wildcard matching.\n        if (wildcard && wildcard.length !== 1) {\n            throw new Error(`Wildcard length must be 1; got ${wildcard.length}`);\n        }\n\n        // List of search hits. Note: not used in `first` mode.\n        const matches = [];\n\n        // Do a BFS over nodes to with fuzzy-matching on the wildcard.\n        const queue = [{data: this.root, depth: 0, memo: ''}];\n        const lastDepth = string.length;\n\n        while (queue.length) {\n            const node = queue.shift();\n            // The search is a hit if we've reached the proper depth and the\n            // node is terminal. The search can break if the query was for\n            // first-only.\n            if (node.depth >= lastDepth) {\n                if (node.data.hasOwnProperty(TERMINAL)) {\n                    if (first) {\n                        return node.memo;\n                    }\n                    // Otherwise store this result and continue searching.\n                    matches.push(node.memo);\n                }\n                // Discard the node and move on if we can; prefix matches need\n                // to traverse everything.\n                if (!prefix) {\n                    continue;\n                }\n            }\n            // Special case: prefix searches overflow the length of the search\n            // queries. Treat these overflowing chars as wildcards.\n            const isPfXOverflow = prefix && node.depth >= lastDepth;\n            // Add any candidate children nodes to the search queue.\n            const token = string[node.depth];\n            // Wildcard could be any child (except terminal).\n            if (token === wildcard || isPfXOverflow) {\n                Object.keys(node.data).forEach(n => {\n                    if (n !== TERMINAL) {\n                        queue.push({\n                            data: node.data[n],\n                            depth: node.depth + 1,\n                            memo: node.memo + n,\n                        });\n                    }\n                });\n            } else {\n                if (node.data.hasOwnProperty(token)) {\n                    queue.push({\n                        data: node.data[token],\n                        depth: node.depth + 1,\n                        memo: node.memo + token,\n                    });\n                }\n            }\n        }\n\n        // A `first` search will have broken out and returned a literal by now;\n        // other searches just return whatever is in matches.\n        return first ? null : matches;\n    }\n\n    /**\n     * Clone a Trie. This will unfreeze a frozen trie.\n     * @return {Trie}\n     */\n    clone() {\n        return new Trie(this.toJSON());\n    }\n\n    /**\n     * Freeze the Trie, deduping suffixes. Given the assumption that there will\n     * not be new entries into a trie, redundant suffix branches can be merged.\n     * @return {Trie} - This trie (freezing modifies it in place)\n     */\n    freeze() {\n        // Freezing is idempotent\n        if (this.frozen) {\n            return this;\n        }\n\n        // Create a store for fast lookup of matching suffixes during walk\n        let suffixTree = {};\n\n        // Walk the entire trie depth first, de-duping suffixes\n        let node = this.root;\n        let stack = [];\n        let depthStack = [node];\n\n        // Iterate over tree nodes, pushing children onto the depthStack so\n        // that the items pushed on to the main `stack` are in the correct\n        // order for a second traversal.\n        while (depthStack.length) {\n            node = depthStack.pop();\n\n            Object.keys(node).forEach(char => {\n                if (char[1] === '_') {\n                    return;\n                }\n                let current = node[char];\n                stack.push({\n                    current: current,\n                    char: char,\n                    parent: node\n                });\n                depthStack.push(current);\n            });\n        }\n\n        // Now do node processing, joining / deduping suffix lines.\n        while (stack.length) {\n            let { char, parent, current } = stack.pop();\n\n            // Find potential suffix duplicates with a char lookup\n            if (suffixTree.hasOwnProperty(char)) {\n                let suffixMeta = suffixTree[char];\n\n                // Find a matching suffix by comparing children. Since\n                // deduping is depth-first, comparing children by identity\n                // is a valid way to check if this node is a duplicate.\n                let match = suffixMeta.find(other => {\n                    let oKeys = Object.keys(other);\n                    let cKeys = Object.keys(current);\n                    return (\n                        oKeys.length === cKeys.length &&\n                        oKeys.every(key => other[key] === current[key])\n                    );\n                });\n\n                // If this node is a dupe, update its parent reference to\n                // point to the cached match.\n                if (match) {\n                    parent[char] = match;\n                }\n                // If the node is novel, cache it for future checks.\n                else {\n                    suffixMeta.push(current);\n                }\n            }\n            // If this char is novel, create a new suffixMeta entry\n            else {\n                suffixTree[char] = [current];\n            }\n        }\n\n        // Flag the tree as frozen\n        this.frozen = true;\n\n        return this;\n    }\n\n    /**\n     * Encode the Trie in a binary format. This format stores the trie or DAWG\n     * efficiently and still allows for fast queries.\n     * @return {Object}\n     */\n    encode() {\n        let chunks = [];\n        let queue = [this.root];\n        let charTable = new Set();\n        let visitCode = Date.now();\n        let offsetMin = Infinity;\n        let offsetMax = -Infinity;\n\n\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n        // Encode trie\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n        while (queue.length) {\n            let node = queue.shift();\n            let keys = Object.keys(node).filter(k => k[1] !== '_');\n            let n = keys.length;\n\n            node.__visited__ = visitCode;\n            let nodeChunkIndex = node.__idx__ = chunks.length;\n\n            // Fill in the parent chunks that are waiting to find out what\n            // index this chunk gets assigned\n            if (node.__parents__) {\n                node.__parents__.forEach(chunk => {\n                    let offset = chunk.offset = nodeChunkIndex - chunk.idx;\n                    if (offset < offsetMin) {\n                        offsetMin = offset;\n                    }\n                    if (offset > offsetMax) {\n                        offsetMax = offset;\n                    }\n                });\n            }\n\n            keys.forEach((char, i) => {\n                let child = node[char];\n                let chunkIdx = chunks.length;\n                let lastInLevel = i === n - 1;\n\n                let newChunk = {\n                    char: char,\n                    idx: chunkIdx,\n                    offset: null,\n                    last: lastInLevel\n                };\n\n                // If the child has been visited, jump directly to that node\n                // instead of creating a new entry.\n                if (child.__visited__ === visitCode) {\n                    let idx = child.__idx__;\n                    let offset = newChunk.offset = idx - chunkIdx;\n                    if (offset < offsetMin) {\n                        offsetMin = offset;\n                    }\n                    if (offset > offsetMax) {\n                        offsetMax = offset;\n                    }\n                }\n                // If child is novel, add it to the process queue and add an\n                // instruction to jump there.\n                else {\n                    if (child.__willVisit__ === visitCode) {\n                        child.__parents__.push(newChunk);\n                    } else {\n                        child.__willVisit__ = visitCode;\n                        child.__parents__ = [newChunk];\n                    }\n                    queue.push(child);\n                }\n\n                // Add a new chunk to the array\n                chunks.push(newChunk);\n\n                // Ensure that the char is in the chartable\n                charTable.add(char);\n            });\n        }\n\n        // Assign a unique integer ID to each character. The actual ID is\n        // arbitrary. For the convenience of not having to serialize the \\0\n        // character, the TERMINAL is always encoded at the 0 index, and it is\n        // not included in the charTable.\n        let charTableAsArray = Array.from(charTable)\n            .filter(char => char !== TERMINAL);\n        let charMap = charTableAsArray.reduce((agg, char, i) => {\n            agg[char] = i + 1;\n            return agg;\n        }, { [TERMINAL]: 0 });\n        // Determine the number of bits that can index the entire charTable.\n        let charEncodingWidth = floor_log2(charTableAsArray.length) + 1;\n\n        let pointerRange = offsetMax - offsetMin;\n        let pointerEncodingWidth = floor_log2(pointerRange) + 1;\n\n        // The binary with of node encodings is variable. There are three parts\n        // that get encoded:\n        //\n        //  1) character index (corresponding to character table),\n        //  2) pointer (as offset from start of word to next node),\n        //  3) last (flag to indicate whether this is the last block in this\n        //     subtree)\n        //\n        // The width of the first two items are determined as the binary width\n        // of the unsigned integer representing the maximum in the range. The\n        // width of the third is a constant 1 binary digit.\n        //\n        // E.g., if the charTable is 28 characters in length, then the binary\n        // digit representing 27 (the last item in the array) is:\n        //\n        //   1 1011\n        //\n        // So the width is determined to be 5. If the pointer range has a\n        // maximum of 250, represented in binary as:\n        //\n        //   1111 1010\n        //\n        // Giving a width of 8. With these specifications, a node such as:\n        //\n        //   charIndex: 8, pointer: 100, last: false\n        //\n        // Would be encoded as:\n        //\n        //   --A---|----B-----|C|XXXXX\n        //   0100 0|011 0010 0|1|00 00\n        //\n        // Which can be represented in Base64 as:\n        //\n        //   QyQ==\n        //\n        // TODO could be more clever and combine the first two fields.\n\n        let encodedTrie = new BinaryString();\n\n        chunks.forEach(chunk => {\n            let { char, offset, last } = chunk;\n            encodedTrie.write(charMap[char], charEncodingWidth);\n            encodedTrie.write(offset - offsetMin, pointerEncodingWidth);\n            encodedTrie.write(+last, 1);\n        });\n\n        encodedTrie.flush();\n\n\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n        // Encode header\n        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n        let headerString = new BinaryString();\n        let outputCharTable = charTableAsArray.join('');\n\n        // Header width designates the ASCII-character count at the beginning\n        // of the file that encodes the header.\n        let headerWidth = Math.ceil((\n            HEADER_WIDTH_FIELD +\n            VERSION_FIELD +\n            OFFSET_SIGN_FIELD +\n            OFFSET_VAL_FIELD +\n            CHAR_WIDTH_FIELD +\n            POINTER_WIDTH_FIELD\n        ) / 6) + outputCharTable.length;\n        // Mark the offset as positive or negative\n        let offsetSign = +(offsetMin < 0);\n\n        headerString.write(headerWidth, HEADER_WIDTH_FIELD);\n        headerString.write(VERSION, VERSION_FIELD);\n        headerString.write(offsetSign, OFFSET_SIGN_FIELD);\n        headerString.write(offsetSign ? -offsetMin : offsetMin, OFFSET_VAL_FIELD);\n        headerString.write(charEncodingWidth, CHAR_WIDTH_FIELD);\n        headerString.write(pointerEncodingWidth, POINTER_WIDTH_FIELD);\n        headerString.flush();\n\n        // Concat the header, charTable, and trie\n        return `${headerString.getData()}${outputCharTable}${encodedTrie.getData()}`;\n    }\n\n    /**\n     * Implement JSON API for serialization. Tries can be serialized and\n     * restored using JSON and the constructor. Note that tries (even frozen\n     * ones) *do not serialize efficiently in JSON*. For memory-efficient\n     * tries, @see Trie#encode.\n     *\n     * @example\n     *   > trie = new Trie();\n     *   > ['foo', 'fudge', 'nudge'].forEach(s => trie.insert(s));\n     *   > let jsonStr = JSON.stringify(trie);\n     *   > let restored = new Trie(JSON.parse(jsonStr));\n     *   > ['foo', 'fudge', 'nudge'].every(s => restored.test(s));\n     *   // -> true\n     *\n     * @return {Object} Vanilla JS object\n     */\n    toJSON() {\n        // Remove any private fields on serialization, e.g. __visited__\n        let str = JSON.stringify(this.root, (k, v) => {\n             if (k[1] === '_') {\n                return undefined;\n            }\n            return v;\n        });\n        return JSON.parse(str);\n    }\n\n}\n\nexport default Trie;\n"
   },
   {
-    "__docId__": 36,
+    "__docId__": 38,
     "kind": "class",
     "static": true,
     "variation": null,
@@ -780,7 +884,7 @@
     "interface": false
   },
   {
-    "__docId__": 37,
+    "__docId__": 39,
     "kind": "constructor",
     "static": false,
     "variation": null,
@@ -819,7 +923,7 @@
     "generator": false
   },
   {
-    "__docId__": 38,
+    "__docId__": 40,
     "kind": "member",
     "static": false,
     "variation": null,
@@ -837,7 +941,7 @@
     }
   },
   {
-    "__docId__": 39,
+    "__docId__": 41,
     "kind": "member",
     "static": false,
     "variation": null,
@@ -855,7 +959,7 @@
     }
   },
   {
-    "__docId__": 40,
+    "__docId__": 42,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -888,7 +992,7 @@
     "generator": false
   },
   {
-    "__docId__": 41,
+    "__docId__": 43,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -896,8 +1000,8 @@
     "memberof": "lib/Trie.js~Trie",
     "longname": "lib/Trie.js~Trie#test",
     "access": null,
-    "description": "Test membership in the trie",
-    "lineNumber": 76,
+    "description": "Test membership in the trie.",
+    "lineNumber": 78,
     "params": [
       {
         "nullable": null,
@@ -907,7 +1011,27 @@
         "spread": false,
         "optional": false,
         "name": "string",
-        "description": ""
+        "description": "Search query"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "String?"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.wildcard",
+        "description": "See Trie#search wildcard doc"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Boolean?"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.prefix",
+        "description": "See Trie#search prefix doc"
       }
     ],
     "return": {
@@ -921,7 +1045,71 @@
     "generator": false
   },
   {
-    "__docId__": 42,
+    "__docId__": 44,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "search",
+    "memberof": "lib/Trie.js~Trie",
+    "longname": "lib/Trie.js~Trie#search",
+    "access": null,
+    "description": "Query for matching words in the trie.",
+    "lineNumber": 107,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "string",
+        "description": "Search query"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "String?"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.wildcard",
+        "description": "Wildcard to use for fuzzy matching.\n                                  Default is no wildcard; only match\n                                  literal query."
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Boolean?"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.prefix",
+        "description": "Perform prefix search (returns true if\n                                 any word exists in the trie starts with\n                                 the search query). Default is false;\n                                 only match the full query."
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Boolean"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "opts.first",
+        "description": "Return only first match that is found,\n                               short-circuiting the search. Default is\n                               false; return all matches."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "String?",
+        "String[]"
+      ],
+      "spread": false,
+      "description": "Return an optional string result when in\n                             first-only mode; otherwise return a list\n                             of strings that match the query."
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 45,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -930,7 +1118,7 @@
     "longname": "lib/Trie.js~Trie#clone",
     "access": null,
     "description": "Clone a Trie. This will unfreeze a frozen trie.",
-    "lineNumber": 86,
+    "lineNumber": 175,
     "params": [],
     "return": {
       "nullable": null,
@@ -943,7 +1131,7 @@
     "generator": false
   },
   {
-    "__docId__": 43,
+    "__docId__": 46,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -952,7 +1140,7 @@
     "longname": "lib/Trie.js~Trie#freeze",
     "access": null,
     "description": "Freeze the Trie, deduping suffixes. Given the assumption that there will\nnot be new entries into a trie, redundant suffix branches can be merged.",
-    "lineNumber": 95,
+    "lineNumber": 184,
     "params": [],
     "return": {
       "nullable": null,
@@ -965,7 +1153,7 @@
     "generator": false
   },
   {
-    "__docId__": 44,
+    "__docId__": 47,
     "kind": "member",
     "static": false,
     "variation": null,
@@ -974,7 +1162,7 @@
     "longname": "lib/Trie.js~Trie#frozen",
     "access": null,
     "description": null,
-    "lineNumber": 166,
+    "lineNumber": 255,
     "undocument": true,
     "type": {
       "types": [
@@ -983,7 +1171,7 @@
     }
   },
   {
-    "__docId__": 45,
+    "__docId__": 48,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -992,7 +1180,7 @@
     "longname": "lib/Trie.js~Trie#encode",
     "access": null,
     "description": "Encode the Trie in a binary format. This format stores the trie or DAWG\nefficiently and still allows for fast queries.",
-    "lineNumber": 176,
+    "lineNumber": 265,
     "params": [],
     "return": {
       "nullable": null,
@@ -1005,7 +1193,7 @@
     "generator": false
   },
   {
-    "__docId__": 46,
+    "__docId__": 49,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -1017,7 +1205,7 @@
     "examples": [
       "  > trie = new Trie();\n  > ['foo', 'fudge', 'nudge'].forEach(s => trie.insert(s));\n  > let jsonStr = JSON.stringify(trie);\n  > let restored = new Trie(JSON.parse(jsonStr));\n  > ['foo', 'fudge', 'nudge'].every(s => restored.test(s));\n  // -> true"
     ],
-    "lineNumber": 368,
+    "lineNumber": 457,
     "params": [],
     "return": {
       "nullable": null,
@@ -1030,7 +1218,7 @@
     "generator": false
   },
   {
-    "__docId__": 47,
+    "__docId__": 50,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1042,7 +1230,7 @@
     "importPath": "tiny-trie/lib/Trie.js",
     "importStyle": "trie",
     "description": null,
-    "lineNumber": 381,
+    "lineNumber": 470,
     "undocument": true,
     "type": {
       "types": [
@@ -1051,7 +1239,7 @@
     }
   },
   {
-    "__docId__": 48,
+    "__docId__": 51,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -1061,10 +1249,10 @@
     "access": null,
     "description": null,
     "lineNumber": 3,
-    "content": "/* eslint-env mocha */\n\nimport Trie from './Trie';\nimport assert from 'assert';\n\n/**\n * Flatten the trie and output a list of keys representing the unique nodes.\n * This can be used to inspect how nodes have been deduped.\n * @param  {Trie} trie\n * @return {String[]}\n */\nfunction flatKeys(trie) {\n    let nodes = [];\n    let keys = [];\n\n    (function walk(node, i = 0) {\n        Object.keys(node).forEach(key => {\n            if (key.substr(0, 2) === '__') {\n                return;\n            }\n            let current = node[key];\n            if (!nodes.find(x => x === current)) {\n                nodes.push(current);\n                keys.push(`${key}_${i}`);\n            }\n            walk(current, i + 1);\n        });\n    }(trie.root));\n\n    return keys;\n}\n\n/**\n * Stringify an object dropping \"private\" prefixes, i.e. those that start with\n * the prefix \"__\".\n * @param  {Object} obj\n * @return {String}\n */\nfunction stringifyNoPrivate(obj) {\n    return JSON.stringify(obj, (k, v) =>\n        k.substr(0, 2) === '__' ? undefined : v);\n}\n\ndescribe('Trie', () => {\n\n    describe('constructor', () => {\n        it('creates an empty Trie', () => {\n            let trie = new Trie();\n            assert(stringifyNoPrivate(trie.root), '{}');\n            assert(trie.frozen === false);\n        });\n    });\n\n    describe('insert', () => {\n        it('inserts a word into the trie', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            assert.strictEqual(\n                stringifyNoPrivate(trie.root),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{}}}}}'\n            );\n        });\n\n        it('does not create redundant prefixes', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('food');\n            assert.strictEqual(\n                stringifyNoPrivate(trie.root),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{},\"d\":{\"\\\\u0000\":{}}}}}}'\n            );\n        });\n\n        it('throws an error if trie is frozen', () => {\n            let trie = new Trie();\n            trie.freeze();\n            assert.throws(() => trie.insert('foo'));\n        });\n    });\n\n    describe('test', () => {\n        it('recalls strings entered into the trie', () => {\n            let trie = new Trie();\n\n            trie.insert('foo');\n            assert(trie.test('foo'));\n\n            trie.insert('bar');\n            assert(trie.test('foo'));\n            assert(trie.test('bar'));\n\n            trie.insert('food');\n            assert(trie.test('food'));\n            assert(trie.test('foo'));\n            assert(trie.test('bar'));\n        });\n    });\n\n    describe('freeze', () => {\n        const strings = ['foo', 'bar', 'bare', 'fool', 'goo', 'far', 'boo', 'gar'];\n        const strings2 = ['spit', 'spat', 'spot', 'spits', 'spats', 'spots'];\n\n        it('marks trie as frozen', () => {\n            let trie = new Trie();\n            trie.freeze();\n            assert(trie.frozen === true);\n        });\n\n        it('preserves stringification', () => {\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n\n            const expected = `{\\\n\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{},\"l\":{\"\\\\u0000\":{}}}},\"a\":{\"r\":{\"\\\\u0000\":{}}}},\\\n\"b\":{\"a\":{\"r\":{\"\\\\u0000\":{},\"e\":{\"\\\\u0000\":{}}}},\"o\":{\"o\":{\"\\\\u0000\":{}}}},\\\n\"g\":{\"o\":{\"o\":{\"\\\\u0000\":{}}},\"a\":{\"r\":{\"\\\\u0000\":{}}}}\\\n}`;\n            assert.strictEqual(stringifyNoPrivate(trie.root), expected);\n\n            trie.freeze();\n\n            assert.strictEqual(stringifyNoPrivate(trie.root), expected);\n        });\n\n        it('preserves lookup', () => {\n            let trie = new Trie();\n\n            strings.forEach(s => trie.insert(s));\n            strings.forEach(s => assert(trie.test(s)));\n\n            trie.freeze();\n\n            strings.forEach(s => assert(trie.test(s)));\n        });\n\n        it('converts internal structure into a DAWG', () => {\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n            assert(trie.root.b.o !== trie.root.g.o);\n            assert(trie.root.f.a !== trie.root.g.a);\n            assert.deepEqual(flatKeys(trie), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"l_3\",\n                \"a_1\",\n                \"r_2\",\n                \"b_0\",\n                \"a_1\",\n                \"r_2\",\n                \"e_3\",\n                \"o_1\",\n                \"o_2\",\n                \"g_0\",\n                \"o_1\",\n                \"o_2\",\n                \"a_1\",\n                \"r_2\"\n            ]);\n            trie.freeze();\n            assert(trie.root.b.o === trie.root.g.o);\n            assert(trie.root.f.a === trie.root.g.a);\n            assert.deepEqual(flatKeys(trie), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"l_3\",\n                \"a_1\",\n                \"r_2\",\n                \"b_0\",\n                \"a_1\",\n                \"r_2\",\n                \"e_3\",\n                \"o_1\",\n                \"o_2\",\n                \"g_0\"\n            ]);\n\n            let trie2 = new Trie();\n            strings2.forEach(s => trie2.insert(s));\n            assert.deepEqual(flatKeys(trie2), [\n                \"s_0\",\n                \"p_1\",\n                \"i_2\",\n                \"t_3\",\n                \"\\u0000_4\",\n                \"s_4\",\n                \"a_2\",\n                \"t_3\",\n                \"s_4\",\n                \"o_2\",\n                \"t_3\",\n                \"s_4\"\n            ]);\n            trie2.freeze();\n            assert.deepEqual(flatKeys(trie2), [\n                \"s_0\",\n                \"p_1\",\n                \"i_2\",\n                \"t_3\",\n                \"\\u0000_4\",\n                \"s_4\",\n                \"a_2\",\n                \"o_2\"\n            ]);\n            assert(trie2.root.s.p.a.t === trie2.root.s.p.i.t);\n            assert(trie2.root.s.p.a.t === trie2.root.s.p.o.t);\n        });\n\n        it('has no cycles', () => {\n            let trie = new Trie();\n\n            ['yo', 'yolo'].forEach(s => trie.insert(s));\n\n            trie.freeze();\n\n            assert(trie.test('yo'));\n            assert(trie.test('yolo'));\n            assert(trie.test('yololo') === false);\n\n            assert.strictEqual(\n                stringifyNoPrivate(trie.root),\n                '{\"y\":{\"o\":{\"\\\\u0000\":{},\"l\":{\"o\":{\"\\\\u0000\":{}}}}}}'\n            );\n        });\n    });\n\n    describe('clone', () => {\n        const strings = ['foo', 'bar', 'boo', 'far', 'spot', 'spat', 'spots', 'spats'];\n\n        it('produces an identical copy of a trie', () => {\n            let trie = new Trie();\n            strings.forEach(string => trie.insert(string));\n\n            let clone = trie.clone();\n\n            assert.strictEqual(stringifyNoPrivate(clone), stringifyNoPrivate(trie));\n        });\n\n        it('produces a deep copy of the old trie', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('boo');\n\n            let clone = trie.clone();\n            clone.insert('fool');\n\n            assert(stringifyNoPrivate(clone) !== stringifyNoPrivate(trie));\n            assert(trie.test('fool') === false);\n            assert(clone.test('fool'));\n        });\n\n        it('preserves lookup', () => {\n            let trie = new Trie();\n            strings.forEach(string => trie.insert(string));\n\n            strings.forEach(string => assert(trie.test(string)));\n\n            let clone = trie.clone();\n\n            strings.forEach(string => assert(clone.test(string)));\n        });\n\n        it('thaws frozen tries', () => {\n            let trie = new Trie();\n            trie.freeze();\n            let clone = trie.clone();\n            assert.throws(() => trie.insert('foo'));\n            clone.insert('foo');\n            assert(clone.test('foo'));\n        });\n\n        it('does not affect ability to refreeze', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('boo');\n            let clone = trie.clone();\n            clone.freeze();\n            assert.deepEqual(flatKeys(clone), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"b_0\"\n            ]);\n        });\n    });\n\n    describe('toJSON', () => {\n        it('presents the root node for serialization', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('fob');\n            assert.deepEqual(trie.toJSON(), JSON.parse(stringifyNoPrivate(trie.root)));\n            assert.strictEqual(\n                stringifyNoPrivate(trie),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{}},\"b\":{\"\\\\u0000\":{}}}}}'\n            );\n        });\n\n        it('can restore a serialized trie with the constructor', () => {\n            let strings = ['foo', 'bar', 'zap', 'zoology', 'zoo'];\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n            let json = stringifyNoPrivate(trie);\n            let trie2 = new Trie(JSON.parse(json));\n            strings.forEach(s => assert(trie2.test(s)));\n        });\n\n        it('should return a deep clone of the internal structure', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('bar');\n            let json = trie.toJSON();\n            assert(json !== trie.root);\n            json.b.hello = \"hi!\";\n            assert(trie.root.b.hello === undefined);\n        });\n    });\n\n});\n"
+    "content": "/* eslint-env mocha */\n\nimport Trie from './Trie';\nimport assert from 'assert';\n\n/**\n * Flatten the trie and output a list of keys representing the unique nodes.\n * This can be used to inspect how nodes have been deduped.\n * @param  {Trie} trie\n * @return {String[]}\n */\nfunction flatKeys(trie) {\n    const nodes = [];\n    const keys = [];\n\n    (function walk(node, i = 0) {\n        Object.keys(node).forEach(key => {\n            if (key.substr(0, 2) === '__') {\n                return;\n            }\n            const current = node[key];\n            if (!nodes.find(x => x === current)) {\n                nodes.push(current);\n                keys.push(`${key}_${i}`);\n            }\n            walk(current, i + 1);\n        });\n    }(trie.root));\n\n    return keys;\n}\n\n/**\n * Stringify an object dropping \"private\" prefixes, i.e. those that start with\n * the prefix \"__\".\n * @param  {Object} obj\n * @return {String}\n */\nfunction stringifyNoPrivate(obj) {\n    return JSON.stringify(obj, (k, v) =>\n        k.substr(0, 2) === '__' ? undefined : v);\n}\n\ndescribe('Trie', () => {\n\n    describe('constructor', () => {\n        it('creates an empty Trie', () => {\n            const trie = new Trie();\n            assert(stringifyNoPrivate(trie.root), '{}');\n            assert(trie.frozen === false);\n        });\n    });\n\n    describe('insert', () => {\n        it('inserts a word into the trie', () => {\n            const trie = new Trie();\n            trie.insert('foo');\n            assert.strictEqual(\n                stringifyNoPrivate(trie.root),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{}}}}}'\n            );\n        });\n\n        it('does not create redundant prefixes', () => {\n            const trie = new Trie();\n            trie.insert('foo');\n            trie.insert('food');\n            assert.strictEqual(\n                stringifyNoPrivate(trie.root),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{},\"d\":{\"\\\\u0000\":{}}}}}}'\n            );\n        });\n\n        it('throws an error if trie is frozen', () => {\n            const trie = new Trie();\n            trie.freeze();\n            assert.throws(() => trie.insert('foo'));\n        });\n    });\n\n    describe('test', () => {\n        it('recalls strings entered into the trie', () => {\n            const trie = new Trie();\n\n            trie.insert('foo');\n            assert(trie.test('foo'));\n\n            trie.insert('bar');\n            assert(trie.test('foo'));\n            assert(trie.test('bar'));\n\n            trie.insert('food');\n            assert(trie.test('food'));\n            assert(trie.test('foo'));\n            assert(trie.test('bar'));\n        });\n\n        it('returns true for fuzzy matches when wildcard is given', () => {\n            const trie = new Trie();\n            trie.insert('foo');\n            trie.insert('bar');\n            trie.insert('bop');\n            trie.insert('baz');\n\n            assert(trie.test('***', {wildcard: '*'}));\n            assert(trie.test('**r', {wildcard: '*'}));\n            assert(trie.test('*az', {wildcard: '*'}));\n            assert(trie.test('f**', {wildcard: '*'}));\n            assert(trie.test('f*o', {wildcard: '*'}));\n            assert(!trie.test('**x', {wildcard: '*'}));\n        });\n\n        it('returns true for partial matches when searching over prefixes', () => {\n            const trie = new Trie();\n            trie.insert('foo');\n            trie.insert('food');\n            trie.insert('foodology');\n\n            assert(trie.test('fo', {prefix: true}));\n            assert(trie.test('foodolog', {prefix: true}));\n            assert(!trie.test('fob', {prefix: true}));\n        });\n\n        it('returns correct value for complex options cases', () => {\n            const trie = new Trie();\n            trie.insert('foo');\n            trie.insert('bar');\n            trie.insert('foobar');\n\n            assert(trie.test('foo', {wildcard: '*'}));\n            assert(trie.test('bar', {wildcard: '*'}));\n            assert(!trie.test('foob', {wildcard: '*', prefix: false}));\n            assert(trie.test('foobar', {wildcard: '*', prefix: false}));\n            assert(trie.test('foob*', {wildcard: '*', prefix: true}));\n            assert(!trie.test('foob*', {wildcard: '*', prefix: false}));\n            assert(trie.test('**ob*', {wildcard: '*', prefix: true}));\n        });\n    });\n\n    describe('search', () => {\n        const strings = ['foo', 'bar', 'bare', 'fool', 'goo', 'far', 'boo', 'gar', 'tool'];\n\n        it('returns all matching values with wildcard', () => {\n            const trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n\n            assert.deepEqual(trie.search('*oo', {wildcard: '*'}), ['foo', 'boo', 'goo']);\n            assert.deepEqual(trie.search('*oo', {wildcard: '*', prefix: true}), [\n                'foo', 'boo', 'goo', 'fool', 'tool']);\n            assert.deepEqual(trie.search('f**', {wildcard: '*'}), ['foo', 'far']);\n            assert.deepEqual(trie.search('*x*', {wildcard: '*'}), []);\n        });\n\n        it('returns first match with wildcard', () => {\n            const trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n            assert(trie.search('f**', {wildcard: '*', first: true}) === 'foo');\n            assert(trie.search('**x', {wildcard: '*', first: true}) === null);\n            assert(trie.search('*', {wildcard: '*', prefix: true}), strings);\n        });\n    });\n\n    describe('freeze', () => {\n        const strings = ['foo', 'bar', 'bare', 'fool', 'goo', 'far', 'boo', 'gar'];\n        const strings2 = ['spit', 'spat', 'spot', 'spits', 'spats', 'spots'];\n\n        it('marks trie as frozen', () => {\n            let trie = new Trie();\n            trie.freeze();\n            assert(trie.frozen === true);\n        });\n\n        it('preserves stringification', () => {\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n\n            const expected = `{\\\n\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{},\"l\":{\"\\\\u0000\":{}}}},\"a\":{\"r\":{\"\\\\u0000\":{}}}},\\\n\"b\":{\"a\":{\"r\":{\"\\\\u0000\":{},\"e\":{\"\\\\u0000\":{}}}},\"o\":{\"o\":{\"\\\\u0000\":{}}}},\\\n\"g\":{\"o\":{\"o\":{\"\\\\u0000\":{}}},\"a\":{\"r\":{\"\\\\u0000\":{}}}}\\\n}`;\n            assert.strictEqual(stringifyNoPrivate(trie.root), expected);\n\n            trie.freeze();\n\n            assert.strictEqual(stringifyNoPrivate(trie.root), expected);\n        });\n\n        it('preserves lookup', () => {\n            let trie = new Trie();\n\n            strings.forEach(s => trie.insert(s));\n            strings.forEach(s => assert(trie.test(s)));\n\n            trie.freeze();\n\n            strings.forEach(s => assert(trie.test(s)));\n        });\n\n        it('converts internal structure into a DAWG', () => {\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n            assert(trie.root.b.o !== trie.root.g.o);\n            assert(trie.root.f.a !== trie.root.g.a);\n            assert.deepEqual(flatKeys(trie), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"l_3\",\n                \"a_1\",\n                \"r_2\",\n                \"b_0\",\n                \"a_1\",\n                \"r_2\",\n                \"e_3\",\n                \"o_1\",\n                \"o_2\",\n                \"g_0\",\n                \"o_1\",\n                \"o_2\",\n                \"a_1\",\n                \"r_2\"\n            ]);\n            trie.freeze();\n            assert(trie.root.b.o === trie.root.g.o);\n            assert(trie.root.f.a === trie.root.g.a);\n            assert.deepEqual(flatKeys(trie), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"l_3\",\n                \"a_1\",\n                \"r_2\",\n                \"b_0\",\n                \"a_1\",\n                \"r_2\",\n                \"e_3\",\n                \"o_1\",\n                \"o_2\",\n                \"g_0\"\n            ]);\n\n            let trie2 = new Trie();\n            strings2.forEach(s => trie2.insert(s));\n            assert.deepEqual(flatKeys(trie2), [\n                \"s_0\",\n                \"p_1\",\n                \"i_2\",\n                \"t_3\",\n                \"\\u0000_4\",\n                \"s_4\",\n                \"a_2\",\n                \"t_3\",\n                \"s_4\",\n                \"o_2\",\n                \"t_3\",\n                \"s_4\"\n            ]);\n            trie2.freeze();\n            assert.deepEqual(flatKeys(trie2), [\n                \"s_0\",\n                \"p_1\",\n                \"i_2\",\n                \"t_3\",\n                \"\\u0000_4\",\n                \"s_4\",\n                \"a_2\",\n                \"o_2\"\n            ]);\n            assert(trie2.root.s.p.a.t === trie2.root.s.p.i.t);\n            assert(trie2.root.s.p.a.t === trie2.root.s.p.o.t);\n        });\n\n        it('has no cycles', () => {\n            let trie = new Trie();\n\n            ['yo', 'yolo'].forEach(s => trie.insert(s));\n\n            trie.freeze();\n\n            assert(trie.test('yo'));\n            assert(trie.test('yolo'));\n            assert(trie.test('yololo') === false);\n\n            assert.strictEqual(\n                stringifyNoPrivate(trie.root),\n                '{\"y\":{\"o\":{\"\\\\u0000\":{},\"l\":{\"o\":{\"\\\\u0000\":{}}}}}}'\n            );\n        });\n    });\n\n    describe('clone', () => {\n        const strings = ['foo', 'bar', 'boo', 'far', 'spot', 'spat', 'spots', 'spats'];\n\n        it('produces an identical copy of a trie', () => {\n            let trie = new Trie();\n            strings.forEach(string => trie.insert(string));\n\n            let clone = trie.clone();\n\n            assert.strictEqual(stringifyNoPrivate(clone), stringifyNoPrivate(trie));\n        });\n\n        it('produces a deep copy of the old trie', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('boo');\n\n            let clone = trie.clone();\n            clone.insert('fool');\n\n            assert(stringifyNoPrivate(clone) !== stringifyNoPrivate(trie));\n            assert(trie.test('fool') === false);\n            assert(clone.test('fool'));\n        });\n\n        it('preserves lookup', () => {\n            let trie = new Trie();\n            strings.forEach(string => trie.insert(string));\n\n            strings.forEach(string => assert(trie.test(string)));\n\n            let clone = trie.clone();\n\n            strings.forEach(string => assert(clone.test(string)));\n        });\n\n        it('thaws frozen tries', () => {\n            let trie = new Trie();\n            trie.freeze();\n            let clone = trie.clone();\n            assert.throws(() => trie.insert('foo'));\n            clone.insert('foo');\n            assert(clone.test('foo'));\n        });\n\n        it('does not affect ability to refreeze', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('boo');\n            let clone = trie.clone();\n            clone.freeze();\n            assert.deepEqual(flatKeys(clone), [\n                \"f_0\",\n                \"o_1\",\n                \"o_2\",\n                \"\\u0000_3\",\n                \"b_0\"\n            ]);\n        });\n    });\n\n    describe('toJSON', () => {\n        it('presents the root node for serialization', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('fob');\n            assert.deepEqual(trie.toJSON(), JSON.parse(stringifyNoPrivate(trie.root)));\n            assert.strictEqual(\n                stringifyNoPrivate(trie),\n                '{\"f\":{\"o\":{\"o\":{\"\\\\u0000\":{}},\"b\":{\"\\\\u0000\":{}}}}}'\n            );\n        });\n\n        it('can restore a serialized trie with the constructor', () => {\n            let strings = ['foo', 'bar', 'zap', 'zoology', 'zoo'];\n            let trie = new Trie();\n            strings.forEach(s => trie.insert(s));\n            let json = stringifyNoPrivate(trie);\n            let trie2 = new Trie(JSON.parse(json));\n            strings.forEach(s => assert(trie2.test(s)));\n        });\n\n        it('should return a deep clone of the internal structure', () => {\n            let trie = new Trie();\n            trie.insert('foo');\n            trie.insert('bar');\n            let json = trie.toJSON();\n            assert(json !== trie.root);\n            json.b.hello = \"hi!\";\n            assert(trie.root.b.hello === undefined);\n        });\n    });\n\n});\n"
   },
   {
-    "__docId__": 49,
+    "__docId__": 52,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -1100,7 +1288,7 @@
     "generator": false
   },
   {
-    "__docId__": 50,
+    "__docId__": 53,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -1136,7 +1324,7 @@
     "generator": false
   },
   {
-    "__docId__": 51,
+    "__docId__": 54,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -1149,7 +1337,7 @@
     "content": "/**\n * @file Lookup tables for Base64 conversions\n */\n\n/**\n * Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII\n * character.\n * @constant {String[]}\n */\nexport const BASE64_INT_TO_CHAR = `\\\nABCDEFGHIJKLMNOPQRSTUVWXYZ\\\nabcdefghijklmnopqrstuvwxyz\\\n0123456789\\\n+/\\\n`.split('');\n\n/**\n * Inverse lookup table for transformating a Base-64 ASCII character into the\n * corresponding integer value.\n * @constant {Object}\n */\nexport const BASE64_CHAR_TO_INT = BASE64_INT_TO_CHAR.reduce((agg, char, i) => {\n    agg[char] = i;\n    return agg;\n}, {});\n"
   },
   {
-    "__docId__": 52,
+    "__docId__": 55,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1175,7 +1363,7 @@
     }
   },
   {
-    "__docId__": 53,
+    "__docId__": 56,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1201,7 +1389,7 @@
     }
   },
   {
-    "__docId__": 54,
+    "__docId__": 57,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -1214,7 +1402,7 @@
     "content": "/**\n * @file Parameters used for encoding\n */\n\n/**\n * String terminal character\n * @constant {String}\n */\nexport const TERMINAL = '\\0';\n\n/**\n * Terminal edge\n * @constant {Object}\n */\nexport const TERMINUS = Object.create(null);\n\n/**\n * Encoding version. Bump when breaking encoding changes are introduced.\n * @constant {Number}\n */\nexport const VERSION = 0;\n\n/**\n * Width of header field storing entire header width (including char table).\n * Value is given in Base64 characters (i.e., every six bits)\n * @constant {Number}\n */\nexport const HEADER_WIDTH_FIELD = 10;\n\n/**\n * Width of version field\n * @type {Number}\n */\nexport const VERSION_FIELD = 10;\n\n/**\n * Width of header field representing sign of offset\n * @constant {Number}\n */\nexport const OFFSET_SIGN_FIELD = 1;\n\n/**\n * Width of header field representing unsigned value of offset\n * @constant {Number}\n */\nexport const OFFSET_VAL_FIELD = 21;\n\n/**\n * Width of header field representing the width of the char index in a word\n * @constant {Number}\n */\nexport const CHAR_WIDTH_FIELD = 8;\n\n/**\n * Width of header field representing the width of the offset pointer in a word\n * @constant {Number}\n */\nexport const POINTER_WIDTH_FIELD = 8;\n"
   },
   {
-    "__docId__": 55,
+    "__docId__": 58,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1240,7 +1428,7 @@
     }
   },
   {
-    "__docId__": 56,
+    "__docId__": 59,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1266,7 +1454,7 @@
     }
   },
   {
-    "__docId__": 57,
+    "__docId__": 60,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1292,7 +1480,7 @@
     }
   },
   {
-    "__docId__": 58,
+    "__docId__": 61,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1318,7 +1506,7 @@
     }
   },
   {
-    "__docId__": 59,
+    "__docId__": 62,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1341,7 +1529,7 @@
     }
   },
   {
-    "__docId__": 60,
+    "__docId__": 63,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1367,7 +1555,7 @@
     }
   },
   {
-    "__docId__": 61,
+    "__docId__": 64,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1393,7 +1581,7 @@
     }
   },
   {
-    "__docId__": 62,
+    "__docId__": 65,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1419,7 +1607,7 @@
     }
   },
   {
-    "__docId__": 63,
+    "__docId__": 66,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -1445,7 +1633,7 @@
     }
   },
   {
-    "__docId__": 64,
+    "__docId__": 67,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -1458,7 +1646,7 @@
     "content": "/**\n * @file Provides a fast floor_log2 function\n */\n\n/**\n * Fast floor(log2(x)) operation\n * @param  {Number} x\n * @return {Number}\n */\nexport default function floor_log2(x) {\n    let n = 0;\n    while (x >>= 1) {\n        n++;\n    }\n    return n;\n}\n"
   },
   {
-    "__docId__": 65,
+    "__docId__": 68,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -1494,7 +1682,7 @@
     "generator": false
   },
   {
-    "__docId__": 66,
+    "__docId__": 69,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -1507,7 +1695,7 @@
     "content": "/* eslint-env mocha */\nimport floor_log2 from './floor_log2';\nimport assert from 'assert';\n\ndescribe('floor_log2', () => {\n    it('should compute the floored log base 2 of a number', () => {\n        assert.strictEqual(floor_log2(0), 0);\n        assert.strictEqual(floor_log2(1), 0);\n        assert.strictEqual(floor_log2(2), 1);\n        assert.strictEqual(floor_log2(3), 1);\n        assert.strictEqual(floor_log2(4), 2);\n        assert.strictEqual(floor_log2(5), 2);\n        assert.strictEqual(floor_log2(6), 2);\n        assert.strictEqual(floor_log2(7), 2);\n        assert.strictEqual(floor_log2(8), 3);\n        assert.strictEqual(floor_log2(15), 3);\n        assert.strictEqual(floor_log2(16), 4);\n    });\n});\n"
   },
   {
-    "__docId__": 67,
+    "__docId__": 70,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -1520,7 +1708,7 @@
     "content": "/**\n * @file Convenient functional tools for creating Tries from arrays\n */\n\nimport Trie from './Trie';\nexport {default as Trie} from './Trie';\n\n\n/**\n * Synchronously construct a new Trie out of the given strings.\n * @param  {String[]} words\n * @return {Trie}\n */\nexport function createSync(strings) {\n    let trie = new Trie();\n\n    strings.forEach(s => trie.insert(s));\n\n    return trie;\n}\n\n/**\n * Create a frozen Trie out of given words\n * @param  {String[]} words\n * @return {Trie}\n */\nexport function createFrozenSync(string) {\n    return createSync(string).freeze();\n}\n"
   },
   {
-    "__docId__": 68,
+    "__docId__": 71,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -1556,7 +1744,7 @@
     "generator": false
   },
   {
-    "__docId__": 69,
+    "__docId__": 72,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -1592,7 +1780,7 @@
     "generator": false
   },
   {
-    "__docId__": 70,
+    "__docId__": 73,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -1605,7 +1793,7 @@
     "content": "/* eslint-env mocha */\n\nimport {\n    createSync,\n    createFrozenSync\n} from './index';\nimport Trie from './Trie';\nimport assert from 'assert';\n\n\ndescribe('index', function() {\n\n    describe('createSync', function() {\n        it('creates a valid trie', function() {\n            let trie = createSync([\"foo\", \"bar\", \"zap\"]);\n            assert(trie instanceof Trie);\n            [\"foo\", \"bar\", \"zap\"].forEach(s => assert(trie.test(s)));\n        });\n    });\n\n    describe('createFrozenSync', function() {\n        it('creates a valid frozen trie', function() {\n            let frozenTrie = createFrozenSync([\"foo\", \"bar\", \"zap\"]);\n            assert(frozenTrie instanceof Trie);\n            assert(frozenTrie.frozen);\n            assert.throws(() => frozenTrie.insert('bop'));\n        });\n    });\n\n});\n"
   },
   {
-    "__docId__": 72,
+    "__docId__": 75,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1618,7 +1806,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 73,
+    "__docId__": 76,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1631,7 +1819,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 74,
+    "__docId__": 77,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1644,7 +1832,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 75,
+    "__docId__": 78,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1657,7 +1845,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 76,
+    "__docId__": 79,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1670,7 +1858,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 77,
+    "__docId__": 80,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1683,7 +1871,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 78,
+    "__docId__": 81,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1696,7 +1884,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 79,
+    "__docId__": 82,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1709,7 +1897,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 80,
+    "__docId__": 83,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1722,7 +1910,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 81,
+    "__docId__": 84,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1735,7 +1923,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 82,
+    "__docId__": 85,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1748,7 +1936,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 83,
+    "__docId__": 86,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1761,7 +1949,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 84,
+    "__docId__": 87,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1774,7 +1962,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 85,
+    "__docId__": 88,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1787,7 +1975,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 86,
+    "__docId__": 89,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1800,7 +1988,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 87,
+    "__docId__": 90,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1813,7 +2001,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 88,
+    "__docId__": 91,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1826,7 +2014,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 89,
+    "__docId__": 92,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1839,7 +2027,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 90,
+    "__docId__": 93,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1852,7 +2040,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 91,
+    "__docId__": 94,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1865,7 +2053,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 92,
+    "__docId__": 95,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1878,7 +2066,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 93,
+    "__docId__": 96,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1891,7 +2079,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 94,
+    "__docId__": 97,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1904,7 +2092,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 95,
+    "__docId__": 98,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1917,7 +2105,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 96,
+    "__docId__": 99,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1930,7 +2118,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 97,
+    "__docId__": 100,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1943,7 +2131,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 98,
+    "__docId__": 101,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1956,7 +2144,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 99,
+    "__docId__": 102,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1969,7 +2157,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 100,
+    "__docId__": 103,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1982,7 +2170,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 101,
+    "__docId__": 104,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1995,7 +2183,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 102,
+    "__docId__": 105,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2008,7 +2196,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 103,
+    "__docId__": 106,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2021,7 +2209,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 104,
+    "__docId__": 107,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2034,7 +2222,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 105,
+    "__docId__": 108,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2047,7 +2235,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 106,
+    "__docId__": 109,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2060,7 +2248,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 107,
+    "__docId__": 110,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2073,7 +2261,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 108,
+    "__docId__": 111,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2086,7 +2274,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 109,
+    "__docId__": 112,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2099,7 +2287,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 110,
+    "__docId__": 113,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2112,7 +2300,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 111,
+    "__docId__": 114,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2125,7 +2313,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 112,
+    "__docId__": 115,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2138,7 +2326,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 113,
+    "__docId__": 116,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2151,7 +2339,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 114,
+    "__docId__": 117,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2164,7 +2352,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 115,
+    "__docId__": 118,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2177,7 +2365,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 116,
+    "__docId__": 119,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2190,7 +2378,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 117,
+    "__docId__": 120,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2203,7 +2391,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 118,
+    "__docId__": 121,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2216,7 +2404,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 120,
+    "__docId__": 123,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2229,7 +2417,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 121,
+    "__docId__": 124,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2242,7 +2430,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 122,
+    "__docId__": 125,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2255,7 +2443,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 123,
+    "__docId__": 126,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2268,7 +2456,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 124,
+    "__docId__": 127,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2281,7 +2469,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 125,
+    "__docId__": 128,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2294,7 +2482,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 126,
+    "__docId__": 129,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -2307,7 +2495,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 127,
+    "__docId__": 130,
     "kind": "external",
     "static": true,
     "variation": null,
