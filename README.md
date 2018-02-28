@@ -29,7 +29,11 @@ contain the unicode characters somewhere in it.)
 Both `Trie` and `PackedTrie` support `test` and `search` methods which support
 fuzzy-matching (i.e., wildcards) and prefix search.
 
-## Usage
+## Docs
+
+See complete docs at https://jnu.github.io/tiny-trie/
+
+## Quick Usage
 
 ```js
 const words = ['spit', 'spat', 'spot', 'spits', 'spats', 'spots'];
