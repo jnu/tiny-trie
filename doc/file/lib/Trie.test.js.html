@@ -69,15 +69,15 @@ import assert from &apos;assert&apos;;
  * @return {String[]}
  */
 function flatKeys(trie) {
-    let nodes = [];
-    let keys = [];
+    const nodes = [];
+    const keys = [];
 
     (function walk(node, i = 0) {
         Object.keys(node).forEach(key =&gt; {
             if (key.substr(0, 2) === &apos;__&apos;) {
                 return;
             }
-            let current = node[key];
+            const current = node[key];
             if (!nodes.find(x =&gt; x === current)) {
                 nodes.push(current);
                 keys.push(`${key}_${i}`);
@@ -104,7 +104,7 @@ describe(&apos;Trie&apos;, () =&gt; {
 
     describe(&apos;constructor&apos;, () =&gt; {
         it(&apos;creates an empty Trie&apos;, () =&gt; {
-            let trie = new Trie();
+            const trie = new Trie();
             assert(stringifyNoPrivate(trie.root), &apos;{}&apos;);
             assert(trie.frozen === false);
         });
@@ -112,7 +112,7 @@ describe(&apos;Trie&apos;, () =&gt; {
 
     describe(&apos;insert&apos;, () =&gt; {
         it(&apos;inserts a word into the trie&apos;, () =&gt; {
-            let trie = new Trie();
+            const trie = new Trie();
             trie.insert(&apos;foo&apos;);
             assert.strictEqual(
                 stringifyNoPrivate(trie.root),
@@ -121,7 +121,7 @@ describe(&apos;Trie&apos;, () =&gt; {
         });
 
         it(&apos;does not create redundant prefixes&apos;, () =&gt; {
-            let trie = new Trie();
+            const trie = new Trie();
             trie.insert(&apos;foo&apos;);
             trie.insert(&apos;food&apos;);
             assert.strictEqual(
@@ -131,7 +131,7 @@ describe(&apos;Trie&apos;, () =&gt; {
         });
 
         it(&apos;throws an error if trie is frozen&apos;, () =&gt; {
-            let trie = new Trie();
+            const trie = new Trie();
             trie.freeze();
             assert.throws(() =&gt; trie.insert(&apos;foo&apos;));
         });
@@ -139,7 +139,7 @@ describe(&apos;Trie&apos;, () =&gt; {
 
     describe(&apos;test&apos;, () =&gt; {
         it(&apos;recalls strings entered into the trie&apos;, () =&gt; {
-            let trie = new Trie();
+            const trie = new Trie();
 
             trie.insert(&apos;foo&apos;);
             assert(trie.test(&apos;foo&apos;));
@@ -152,6 +152,70 @@ describe(&apos;Trie&apos;, () =&gt; {
             assert(trie.test(&apos;food&apos;));
             assert(trie.test(&apos;foo&apos;));
             assert(trie.test(&apos;bar&apos;));
+        });
+
+        it(&apos;returns true for fuzzy matches when wildcard is given&apos;, () =&gt; {
+            const trie = new Trie();
+            trie.insert(&apos;foo&apos;);
+            trie.insert(&apos;bar&apos;);
+            trie.insert(&apos;bop&apos;);
+            trie.insert(&apos;baz&apos;);
+
+            assert(trie.test(&apos;***&apos;, {wildcard: &apos;*&apos;}));
+            assert(trie.test(&apos;**r&apos;, {wildcard: &apos;*&apos;}));
+            assert(trie.test(&apos;*az&apos;, {wildcard: &apos;*&apos;}));
+            assert(trie.test(&apos;f**&apos;, {wildcard: &apos;*&apos;}));
+            assert(trie.test(&apos;f*o&apos;, {wildcard: &apos;*&apos;}));
+            assert(!trie.test(&apos;**x&apos;, {wildcard: &apos;*&apos;}));
+        });
+
+        it(&apos;returns true for partial matches when searching over prefixes&apos;, () =&gt; {
+            const trie = new Trie();
+            trie.insert(&apos;foo&apos;);
+            trie.insert(&apos;food&apos;);
+            trie.insert(&apos;foodology&apos;);
+
+            assert(trie.test(&apos;fo&apos;, {prefix: true}));
+            assert(trie.test(&apos;foodolog&apos;, {prefix: true}));
+            assert(!trie.test(&apos;fob&apos;, {prefix: true}));
+        });
+
+        it(&apos;returns correct value for complex options cases&apos;, () =&gt; {
+            const trie = new Trie();
+            trie.insert(&apos;foo&apos;);
+            trie.insert(&apos;bar&apos;);
+            trie.insert(&apos;foobar&apos;);
+
+            assert(trie.test(&apos;foo&apos;, {wildcard: &apos;*&apos;}));
+            assert(trie.test(&apos;bar&apos;, {wildcard: &apos;*&apos;}));
+            assert(!trie.test(&apos;foob&apos;, {wildcard: &apos;*&apos;, prefix: false}));
+            assert(trie.test(&apos;foobar&apos;, {wildcard: &apos;*&apos;, prefix: false}));
+            assert(trie.test(&apos;foob*&apos;, {wildcard: &apos;*&apos;, prefix: true}));
+            assert(!trie.test(&apos;foob*&apos;, {wildcard: &apos;*&apos;, prefix: false}));
+            assert(trie.test(&apos;**ob*&apos;, {wildcard: &apos;*&apos;, prefix: true}));
+        });
+    });
+
+    describe(&apos;search&apos;, () =&gt; {
+        const strings = [&apos;foo&apos;, &apos;bar&apos;, &apos;bare&apos;, &apos;fool&apos;, &apos;goo&apos;, &apos;far&apos;, &apos;boo&apos;, &apos;gar&apos;, &apos;tool&apos;];
+
+        it(&apos;returns all matching values with wildcard&apos;, () =&gt; {
+            const trie = new Trie();
+            strings.forEach(s =&gt; trie.insert(s));
+
+            assert.deepEqual(trie.search(&apos;*oo&apos;, {wildcard: &apos;*&apos;}), [&apos;foo&apos;, &apos;boo&apos;, &apos;goo&apos;]);
+            assert.deepEqual(trie.search(&apos;*oo&apos;, {wildcard: &apos;*&apos;, prefix: true}), [
+                &apos;foo&apos;, &apos;boo&apos;, &apos;goo&apos;, &apos;fool&apos;, &apos;tool&apos;]);
+            assert.deepEqual(trie.search(&apos;f**&apos;, {wildcard: &apos;*&apos;}), [&apos;foo&apos;, &apos;far&apos;]);
+            assert.deepEqual(trie.search(&apos;*x*&apos;, {wildcard: &apos;*&apos;}), []);
+        });
+
+        it(&apos;returns first match with wildcard&apos;, () =&gt; {
+            const trie = new Trie();
+            strings.forEach(s =&gt; trie.insert(s));
+            assert(trie.search(&apos;f**&apos;, {wildcard: &apos;*&apos;, first: true}) === &apos;foo&apos;);
+            assert(trie.search(&apos;**x&apos;, {wildcard: &apos;*&apos;, first: true}) === null);
+            assert(trie.search(&apos;*&apos;, {wildcard: &apos;*&apos;, prefix: true}), strings);
         });
     });
 

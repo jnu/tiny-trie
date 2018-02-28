@@ -311,13 +311,39 @@ Trie from a JSON object that represents it (@see Trie#toJSON).</p>
     <td>
       <div>
         <p>
+           <span data-ice="name"><span><a href="class/lib/Trie.js~Trie.html#instance-method-search">search</a></span></span><span data-ice="signature">(string: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span> | <span><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span><span>[]</span></span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        <div data-ice="description"><p>Query for matching words in the trie.</p>
+</div>
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
            <span data-ice="name"><span><a href="class/lib/Trie.js~Trie.html#instance-method-test">test</a></span></span><span data-ice="signature">(string: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Test membership in the trie</p>
+        <div data-ice="description"><p>Test membership in the trie.</p>
 </div>
       </div>
     </td>
@@ -529,7 +555,7 @@ Trie from a JSON object that represents it (@see Trie#toJSON).</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber86">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber175">source</a></span></span>
     </span>
   </h3>
 
@@ -580,7 +606,7 @@ Trie from a JSON object that represents it (@see Trie#toJSON).</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber176">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber265">source</a></span></span>
     </span>
   </h3>
 
@@ -632,7 +658,7 @@ efficiently and still allows for fast queries.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber95">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber184">source</a></span></span>
     </span>
   </h3>
 
@@ -746,24 +772,24 @@ an error. The</p>
   
 </div>
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-method-test">
+  <h3 data-ice="anchor" id="instance-method-search">
     <span class="access" data-ice="access">public</span>
     
     
     
     
-    <span data-ice="name">test</span><span data-ice="signature">(string: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
+    <span data-ice="name">search</span><span data-ice="signature">(string: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span> | <span><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span><span>[]</span></span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber76">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber107">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Test membership in the trie</p>
+  <div data-ice="description"><p>Query for matching words in the trie.</p>
 </div>
 
   
@@ -780,7 +806,121 @@ an error. The</p>
       <td data-ice="name" data-depth="0">string</td>
       <td data-ice="type"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></td>
       <td data-ice="appendix"></td>
-      <td data-ice="description"></td>
+      <td data-ice="description"><p>Search query</p>
+</td>
+    </tr>
+<tr data-ice="property" data-depth="1">
+      <td data-ice="name" data-depth="1">opts.wildcard</td>
+      <td data-ice="type"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>Wildcard to use for fuzzy matching.
+                                  Default is no wildcard; only match
+                                  literal query.</p>
+</td>
+    </tr>
+<tr data-ice="property" data-depth="1">
+      <td data-ice="name" data-depth="1">opts.prefix</td>
+      <td data-ice="type"><span>Boolean?</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>Perform prefix search (returns true if
+                                 any word exists in the trie starts with
+                                 the search query). Default is false;
+                                 only match the full query.</p>
+</td>
+    </tr>
+<tr data-ice="property" data-depth="1">
+      <td data-ice="name" data-depth="1">opts.first</td>
+      <td data-ice="type"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>Return only first match that is found,
+                               short-circuiting the search. Default is
+                               false; return all matches.</p>
+</td>
+    </tr>
+</tbody>
+  </table>
+</div>
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tr>
+        <td class="return-type" data-ice="returnType"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span> | <span><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span><span>[]</span></span></td>
+        <td class="return-desc" data-ice="returnDescription"><p>Return an optional string result when in
+                             first-only mode; otherwise return a list
+                             of strings that match the query.</p>
+</td>
+      </tr>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-test">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    <span data-ice="name">test</span><span data-ice="signature">(string: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber78">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  <div data-ice="description"><p>Test membership in the trie.</p>
+</div>
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" data-depth="0">string</td>
+      <td data-ice="type"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>Search query</p>
+</td>
+    </tr>
+<tr data-ice="property" data-depth="1">
+      <td data-ice="name" data-depth="1">opts.wildcard</td>
+      <td data-ice="type"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>See Trie#search wildcard doc</p>
+</td>
+    </tr>
+<tr data-ice="property" data-depth="1">
+      <td data-ice="name" data-depth="1">opts.prefix</td>
+      <td data-ice="type"><span>Boolean?</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>See Trie#search prefix doc</p>
+</td>
     </tr>
 </tbody>
   </table>
@@ -823,7 +963,7 @@ an error. The</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber368">source</a></span></span>
+      <span data-ice="source"><span><a href="file/lib/Trie.js.html#lineNumber457">source</a></span></span>
     </span>
   </h3>
 

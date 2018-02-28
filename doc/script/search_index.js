@@ -534,6 +534,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "lib/packedtrie.js~packedtrie#inversetable",
+    "class/lib/PackedTrie.js~PackedTrie.html#instance-member-inverseTable",
+    "lib/PackedTrie.js~PackedTrie#inverseTable",
+    "member"
+  ],
+  [
     "lib/packedtrie.js~packedtrie#lastmask",
     "class/lib/PackedTrie.js~PackedTrie.html#instance-member-lastMask",
     "lib/PackedTrie.js~PackedTrie#lastMask",
@@ -556,6 +562,12 @@ window.esdocSearchIndex = [
     "class/lib/PackedTrie.js~PackedTrie.html#instance-member-pointerShift",
     "lib/PackedTrie.js~PackedTrie#pointerShift",
     "member"
+  ],
+  [
+    "lib/packedtrie.js~packedtrie#search",
+    "class/lib/PackedTrie.js~PackedTrie.html#instance-method-search",
+    "lib/PackedTrie.js~PackedTrie#search",
+    "method"
   ],
   [
     "lib/packedtrie.js~packedtrie#table",
@@ -628,6 +640,12 @@ window.esdocSearchIndex = [
     "class/lib/Trie.js~Trie.html#instance-member-root",
     "lib/Trie.js~Trie#root",
     "member"
+  ],
+  [
+    "lib/trie.js~trie#search",
+    "class/lib/Trie.js~Trie.html#instance-method-search",
+    "lib/Trie.js~Trie#search",
+    "method"
   ],
   [
     "lib/trie.js~trie#test",

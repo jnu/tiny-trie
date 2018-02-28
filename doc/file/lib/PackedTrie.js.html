@@ -181,6 +181,12 @@ class PackedTrie {
         }, { [TERMINAL]: 0 });
 
         /**
+         * Inverse of character table, mapping integer ID to character.
+         * @type {Array}
+         */
+        this.inverseTable = [TERMINAL].concat(charTable.split(&apos;&apos;));
+
+        /**
          * Number of bits in one word
          * @type {Number}
          */
@@ -218,15 +224,45 @@ class PackedTrie {
     }
 
     /**
-     * Test whether trie contains the given string.
-     * @param  {String} string
+     * Test membership in the trie.
+     * @param  {String} string - Search query
+     * @param  {String?} opts.wildcard - See PackedTrie#search wildcard doc
+     * @param  {Boolean?} opts.prefix - See PackedTrie#search prefix doc
      * @return {Boolean}
      */
-    test(string) {
-        let {
+    test(string, {wildcard, prefix} = {wildcard: null, prefix: false}) {
+        // Delegate to #search with early exit. Could write an optimized path,
+        // especially for the prefix search case.
+        return this.search(string, {wildcard, prefix, first: true}) !== null;
+    }
+
+    /**
+     * Query for matching words in the trie.
+     * @param  {String} string - Search query
+     * @param  {String?} opts.wildcard - Wildcard to use for fuzzy matching.
+     *                                   Default is no wildcard; only match
+     *                                   literal query.
+     * @param  {Boolean?} opts.prefix - Perform prefix search (returns true if
+     *                                  any word exists in the trie starts with
+     *                                  the search query). Default is false;
+     *                                  only match the full query.
+     * @param  {Boolean} opts.first - Return only first match that is found,
+     *                                short-circuiting the search. Default is
+     *                                false; return all matches.
+     * @return {String?|String[]} - Return an optional string result when in
+     *                              first-only mode; otherwise return a list
+     *                              of strings that match the query.
+     */
+    search(string, {wildcard, prefix, first} = {wildcard: null, prefix: false, first: false}) {
+        if (wildcard &amp;&amp; wildcard.length !== 1) {
+            throw new Error(`Wilcard must be a single character; got ${wildcard}`);
+        }
+
+        const {
             data,
             offset,
             table,
+            inverseTable,
             wordWidth,
             lastMask,
             pointerShift,
@@ -235,52 +271,90 @@ class PackedTrie {
             charMask
         } = this;
 
-        let wordPointer = 0;
+        // List of matches found in the search.
+        const matches = [];
 
-        // Test every character, with a terminal at the end
-        let match = string.split(&apos;&apos;).concat(TERMINAL).every(char =&gt; {
-            // TODO is binary search possible within blocks? Not sure if the
-            // encoder guarantees ordering, plus there&apos;s no indication how long
-            // a block is, so it&apos;d require extra overhead for each block.
+        // Search queue.
+        const queue = [{pointer: 0, memo: &apos;&apos;, depth: 0}];
+        const lastDepth = string.length;
+
+        // Do a BFS over nodes for the search query.
+        while (queue.length) {
+            const node = queue.shift();
+            const isLast = node.depth &gt;= lastDepth;
+            const token = isLast ? TERMINAL : string[node.depth];
+            // Flag for matching anything. Note that the overflow beyond the
+            // length of the query in a prefix search behaves as a wildcard.
+            const isWild = token === wildcard || (prefix &amp;&amp; isLast);
+            // We&apos;re committed to an O(N) scan over the entire node even in
+            // the simple literal-search case, since our structure doesn&apos;t
+            // currently guarantee any child ordering.
+            // TODO(joen) ordering is a potential future format optimization.
+            let wordPointer = node.pointer;
             while (true) {
-                let queryCharId = table[char];
-
-                // Exit immediately if the char was not found in the table,
-                // (or if it was the TERMINAL character, which has a code of 0)
-                if (queryCharId === undefined) {
-                    return false;
+                // Optimization: Exit immediately if the char was not found in
+                // the table (meaning there can&apos;t be any children in the trie
+                // with this character). Exception is wildcards.
+                if (!isWild &amp;&amp; !table.hasOwnProperty(token)) {
+                    break;
                 }
 
-                let bits = wordPointer * wordWidth;
-                let chunk = readBits(data, bits, wordWidth);
+                const bits = wordPointer * wordWidth;
+                const chunk = readBits(data, bits, wordWidth);
 
                 // Read the character index
-                let charIdx = (chunk &gt;&gt; charShift) &amp; charMask;
+                const charIdx = (chunk &gt;&gt; charShift) &amp; charMask;
 
                 // If this character is matched, jump to the pointer given in
                 // this node.
-                if (charIdx === queryCharId) {
-                    let pointer = (chunk &gt;&gt; pointerShift) &amp; pointerMask;
-                    wordPointer += offset + pointer;
-                    return true;
+                if (isWild || charIdx === table[token]) {
+                    const pointer = (chunk &gt;&gt; pointerShift) &amp; pointerMask;
+                    // Find the next char with an inverse map, since we might
+                    // be using a wildcard search.
+                    const newChar = inverseTable[charIdx];
+                    // Stopping condition: searching last block and we hit a terminal
+                    if (isLast &amp;&amp; newChar === TERMINAL) {
+                        // Optimization: early exit if we only need first match.
+                        if (first) {
+                            return node.memo;
+                        }
+                        // Store this match.
+                        matches.push(node.memo);
+                        // If we&apos;re not matching everything, break out of the
+                        // inner loop.
+                        if (!isWild) {
+                            break;
+                        }
+                    }
+
+                    // Push next node for search, if it&apos;s non-terminal.
+                    if (newChar !== TERMINAL) {
+                        queue.push({
+                            pointer: wordPointer + offset + pointer,
+                            depth: node.depth + 1,
+                            memo: node.memo + newChar,
+                        });
+                    }
                 }
 
                 // If this wasn&apos;t a match, check if this was the last key in
                 // the block.
-                let last = chunk &amp; lastMask;
+                const last = chunk &amp; lastMask;
 
                 // If this was the last node, the word was not found.
                 if (last) {
-                    return false;
+                    break;
                 }
                 // Otherwise increment the pointer to the next sibling key
                 else {
                     wordPointer += 1;
                 }
             }
-        });
+        }
 
-        return match;
+        // If first was requested it should have returned by now. Otherwise
+        // return the matches list, which may be empty.
+        return first ? null : matches;
     }
 
 }

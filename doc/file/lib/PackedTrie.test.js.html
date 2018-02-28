@@ -67,8 +67,8 @@ describe(&apos;PackedTrie&apos;, () =&gt; {
 
     describe(&apos;constructor&apos;, () =&gt; {
         it(&apos;should parse header fields on init&apos;, () =&gt; {
-            let encoded = &apos;BAAAAABAwIfboarzKTbjds1FDB&apos;;
-            let trie = new PackedTrie(encoded);
+            const encoded = &apos;BAAAAABAwIfboarzKTbjds1FDB&apos;;
+            const trie = new PackedTrie(encoded);
 
             assert.strictEqual(trie.offset, 1);
             assert.deepEqual(trie.table, {
@@ -90,15 +90,15 @@ describe(&apos;PackedTrie&apos;, () =&gt; {
         });
 
         it(&apos;should throw a version mismatch error if encoded string differs from reader version&apos;, () =&gt; {
-            let encoded = &apos;BD/wAABAwIfboarzKTbjds1FDB&apos;;
+            const encoded = &apos;BD/wAABAwIfboarzKTbjds1FDB&apos;;
             assert.throws(() =&gt; new PackedTrie(encoded));
         });
     });
 
     describe(&apos;test&apos;, () =&gt; {
         it(&apos;should determine whether an item is in the Trie&apos;, () =&gt; {
-            let encoded = &apos;BAAAAABAwIfboarzKTbjds1FDB&apos;;
-            let trie = new PackedTrie(encoded);
+            const encoded = &apos;BAAAAABAwIfboarzKTbjds1FDB&apos;;
+            const trie = new PackedTrie(encoded);
 
             [&apos;foo&apos;, &apos;bar&apos;, &apos;baz&apos;].forEach(w =&gt; assert(trie.test(w)));
             [&apos;fu&apos;, &apos;boer&apos;, &apos;batz&apos;].forEach(w =&gt; assert(!trie.test(w)));
@@ -111,16 +111,80 @@ describe(&apos;PackedTrie&apos;, () =&gt; {
                 [&apos;agricola&apos;, &apos;agricolae&apos;, &apos;agricolae&apos;, &apos;agricolam&apos;, &apos;agricol&#x101;&apos;],
                 [&apos;&#x43B;&#x44E;&#x431;&#x438;&#x442;&#x44C;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x43B;&#x44E;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x438;&#x448;&#x44C;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x438;&#x442;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x438;&#x43C;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x438;&#x442;&#x435;&apos;, &apos;&#x43B;&#x44E;&#x431;&#x44F;&#x442;&apos;]
             ].forEach(words =&gt; {
-                let sdrow = words.slice().map(w =&gt; w.split(&apos;&apos;).reverse().join(&apos;&apos;));
-                let trie = new Trie();
+                const sdrow = words.slice().map(w =&gt; w.split(&apos;&apos;).reverse().join(&apos;&apos;));
+                const trie = new Trie();
                 words.forEach(w =&gt; trie.insert(w));
                 words.forEach(w =&gt; assert(trie.test(w)));
                 sdrow.forEach(s =&gt; assert(!trie.test(s)));
-                let encoded = trie.freeze().encode();
-                let packed = new PackedTrie(encoded);
+                const encoded = trie.freeze().encode();
+                const packed = new PackedTrie(encoded);
                 words.forEach(w =&gt; assert(packed.test(w)));
                 sdrow.forEach(s =&gt; assert(!packed.test(s)));
             });
+        });
+
+        it(&apos;returns true for fuzzy matches when wildcard is given&apos;, () =&gt; {
+            const trie = new Trie();
+            trie.insert(&apos;foo&apos;);
+            trie.insert(&apos;bar&apos;);
+            trie.insert(&apos;bop&apos;);
+            trie.insert(&apos;baz&apos;);
+            const packed = new PackedTrie(trie.freeze().encode());
+
+            assert(packed.test(&apos;***&apos;, {wildcard: &apos;*&apos;}));
+            assert(packed.test(&apos;**r&apos;, {wildcard: &apos;*&apos;}));
+            assert(packed.test(&apos;*az&apos;, {wildcard: &apos;*&apos;}));
+            assert(packed.test(&apos;f**&apos;, {wildcard: &apos;*&apos;}));
+            assert(packed.test(&apos;f*o&apos;, {wildcard: &apos;*&apos;}));
+            assert(!packed.test(&apos;**x&apos;, {wildcard: &apos;*&apos;}));
+        });
+
+        it(&apos;returns true for partial matches when searching over prefixes&apos;, () =&gt; {
+            const trie = new Trie();
+            trie.insert(&apos;foo&apos;);
+            trie.insert(&apos;food&apos;);
+            trie.insert(&apos;foodology&apos;);
+            const packed = new PackedTrie(trie.freeze().encode());
+
+            assert(packed.test(&apos;fo&apos;, {prefix: true}));
+            assert(packed.test(&apos;foodolog&apos;, {prefix: true}));
+            assert(!packed.test(&apos;fob&apos;, {prefix: true}));
+        });
+
+        it(&apos;returns correct value for complex options cases&apos;, () =&gt; {
+            const trie = new Trie();
+            trie.insert(&apos;foo&apos;);
+            trie.insert(&apos;bar&apos;);
+            trie.insert(&apos;foobar&apos;);
+            const packed = new PackedTrie(trie.freeze().encode());
+
+            assert(packed.test(&apos;foo&apos;, {wildcard: &apos;*&apos;}));
+            assert(packed.test(&apos;bar&apos;, {wildcard: &apos;*&apos;}));
+            assert(!packed.test(&apos;foob&apos;, {wildcard: &apos;*&apos;, prefix: false}));
+            assert(packed.test(&apos;foobar&apos;, {wildcard: &apos;*&apos;, prefix: false}));
+            assert(packed.test(&apos;foob*&apos;, {wildcard: &apos;*&apos;, prefix: true}));
+            assert(!packed.test(&apos;foob*&apos;, {wildcard: &apos;*&apos;, prefix: false}));
+            assert(packed.test(&apos;**ob*&apos;, {wildcard: &apos;*&apos;, prefix: true}));
+        });
+    });
+
+    describe(&apos;search&apos;, () =&gt; {
+        const encoded = &apos;BMAAAAABAQfbgtoarleFBKNiPVzXZyxVzPV6vfbxWqzeazC0VCYQloNBYJg4BAIB&apos;;
+        const trie = new PackedTrie(encoded);
+
+        it(&apos;returns all matching values with wildcard&apos;, () =&gt; {
+            assert.deepEqual(trie.search(&apos;*oo&apos;, {wildcard: &apos;*&apos;}), [&apos;foo&apos;, &apos;boo&apos;, &apos;goo&apos;]);
+            assert.deepEqual(trie.search(&apos;*oo&apos;, {wildcard: &apos;*&apos;, prefix: true}), [
+                &apos;foo&apos;, &apos;boo&apos;, &apos;goo&apos;, &apos;fool&apos;, &apos;tool&apos;]);
+            assert.deepEqual(trie.search(&apos;f**&apos;, {wildcard: &apos;*&apos;}), [&apos;foo&apos;, &apos;far&apos;]);
+            assert.deepEqual(trie.search(&apos;*x*&apos;, {wildcard: &apos;*&apos;}), []);
+        });
+
+        it(&apos;returns first match with wildcard&apos;, () =&gt; {
+            assert(trie.search(&apos;f**&apos;, {wildcard: &apos;*&apos;, first: true}) === &apos;foo&apos;);
+            assert(trie.search(&apos;**x&apos;, {wildcard: &apos;*&apos;, first: true}) === null);
+            assert(trie.search(&apos;*&apos;, {wildcard: &apos;*&apos;, prefix: true}), [
+                &apos;foo&apos;, &apos;bar&apos;, &apos;bare&apos;, &apos;fool&apos;, &apos;goo&apos;, &apos;far&apos;, &apos;boo&apos;, &apos;gar&apos;, &apos;tool&apos;]);
         });
     });
 

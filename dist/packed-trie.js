@@ -183,6 +183,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }, _defineProperty({}, _constants.TERMINAL, 0));
 
 	        /**
+	         * Inverse of character table, mapping integer ID to character.
+	         * @type {Array}
+	         */
+	        this.inverseTable = [_constants.TERMINAL].concat(charTable.split(''));
+
+	        /**
 	         * Number of bits in one word
 	         * @type {Number}
 	         */
@@ -220,17 +226,61 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * Test whether trie contains the given string.
-	     * @param  {String} string
+	     * Test membership in the trie.
+	     * @param  {String} string - Search query
+	     * @param  {String?} opts.wildcard - See PackedTrie#search wildcard doc
+	     * @param  {Boolean?} opts.prefix - See PackedTrie#search prefix doc
 	     * @return {Boolean}
 	     */
 
 	    _createClass(PackedTrie, [{
 	        key: 'test',
 	        value: function test(string) {
+	            var _ref = arguments.length <= 1 || arguments[1] === undefined ? { wildcard: null, prefix: false } : arguments[1];
+
+	            var wildcard = _ref.wildcard;
+	            var prefix = _ref.prefix;
+
+	            // Delegate to #search with early exit. Could write an optimized path,
+	            // especially for the prefix search case.
+	            return this.search(string, { wildcard: wildcard, prefix: prefix, first: true }) !== null;
+	        }
+
+	        /**
+	         * Query for matching words in the trie.
+	         * @param  {String} string - Search query
+	         * @param  {String?} opts.wildcard - Wildcard to use for fuzzy matching.
+	         *                                   Default is no wildcard; only match
+	         *                                   literal query.
+	         * @param  {Boolean?} opts.prefix - Perform prefix search (returns true if
+	         *                                  any word exists in the trie starts with
+	         *                                  the search query). Default is false;
+	         *                                  only match the full query.
+	         * @param  {Boolean} opts.first - Return only first match that is found,
+	         *                                short-circuiting the search. Default is
+	         *                                false; return all matches.
+	         * @return {String?|String[]} - Return an optional string result when in
+	         *                              first-only mode; otherwise return a list
+	         *                              of strings that match the query.
+	         */
+
+	    }, {
+	        key: 'search',
+	        value: function search(string) {
+	            var _ref2 = arguments.length <= 1 || arguments[1] === undefined ? { wildcard: null, prefix: false, first: false } : arguments[1];
+
+	            var wildcard = _ref2.wildcard;
+	            var prefix = _ref2.prefix;
+	            var first = _ref2.first;
+
+	            if (wildcard && wildcard.length !== 1) {
+	                throw new Error('Wilcard must be a single character; got ' + wildcard);
+	            }
+
 	            var data = this.data;
 	            var offset = this.offset;
 	            var table = this.table;
+	            var inverseTable = this.inverseTable;
 	            var wordWidth = this.wordWidth;
 	            var lastMask = this.lastMask;
 	            var pointerShift = this.pointerShift;
@@ -238,20 +288,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var charShift = this.charShift;
 	            var charMask = this.charMask;
 
-	            var wordPointer = 0;
+	            // List of matches found in the search.
 
-	            // Test every character, with a terminal at the end
-	            var match = string.split('').concat(_constants.TERMINAL).every(function (char) {
-	                // TODO is binary search possible within blocks? Not sure if the
-	                // encoder guarantees ordering, plus there's no indication how long
-	                // a block is, so it'd require extra overhead for each block.
+	            var matches = [];
+
+	            // Search queue.
+	            var queue = [{ pointer: 0, memo: '', depth: 0 }];
+	            var lastDepth = string.length;
+
+	            // Do a BFS over nodes for the search query.
+	            while (queue.length) {
+	                var node = queue.shift();
+	                var isLast = node.depth >= lastDepth;
+	                var token = isLast ? _constants.TERMINAL : string[node.depth];
+	                // Flag for matching anything. Note that the overflow beyond the
+	                // length of the query in a prefix search behaves as a wildcard.
+	                var isWild = token === wildcard || prefix && isLast;
+	                // We're committed to an O(N) scan over the entire node even in
+	                // the simple literal-search case, since our structure doesn't
+	                // currently guarantee any child ordering.
+	                // TODO(joen) ordering is a potential future format optimization.
+	                var wordPointer = node.pointer;
 	                while (true) {
-	                    var queryCharId = table[char];
-
-	                    // Exit immediately if the char was not found in the table,
-	                    // (or if it was the TERMINAL character, which has a code of 0)
-	                    if (queryCharId === undefined) {
-	                        return false;
+	                    // Optimization: Exit immediately if the char was not found in
+	                    // the table (meaning there can't be any children in the trie
+	                    // with this character). Exception is wildcards.
+	                    if (!isWild && !table.hasOwnProperty(token)) {
+	                        break;
 	                    }
 
 	                    var bits = wordPointer * wordWidth;
@@ -262,10 +325,34 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                    // If this character is matched, jump to the pointer given in
 	                    // this node.
-	                    if (charIdx === queryCharId) {
+	                    if (isWild || charIdx === table[token]) {
 	                        var pointer = chunk >> pointerShift & pointerMask;
-	                        wordPointer += offset + pointer;
-	                        return true;
+	                        // Find the next char with an inverse map, since we might
+	                        // be using a wildcard search.
+	                        var newChar = inverseTable[charIdx];
+	                        // Stopping condition: searching last block and we hit a terminal
+	                        if (isLast && newChar === _constants.TERMINAL) {
+	                            // Optimization: early exit if we only need first match.
+	                            if (first) {
+	                                return node.memo;
+	                            }
+	                            // Store this match.
+	                            matches.push(node.memo);
+	                            // If we're not matching everything, break out of the
+	                            // inner loop.
+	                            if (!isWild) {
+	                                break;
+	                            }
+	                        }
+
+	                        // Push next node for search, if it's non-terminal.
+	                        if (newChar !== _constants.TERMINAL) {
+	                            queue.push({
+	                                pointer: wordPointer + offset + pointer,
+	                                depth: node.depth + 1,
+	                                memo: node.memo + newChar
+	                            });
+	                        }
 	                    }
 
 	                    // If this wasn't a match, check if this was the last key in
@@ -274,16 +361,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                    // If this was the last node, the word was not found.
 	                    if (last) {
-	                        return false;
+	                        break;
 	                    }
 	                    // Otherwise increment the pointer to the next sibling key
 	                    else {
 	                            wordPointer += 1;
 	                        }
 	                }
-	            });
+	            }
 
-	            return match;
+	            // If first was requested it should have returned by now. Otherwise
+	            // return the matches list, which may be empty.
+	            return first ? null : matches;
 	        }
 	    }]);
 
