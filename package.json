@@ -1,6 +1,6 @@
 {
   "name": "tiny-trie",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "JS Trie / DAWG classes",
   "main": "lib/index.js",
   "scripts": {
