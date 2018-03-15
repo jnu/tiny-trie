@@ -1,35 +1,47 @@
 /* eslint-env node */
-var UglifyJsPlugin = require('webpack/lib/optimize/UglifyJsPlugin');
 var path = require('path');
 
 var DEBUG = process.env.NODE_ENV !== 'production';
 
 var bundleExt = (DEBUG ? '' : '.min') + '.js';
 
-var plugins = [];
-if (!DEBUG) {
-    plugins.push(new UglifyJsPlugin());
-}
 
 module.exports = {
     entry: {
-        'tiny-trie': './lib/index.js',
-        'packed-trie': './lib/PackedTrie.js'
+        'tiny-trie': './lib/index.ts',
+        'packed-trie': './lib/PackedTrie.ts'
     },
+    mode: DEBUG ? 'development' : 'production',
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.js$/,
-                exclude: /(node_modules|bower_components)/,
-                loader: 'babel?cacheDirectory'
-            }
-        ]
+                exclude: [/node_modules/],
+                use: [{
+                    loader: 'babel-loader',
+                    options: {cacheDirectory: true}
+                }]
+            },
+            {
+                test: /\.ts$/,
+                exclude: [/node_modules/],
+                use: [{
+                    loader: 'babel-loader',
+                    options: {cacheDirectory: true}
+                }, {
+                    loader: 'ts-loader'
+                }]
+            },
+        ],
     },
-    plugins: plugins,
     output: {
         path: path.join(__dirname, 'dist'),
         filename: '[name]' + bundleExt,
         libraryTarget: 'umd',
         library: 'TinyTrie'
+    },
+    resolve: {
+        extensions: ['.js', '.ts'],
+        modules: [path.join(__dirname, 'lib'), 'node_modules']
     }
 };

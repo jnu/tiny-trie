@@ -63,154 +63,36 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<div class="tsd-panel tsd-typography">
-				<h1 id="tiny-trie">tiny-trie</h1>
-				<p>Trie / DAWG implementation for JavaScript.</p>
-				<p><a href="https://travis-ci.org/jnu/tiny-trie"><img src="https://travis-ci.org/jnu/tiny-trie.svg?branch=master" alt="Build Status"></a></p>
-				<h2 id="about">About</h2>
-				<p>Construct a trie out of a list of words for efficient searches. The trie
-					provides a <code>#freeze</code> method to dedupe its suffixes, turning it into a directed
-				acyclic word graph (DAWG).</p>
-				<p>More excitingly, there is a <code>Trie#encode</code> method which outputs the trie in a
-					succinct binary format. (The trie does not need to be DAWG-ified in order to
-					encode it, but it usually makes sense to do so.) The binary format is output in
-				Base-64 and can be transmitted as JSON.</p>
-				<p>To use an encoded trie, there is a <code>PackedTrie</code> class. This class can make
-					queries against the trie without ever having to parse the binary file. This
-					class has virtually no initialization cost and low memory overhead without
-				sacrificing lookup speed.</p>
-				<p>There are no specific character or size constraints on the Trie input. Unicode
-					input should work, provided you treat the encoded string as unicode (it will
-				contain the unicode characters somewhere in it.)</p>
-				<h3 id="features">Features</h3>
-				<p>Both <code>Trie</code> and <code>PackedTrie</code> support <code>test</code> and <code>search</code> methods which support
-				fuzzy-matching (i.e., wildcards) and prefix search.</p>
-				<h2 id="docs">Docs</h2>
-				<p>See complete docs at <a href="https://jnu.github.io/tiny-trie/">https://jnu.github.io/tiny-trie/</a></p>
-				<h2 id="quick-usage">Quick Usage</h2>
-				<pre><code class="lang-js"><span class="hljs-keyword">const</span> words = [<span class="hljs-string">'spit'</span>, <span class="hljs-string">'spat'</span>, <span class="hljs-string">'spot'</span>, <span class="hljs-string">'spits'</span>, <span class="hljs-string">'spats'</span>, <span class="hljs-string">'spots'</span>];
-
-<span class="hljs-keyword">const</span> trie = <span class="hljs-keyword">new</span> Trie();
-
-words.forEach(<span class="hljs-function"><span class="hljs-params">word</span> =&gt;</span> trie.insert(word));
-
-<span class="hljs-comment">// test membership</span>
-trie.test(<span class="hljs-string">'spit'</span>);
-<span class="hljs-comment">// -&gt; true</span>
-trie.test(<span class="hljs-string">'split'</span>);
-<span class="hljs-comment">// -&gt; false</span>
-trie.search(<span class="hljs-string">'sp*t'</span>, {<span class="hljs-attr">wildcard</span>: <span class="hljs-string">'*'</span>});
-<span class="hljs-comment">// -&gt; ['spit', 'spat', 'spot']</span>
-trie.search(<span class="hljs-string">'spi'</span>, {<span class="hljs-attr">prefix</span>: <span class="hljs-literal">true</span>});
-<span class="hljs-comment">// -&gt; ['spit', 'spits']</span>
-
-<span class="hljs-comment">// finalize the trie, turning it into a DAWG</span>
-trie.freeze();
-
-<span class="hljs-comment">// encode the trie</span>
-<span class="hljs-keyword">let</span> encoded = trie.encode();
-<span class="hljs-comment">// -&gt; 'A4AAAAMEspiaotI0NmhqfPzcsQLwwrCCcBAQE'</span>
-
-<span class="hljs-comment">// This string describes the DAWG in a concise binary format. This format can</span>
-<span class="hljs-comment">// be interpreted by the `PackedTrie` class.</span>
-<span class="hljs-keyword">const</span> smallDawg = <span class="hljs-keyword">new</span> PackedTrie(encoded);
-
-smallDawg.test(<span class="hljs-string">'spit'</span>);
-<span class="hljs-comment">// -&gt; true</span>
-smallDawg.test(<span class="hljs-string">'split'</span>);
-<span class="hljs-comment">// -&gt; false</span>
-smallDawg.search(<span class="hljs-string">'sp*t'</span>, {<span class="hljs-attr">wildcard</span>: <span class="hljs-string">'*'</span>});
-<span class="hljs-comment">// -&gt; ['spit', 'spat', 'spot']</span>
-smallDawg.search(<span class="hljs-string">'spi'</span>, {<span class="hljs-attr">prefix</span>: <span class="hljs-literal">true</span>});
-<span class="hljs-comment">// -&gt; ['spit', 'spits']</span>
-</code></pre>
-				<h3 id="including-in-a-project">Including in a project</h3>
-				<h4 id="installed-in-node_modules-">Installed in <code>node_modules</code>:</h4>
-				<pre><code class="lang-js"><span class="hljs-keyword">import</span> {TinyTrie} <span class="hljs-keyword">from</span> <span class="hljs-string">'tiny-trie'</span>;
-<span class="hljs-keyword">import</span> PackedTrie <span class="hljs-keyword">from</span> <span class="hljs-string">'tiny-trie/lib/PackedTrie'</span>;
-</code></pre>
-				<p>The default module export also provides some convenience functional tools:</p>
-				<pre><code class="lang-js"><span class="hljs-keyword">import</span> tinyTrie <span class="hljs-keyword">from</span> <span class="hljs-string">'tiny-trie'</span>;
-
-tinyTrie.createSync([<span class="hljs-string">'foo'</span>, <span class="hljs-string">'bar'</span>]);
-<span class="hljs-comment">// equivalent to:</span>
-<span class="hljs-comment">//  &gt; var t = new Trie();</span>
-<span class="hljs-comment">//  &gt; ['foo', 'bar'].forEach(word =&gt; t.insert(word));</span>
-
-tinyTrie.createFrozenSync([<span class="hljs-string">'foo'</span>, <span class="hljs-string">'bar'</span>]);
-<span class="hljs-comment">// equivalent to:</span>
-<span class="hljs-comment">//  &gt; var t = new Trie();</span>
-<span class="hljs-comment">//  &gt; ['foo', 'bar'].forEach(word =&gt; t.insert(word));</span>
-<span class="hljs-comment">//  &gt; t.freeze();</span>
-</code></pre>
-				<h4 id="standalone-files">Standalone files</h4>
-				<p>Bundled, ES5-compatible equivalents to the above are in <code>./dist</code>.</p>
-				<pre><code class="lang-js"><span class="hljs-comment">// tiny-trie[.min].js</span>
-TinyTrie.Trie
-TinyTrie.createSync
-TinyTrie.createFrozenSync
-
-<span class="hljs-comment">// packed-trie[.min].js</span>
-PackedTrie
-</code></pre>
-				<h2 id="benchmarks">Benchmarks</h2>
-				<p>Quick benchmarks with the initial implementation on an MBP, node v5.0.0.</p>
-				<p>Using <code>dictionary.txt</code>, a Scrabble dictionary with 178,692 words.</p>
-				<pre><code class="lang-js"><span class="hljs-keyword">var</span> words = fs.readFileSync(<span class="hljs-string">'./dictionary.txt'</span>, <span class="hljs-string">'utf8'</span>).split(<span class="hljs-string">'\n'</span>);
-</code></pre>
-				<h3 id="speed">Speed</h3>
-				<p>Gives an idea roughly how long things take.</p>
-				<pre><code class="lang-js">&gt; <span class="hljs-keyword">var</span> trie = TinyTrie.createSync(words);
-<span class="hljs-comment">// 846 milliseconds</span>
-
-&gt; trie.test(...);
-<span class="hljs-comment">// avg: 0.05 milliseconds</span>
-
-&gt; trie.freeze();
-<span class="hljs-comment">// 124 seconds</span>
-
-&gt; <span class="hljs-keyword">var</span> encoded = trie.encode();
-<span class="hljs-comment">// 936 milliseconds</span>
-
-&gt; <span class="hljs-keyword">var</span> packed = <span class="hljs-keyword">new</span> PackedTrie(encoded);
-<span class="hljs-comment">// 0.06 milliseconds (compare `new Set(words)`, which takes about 1s)</span>
-
-&gt; packed.test(...);
-<span class="hljs-comment">// avg: 0.05 milliseconds (not significantly different from the unpacked trie!)</span>
-</code></pre>
-				<p>The init time of almost 1s is not acceptable for a client-side application.
-					The goal of running <code>Trie#freeze(); Trie#encode();</code> at build time is to
-					produce a packed version of the DAWG that has virtually <em>no</em> init time - and it
-					can still be queried directly, with speeds approaching the full <code>Trie</code>&#39;s very
-				fast 50 microsecond times.</p>
-				<h3 id="memory">Memory</h3>
-				<pre><code class="lang-js">&gt; words.join(<span class="hljs-string">''</span>).length
-<span class="hljs-comment">// 1584476 (bytes)</span>
-
-&gt; encoded.length
-<span class="hljs-comment">// 698518 (bytes)</span>
-
-&gt; encoded.length / words.join(<span class="hljs-string">''</span>).length
-<span class="hljs-comment">// 0.44085110787414894</span>
-</code></pre>
-				<p>The encoded trie uses just 44% of the bytes as the full dictionary. Gzipping
-				gives a trie of 483kb, compared with 616kb for the dictionary.</p>
-				<h2 id="todo">TODO</h2>
-				<ul>
-					<li><p>Real benchmarks, comparison with other implementations</p>
-					</li>
-					<li><p>Optimize in <code>PackedTrie</code> - reduce size, increase perf. Node order could
-						probably be revised to shrink pointer field width.</p>
-					</li>
-					<li><p>Spec out limitations on encoding inputs</p>
-					</li>
-				</ul>
-			</div>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>External modules</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-external-module"><a href="modules/_basetrie_.html" class="tsd-kind-icon">"<wbr>Base<wbr>Trie"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_binarystring_.html" class="tsd-kind-icon">"<wbr>Binary<wbr>String"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_binarystring_test_.html" class="tsd-kind-icon">"<wbr>Binary<wbr>String.test"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_packedtrie_.html" class="tsd-kind-icon">"<wbr>Packed<wbr>Trie"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_packedtrie_test_.html" class="tsd-kind-icon">"<wbr>Packed<wbr>Trie.test"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_trie_.html" class="tsd-kind-icon">"<wbr>Trie"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_trie_test_.html" class="tsd-kind-icon">"<wbr>Trie.test"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_base64_.html" class="tsd-kind-icon">"base64"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_constants_.html" class="tsd-kind-icon">"constants"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_floor_log2_.html" class="tsd-kind-icon">"floor_<wbr>log2"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_floor_log2_test_.html" class="tsd-kind-icon">"floor_<wbr>log2.test"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_index_.html" class="tsd-kind-icon">"index"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_index_test_.html" class="tsd-kind-icon">"index.test"</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
 				<ul>
-					<li class="globals  ">
+					<li class="globals current ">
 						<a href="globals.html"><em>Globals</em></a>
 					</li>
 					<li class=" tsd-kind-external-module">

@@ -7,479 +7,137 @@
 		exports["TinyTrie"] = factory();
 	else
 		root["TinyTrie"] = factory();
-})(this, function() {
+})(window, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-
+/******/
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
+/******/ 		if(installedModules[moduleId]) {
 /******/ 			return installedModules[moduleId].exports;
-
+/******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
-/******/ 			exports: {},
-/******/ 			id: moduleId,
-/******/ 			loaded: false
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
 /******/ 		};
-
+/******/
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
+/******/
 /******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-
+/******/ 		module.l = true;
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-
-
+/******/
+/******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-
+/******/
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-
+/******/
+/******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(0);
+/******/ 	return __webpack_require__(__webpack_require__.s = "./lib/PackedTrie.ts");
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })(); /**
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        * @file Small class for querying a binary-encoded Trie
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        *
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        * TODO - rewrite as a native class. Babel adds a lot of overhead. This class
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        * should be tiny and transparent.
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        */
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _base = __webpack_require__(1);
-
-	var _constants = __webpack_require__(2);
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * Extract a window of bits from a Base64 encoded sequence
-	 * @param  {String} binary - base64 encoded sequence
-	 * @param  {Number} start - first bit to read
-	 * @param  {Number} len - number of bits to read
-	 * @return {Number} - bits from string, as number
-	 */
-	function readBits(binary, start, len) {
-	    var startChar = ~ ~(start / 6);
-	    var startBitOffset = start % 6;
-	    var endBit = startBitOffset + len;
-	    var charLen = Math.ceil(endBit / 6);
-	    var mask = (0x1 << len) - 1;
-	    var chunk = 0;
-
-	    for (var i = 0; i < charLen; i++) {
-	        chunk <<= 6;
-	        chunk |= _base.BASE64_CHAR_TO_INT[binary[startChar + i]];
-	    }
-
-	    var rightPadding = endBit % 6;
-	    if (rightPadding) {
-	        chunk >>= 6 - rightPadding;
-	    }
-
-	    return chunk & mask;
-	}
-
-	/**
-	 * Class for interacting with an encoded trie. The class performs lookups
-	 * virtually just as fast as a regular trie. The binary data never actually
-	 * have to be processed as a whole, so instantiation time and memory usage are
-	 * phenomenally low.
-	 * @class
-	 */
-
-	var PackedTrie = (function () {
-
-	    /**
-	     * Instantiate a packed binary trie, parsing its headers to configure the
-	     * instance for queries.
-	     * @constructor
-	     * @param  {String} binary - binary string from {@link Trie#encode}
-	     * @return {PackedTrie}
-	     */
-
-	    function PackedTrie(binary) {
-	        _classCallCheck(this, PackedTrie);
-
-	        var ptr = 0;
-
-	        // Split binary into header and content by checking first field
-	        var headerCharCount = readBits(binary, ptr, _constants.HEADER_WIDTH_FIELD);
-	        ptr += _constants.HEADER_WIDTH_FIELD;
-	        var header = binary.substr(0, headerCharCount);
-
-	        var version = readBits(binary, ptr, _constants.VERSION_FIELD);
-	        ptr += _constants.VERSION_FIELD;
-
-	        if (version !== _constants.VERSION) {
-	            throw new Error('Version mismatch! Binary: ' + version + ', Reader: ' + _constants.VERSION);
-	        }
-
-	        /**
-	         * Binary string encoded as Base64 representing Trie
-	         * @type {String}
-	         */
-	        this.data = binary.substr(headerCharCount);
-
-	        // compute pointer offset
-
-	        var offsetSign = readBits(header, ptr, _constants.OFFSET_SIGN_FIELD);
-	        ptr += _constants.OFFSET_SIGN_FIELD;
-	        var offset = readBits(header, ptr, _constants.OFFSET_VAL_FIELD);
-	        ptr += _constants.OFFSET_VAL_FIELD;
-
-	        if (offsetSign) {
-	            offset = -offset;
-	        }
-	        /**
-	         * Pointer offset. Add this to every pointer read from every word in
-	         * the trie to obtain the true value of the pointer. This offset is
-	         * used to avoid signed integers in the word.
-	         * @type {Number}
-	         */
-	        this.offset = offset;
-
-	        // interpret the field width within each word
-	        var charWidth = readBits(header, ptr, _constants.CHAR_WIDTH_FIELD);
-	        ptr += _constants.CHAR_WIDTH_FIELD;
-
-	        var pointerWidth = readBits(header, ptr, _constants.POINTER_WIDTH_FIELD);
-	        ptr += _constants.POINTER_WIDTH_FIELD;
-
-	        // Interpret the rest of the header as the charTable
-	        var headerFieldChars = Math.ceil(ptr / 6);
-	        var charTable = header.substr(headerFieldChars);
-
-	        /**
-	         * Character table, mapping character to an integer ID
-	         * @type {Object}
-	         */
-	        this.table = charTable.split('').reduce(function (agg, char, i) {
-	            agg[char] = i + 1;
-	            return agg;
-	        }, _defineProperty({}, _constants.TERMINAL, 0));
-
-	        /**
-	         * Inverse of character table, mapping integer ID to character.
-	         * @type {Array}
-	         */
-	        this.inverseTable = [_constants.TERMINAL].concat(charTable.split(''));
-
-	        /**
-	         * Number of bits in one word
-	         * @type {Number}
-	         */
-	        this.wordWidth = charWidth + pointerWidth + 1;
-
-	        /**
-	         * Mask for reading the "last block" flag in a word
-	         * @type {Number}
-	         */
-	        this.lastMask = 0x1;
-
-	        /**
-	         * Mask for reading the pointer value from a word
-	         * @type {Number}
-	         */
-	        this.pointerMask = (0x1 << pointerWidth) - 1;
-
-	        /**
-	         * Offset of pointer field in a word
-	         * @type {Number}
-	         */
-	        this.pointerShift = 1;
-
-	        /**
-	         * Mask for reading the charTable index in a word
-	         * @type {Number}
-	         */
-	        this.charMask = (0x1 << charWidth) - 1;
-
-	        /**
-	         * Offset of charTable index field in a word
-	         * @type {Number}
-	         */
-	        this.charShift = 1 + pointerWidth;
-	    }
-
-	    /**
-	     * Test membership in the trie.
-	     * @param  {String} string - Search query
-	     * @param  {String?} opts.wildcard - See PackedTrie#search wildcard doc
-	     * @param  {Boolean?} opts.prefix - See PackedTrie#search prefix doc
-	     * @return {Boolean}
-	     */
-
-	    _createClass(PackedTrie, [{
-	        key: 'test',
-	        value: function test(string) {
-	            var _ref = arguments.length <= 1 || arguments[1] === undefined ? { wildcard: null, prefix: false } : arguments[1];
-
-	            var wildcard = _ref.wildcard;
-	            var prefix = _ref.prefix;
-
-	            // Delegate to #search with early exit. Could write an optimized path,
-	            // especially for the prefix search case.
-	            return this.search(string, { wildcard: wildcard, prefix: prefix, first: true }) !== null;
-	        }
-
-	        /**
-	         * Query for matching words in the trie.
-	         * @param  {String} string - Search query
-	         * @param  {String?} opts.wildcard - Wildcard to use for fuzzy matching.
-	         *                                   Default is no wildcard; only match
-	         *                                   literal query.
-	         * @param  {Boolean?} opts.prefix - Perform prefix search (returns true if
-	         *                                  any word exists in the trie starts with
-	         *                                  the search query). Default is false;
-	         *                                  only match the full query.
-	         * @param  {Boolean} opts.first - Return only first match that is found,
-	         *                                short-circuiting the search. Default is
-	         *                                false; return all matches.
-	         * @return {String?|String[]} - Return an optional string result when in
-	         *                              first-only mode; otherwise return a list
-	         *                              of strings that match the query.
-	         */
-
-	    }, {
-	        key: 'search',
-	        value: function search(string) {
-	            var _ref2 = arguments.length <= 1 || arguments[1] === undefined ? { wildcard: null, prefix: false, first: false } : arguments[1];
-
-	            var wildcard = _ref2.wildcard;
-	            var prefix = _ref2.prefix;
-	            var first = _ref2.first;
-
-	            if (wildcard && wildcard.length !== 1) {
-	                throw new Error('Wilcard must be a single character; got ' + wildcard);
-	            }
-
-	            var data = this.data;
-	            var offset = this.offset;
-	            var table = this.table;
-	            var inverseTable = this.inverseTable;
-	            var wordWidth = this.wordWidth;
-	            var lastMask = this.lastMask;
-	            var pointerShift = this.pointerShift;
-	            var pointerMask = this.pointerMask;
-	            var charShift = this.charShift;
-	            var charMask = this.charMask;
-
-	            // List of matches found in the search.
-
-	            var matches = [];
-
-	            // Search queue.
-	            var queue = [{ pointer: 0, memo: '', depth: 0 }];
-	            var lastDepth = string.length;
-
-	            // Do a BFS over nodes for the search query.
-	            while (queue.length) {
-	                var node = queue.shift();
-	                var isLast = node.depth >= lastDepth;
-	                var token = isLast ? _constants.TERMINAL : string[node.depth];
-	                // Flag for matching anything. Note that the overflow beyond the
-	                // length of the query in a prefix search behaves as a wildcard.
-	                var isWild = token === wildcard || prefix && isLast;
-	                // We're committed to an O(N) scan over the entire node even in
-	                // the simple literal-search case, since our structure doesn't
-	                // currently guarantee any child ordering.
-	                // TODO(joen) ordering is a potential future format optimization.
-	                var wordPointer = node.pointer;
-	                while (true) {
-	                    // Optimization: Exit immediately if the char was not found in
-	                    // the table (meaning there can't be any children in the trie
-	                    // with this character). Exception is wildcards.
-	                    if (!isWild && !table.hasOwnProperty(token)) {
-	                        break;
-	                    }
-
-	                    var bits = wordPointer * wordWidth;
-	                    var chunk = readBits(data, bits, wordWidth);
-
-	                    // Read the character index
-	                    var charIdx = chunk >> charShift & charMask;
-
-	                    // If this character is matched, jump to the pointer given in
-	                    // this node.
-	                    if (isWild || charIdx === table[token]) {
-	                        var pointer = chunk >> pointerShift & pointerMask;
-	                        // Find the next char with an inverse map, since we might
-	                        // be using a wildcard search.
-	                        var newChar = inverseTable[charIdx];
-	                        // Stopping condition: searching last block and we hit a terminal
-	                        if (isLast && newChar === _constants.TERMINAL) {
-	                            // Optimization: early exit if we only need first match.
-	                            if (first) {
-	                                return node.memo;
-	                            }
-	                            // Store this match.
-	                            matches.push(node.memo);
-	                            // If we're not matching everything, break out of the
-	                            // inner loop.
-	                            if (!isWild) {
-	                                break;
-	                            }
-	                        }
-
-	                        // Push next node for search, if it's non-terminal.
-	                        if (newChar !== _constants.TERMINAL) {
-	                            queue.push({
-	                                pointer: wordPointer + offset + pointer,
-	                                depth: node.depth + 1,
-	                                memo: node.memo + newChar
-	                            });
-	                        }
-	                    }
-
-	                    // If this wasn't a match, check if this was the last key in
-	                    // the block.
-	                    var last = chunk & lastMask;
-
-	                    // If this was the last node, the word was not found.
-	                    if (last) {
-	                        break;
-	                    }
-	                    // Otherwise increment the pointer to the next sibling key
-	                    else {
-	                            wordPointer += 1;
-	                        }
-	                }
-	            }
-
-	            // If first was requested it should have returned by now. Otherwise
-	            // return the matches list, which may be empty.
-	            return first ? null : matches;
-	        }
-	    }]);
-
-	    return PackedTrie;
-	})();
-
-	exports.default = PackedTrie;
-
-/***/ },
-/* 1 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	/**
-	 * @file Lookup tables for Base64 conversions
-	 */
-
-	/**
-	 * Lookup table for transforming a 6-bit binary integer into a Base-64 ASCII
-	 * character.
-	 * @constant {String[]}
-	 */
-	var BASE64_INT_TO_CHAR = exports.BASE64_INT_TO_CHAR = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
-
-	/**
-	 * Inverse lookup table for transformating a Base-64 ASCII character into the
-	 * corresponding integer value.
-	 * @constant {Object}
-	 */
-	var BASE64_CHAR_TO_INT = exports.BASE64_CHAR_TO_INT = BASE64_INT_TO_CHAR.reduce(function (agg, char, i) {
-	  agg[char] = i;
-	  return agg;
-	}, {});
-
-/***/ },
-/* 2 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	/**
-	 * @file Parameters used for encoding
-	 */
-
-	/**
-	 * String terminal character
-	 * @constant {String}
-	 */
-	var TERMINAL = exports.TERMINAL = '\0';
-
-	/**
-	 * Terminal edge
-	 * @constant {Object}
-	 */
-	var TERMINUS = exports.TERMINUS = Object.create(null);
-
-	/**
-	 * Encoding version. Bump when breaking encoding changes are introduced.
-	 * @constant {Number}
-	 */
-	var VERSION = exports.VERSION = 0;
-
-	/**
-	 * Width of header field storing entire header width (including char table).
-	 * Value is given in Base64 characters (i.e., every six bits)
-	 * @constant {Number}
-	 */
-	var HEADER_WIDTH_FIELD = exports.HEADER_WIDTH_FIELD = 10;
-
-	/**
-	 * Width of version field
-	 * @type {Number}
-	 */
-	var VERSION_FIELD = exports.VERSION_FIELD = 10;
-
-	/**
-	 * Width of header field representing sign of offset
-	 * @constant {Number}
-	 */
-	var OFFSET_SIGN_FIELD = exports.OFFSET_SIGN_FIELD = 1;
-
-	/**
-	 * Width of header field representing unsigned value of offset
-	 * @constant {Number}
-	 */
-	var OFFSET_VAL_FIELD = exports.OFFSET_VAL_FIELD = 21;
-
-	/**
-	 * Width of header field representing the width of the char index in a word
-	 * @constant {Number}
-	 */
-	var CHAR_WIDTH_FIELD = exports.CHAR_WIDTH_FIELD = 8;
-
-	/**
-	 * Width of header field representing the width of the offset pointer in a word
-	 * @constant {Number}
-	 */
-	var POINTER_WIDTH_FIELD = exports.POINTER_WIDTH_FIELD = 8;
-
-/***/ }
-/******/ ])
+/******/ ({
+
+/***/ "./lib sync recursive":
+/*!******************!*\
+  !*** ./lib sync ***!
+  \******************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+eval("function webpackEmptyContext(req) {\n\tvar e = new Error('Cannot find module \"' + req + '\".');\n\te.code = 'MODULE_NOT_FOUND';\n\tthrow e;\n}\nwebpackEmptyContext.keys = function() { return []; };\nwebpackEmptyContext.resolve = webpackEmptyContext;\nmodule.exports = webpackEmptyContext;\nwebpackEmptyContext.id = \"./lib sync recursive\";\n\n//# sourceURL=webpack://TinyTrie/./lib_sync?");
+
+/***/ }),
+
+/***/ "./lib/PackedTrie.ts":
+/*!***************************!*\
+  !*** ./lib/PackedTrie.ts ***!
+  \***************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if (\"value\" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\nfunction _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }\n\nfunction _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError(\"Cannot call a class as a function\"); } }\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./lib sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! ./base64 */ \"./lib/base64.ts\"), __webpack_require__(/*! ./constants */ \"./lib/constants.ts\")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    var base64_1 = require(\"./base64\");\n    var constants_1 = require(\"./constants\");\n    function readBits(binary, start, len) {\n        var startChar = ~~(start / 6);\n        var startBitOffset = start % 6;\n        var endBit = startBitOffset + len;\n        var charLen = Math.ceil(endBit / 6);\n        var mask = (0x1 << len) - 1;\n        var chunk = 0;\n        for (var i = 0; i < charLen; i++) {\n            chunk <<= 6;\n            chunk |= base64_1.BASE64_CHAR_TO_INT[binary[startChar + i]];\n        }\n        var rightPadding = endBit % 6;\n        if (rightPadding) {\n            chunk >>= 6 - rightPadding;\n        }\n        return chunk & mask;\n    }\n\n    var PackedTrie = function () {\n        function PackedTrie(binary) {\n            _classCallCheck(this, PackedTrie);\n\n            this.lastMask = 0x1;\n            this.pointerShift = 1;\n            var ptr = 0;\n            var headerCharCount = readBits(binary, ptr, constants_1.HEADER_WIDTH_FIELD);\n            ptr += constants_1.HEADER_WIDTH_FIELD;\n            var header = binary.substr(0, headerCharCount);\n            var version = readBits(binary, ptr, constants_1.VERSION_FIELD);\n            ptr += constants_1.VERSION_FIELD;\n            if (version !== constants_1.VERSION) {\n                throw new Error(\"Version mismatch! Binary: \" + version + \", Reader: \" + constants_1.VERSION);\n            }\n            this.data = binary.substr(headerCharCount);\n            var offsetSign = readBits(header, ptr, constants_1.OFFSET_SIGN_FIELD);\n            ptr += constants_1.OFFSET_SIGN_FIELD;\n            var offset = readBits(header, ptr, constants_1.OFFSET_VAL_FIELD);\n            ptr += constants_1.OFFSET_VAL_FIELD;\n            if (offsetSign) {\n                offset = -offset;\n            }\n            this.offset = offset;\n            var charWidth = readBits(header, ptr, constants_1.CHAR_WIDTH_FIELD);\n            ptr += constants_1.CHAR_WIDTH_FIELD;\n            var pointerWidth = readBits(header, ptr, constants_1.POINTER_WIDTH_FIELD);\n            ptr += constants_1.POINTER_WIDTH_FIELD;\n            var headerFieldChars = Math.ceil(ptr / 6);\n            var charTable = header.substr(headerFieldChars);\n            this.table = charTable.split('').reduce(function (agg, char, i) {\n                agg[char] = i + 1;\n                return agg;\n            }, _defineProperty({}, constants_1.TERMINAL, 0));\n            this.inverseTable = [constants_1.TERMINAL].concat(charTable.split(''));\n            this.wordWidth = charWidth + pointerWidth + 1;\n            this.pointerMask = (0x1 << pointerWidth) - 1;\n            this.charMask = (0x1 << charWidth) - 1;\n            this.charShift = 1 + pointerWidth;\n        }\n\n        _createClass(PackedTrie, [{\n            key: \"test\",\n            value: function test(str) {\n                var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false },\n                    wildcard = _ref.wildcard,\n                    prefix = _ref.prefix;\n\n                return this.search(str, { wildcard: wildcard, prefix: prefix, first: true }) !== null;\n            }\n        }, {\n            key: \"search\",\n            value: function search(str) {\n                var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false, first: false },\n                    wildcard = _ref2.wildcard,\n                    prefix = _ref2.prefix,\n                    first = _ref2.first;\n\n                if (wildcard && wildcard.length !== 1) {\n                    throw new Error(\"Wilcard must be a single character; got \" + wildcard);\n                }\n                var data = this.data,\n                    offset = this.offset,\n                    table = this.table,\n                    inverseTable = this.inverseTable,\n                    wordWidth = this.wordWidth,\n                    lastMask = this.lastMask,\n                    pointerShift = this.pointerShift,\n                    pointerMask = this.pointerMask,\n                    charShift = this.charShift,\n                    charMask = this.charMask;\n\n                var matches = [];\n                var queue = [{ pointer: 0, memo: '', depth: 0 }];\n                var lastDepth = str.length;\n                while (queue.length) {\n                    var node = queue.shift();\n                    var isLast = node.depth >= lastDepth;\n                    var token = isLast ? constants_1.TERMINAL : str[node.depth];\n                    var isWild = token === wildcard || prefix && isLast;\n                    var wordPointer = node.pointer;\n                    while (true) {\n                        if (!isWild && !table.hasOwnProperty(token)) {\n                            break;\n                        }\n                        var bits = wordPointer * wordWidth;\n                        var chunk = readBits(data, bits, wordWidth);\n                        var charIdx = chunk >> charShift & charMask;\n                        if (isWild || charIdx === table[token]) {\n                            var pointer = chunk >> pointerShift & pointerMask;\n                            var newChar = inverseTable[charIdx];\n                            if (isLast && newChar === constants_1.TERMINAL) {\n                                if (first) {\n                                    return node.memo;\n                                }\n                                matches.push(node.memo);\n                                if (!isWild) {\n                                    break;\n                                }\n                            }\n                            if (newChar !== constants_1.TERMINAL) {\n                                queue.push({\n                                    pointer: wordPointer + offset + pointer,\n                                    depth: node.depth + 1,\n                                    memo: node.memo + newChar\n                                });\n                            }\n                        }\n                        var last = chunk & lastMask;\n                        if (last) {\n                            break;\n                        } else {\n                            wordPointer += 1;\n                        }\n                    }\n                }\n                return first ? null : matches;\n            }\n        }]);\n\n        return PackedTrie;\n    }();\n\n    exports.default = PackedTrie;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./lib/PackedTrie.ts?");
+
+/***/ }),
+
+/***/ "./lib/base64.ts":
+/*!***********************!*\
+  !*** ./lib/base64.ts ***!
+  \***********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./lib sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    exports.BASE64_INT_TO_CHAR = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\".split('');\n    exports.BASE64_CHAR_TO_INT = exports.BASE64_INT_TO_CHAR.reduce(function (agg, char, i) {\n        agg[char] = i;\n        return agg;\n    }, {});\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./lib/base64.ts?");
+
+/***/ }),
+
+/***/ "./lib/constants.ts":
+/*!**************************!*\
+  !*** ./lib/constants.ts ***!
+  \**************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./lib sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    exports.TERMINAL = '\\0';\n    exports.TERMINUS = Object.create(null);\n    exports.VERSION = 0;\n    exports.HEADER_WIDTH_FIELD = 10;\n    exports.VERSION_FIELD = 10;\n    exports.OFFSET_SIGN_FIELD = 1;\n    exports.OFFSET_VAL_FIELD = 21;\n    exports.CHAR_WIDTH_FIELD = 8;\n    exports.POINTER_WIDTH_FIELD = 8;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./lib/constants.ts?");
+
+/***/ }),
+
+/***/ "./node_modules/webpack/buildin/module.js":
+/*!***********************************!*\
+  !*** (webpack)/buildin/module.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+eval("module.exports = function(module) {\r\n\tif (!module.webpackPolyfill) {\r\n\t\tmodule.deprecate = function() {};\r\n\t\tmodule.paths = [];\r\n\t\t// module.parent = undefined by default\r\n\t\tif (!module.children) module.children = [];\r\n\t\tObject.defineProperty(module, \"loaded\", {\r\n\t\t\tenumerable: true,\r\n\t\t\tget: function() {\r\n\t\t\t\treturn module.l;\r\n\t\t\t}\r\n\t\t});\r\n\t\tObject.defineProperty(module, \"id\", {\r\n\t\t\tenumerable: true,\r\n\t\t\tget: function() {\r\n\t\t\t\treturn module.i;\r\n\t\t\t}\r\n\t\t});\r\n\t\tmodule.webpackPolyfill = 1;\r\n\t}\r\n\treturn module;\r\n};\r\n\n\n//# sourceURL=webpack://TinyTrie/(webpack)/buildin/module.js?");
+
+/***/ })
+
+/******/ });
 });
-;
