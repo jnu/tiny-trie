@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "lint": "$(npm bin)/tslint src/**/*.ts",
-    "build": "$(npm bin)/tsc --declaration",
+    "build": "rm -rf lib/ && $(npm bin)/tsc --declaration",
     "build-dist": "$(npm bin)/webpack",
     "build-min": "NODE_ENV=production $(npm bin)/webpack",
     "build-doc": "$(npm bin)/typedoc --out docs/",
