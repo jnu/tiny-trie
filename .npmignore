@@ -1,0 +1,7 @@
+docs/
+src/
+package-lock.json
+README.md
+tsconfig.json
+tslint.json
+webpack.config.js

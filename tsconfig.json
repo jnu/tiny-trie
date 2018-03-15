@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "outDir": "lib/",
         "target": "es6",
         "module": "umd",
         "moduleResolution": "node",
@@ -8,5 +9,5 @@
         "preserveConstEnums": true,
         "sourceMap": true
     },
-    "include": ["lib/**/*"]
+    "include": ["src/**/*"]
 }

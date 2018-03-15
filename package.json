@@ -1,15 +1,16 @@
 {
   "name": "tiny-trie",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "JS Trie / DAWG classes",
   "main": "lib/index.js",
   "scripts": {
-    "lint": "$(npm bin)/tslint lib/**/*.ts",
-    "build": "$(npm bin)/webpack",
+    "lint": "$(npm bin)/tslint src/**/*.ts",
+    "build": "$(npm bin)/tsc --declaration",
+    "build-dist": "$(npm bin)/webpack",
     "build-min": "NODE_ENV=production $(npm bin)/webpack",
     "build-doc": "$(npm bin)/typedoc --out docs/",
-    "build-all": "npm run build && npm run build-min && npm run build-doc",
-    "test": "npm run lint && $(npm bin)/mocha --compilers ts:ts-node/register lib/*.test.ts"
+    "build-all": "npm run build && npm run build-dist && npm run build-min && npm run build-doc",
+    "test": "npm run lint && $(npm bin)/mocha --compilers ts:ts-node/register src/*.test.ts"
   },
   "repository": {
     "type": "git",

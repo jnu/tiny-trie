@@ -8,8 +8,8 @@ var bundleExt = (DEBUG ? '' : '.min') + '.js';
 
 module.exports = {
     entry: {
-        'tiny-trie': './lib/index.ts',
-        'packed-trie': './lib/PackedTrie.ts'
+        'tiny-trie': './src/index.ts',
+        'packed-trie': './src/PackedTrie.ts'
     },
     mode: DEBUG ? 'development' : 'production',
     module: {
@@ -42,6 +42,6 @@ module.exports = {
     },
     resolve: {
         extensions: ['.js', '.ts'],
-        modules: [path.join(__dirname, 'lib'), 'node_modules']
+        modules: [path.join(__dirname, 'src'), 'node_modules']
     }
 };
