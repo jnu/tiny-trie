@@ -1,5 +1,8 @@
+.idea/
 docs/
 src/
+.babelrc
+.travis.yml
 package-lock.json
 README.md
 tsconfig.json
