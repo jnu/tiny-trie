@@ -1,8 +1,9 @@
 {
   "name": "tiny-trie",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "JS Trie / DAWG classes",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "lint": "$(npm bin)/tslint src/**/*.ts",
     "build": "rm -rf lib/ && $(npm bin)/tsc --declaration",
