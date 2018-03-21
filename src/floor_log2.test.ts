@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-import floor_log2 from './floor_log2';
+import {floor_log2} from './floor_log2';
 import {assert} from 'chai';
 
 describe('floor_log2', () => {

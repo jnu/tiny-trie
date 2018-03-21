@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-import BinaryString from './BinaryString';
+import {BinaryString} from './BinaryString';
 import {assert} from 'chai';
 
 describe('BinaryString', () => {

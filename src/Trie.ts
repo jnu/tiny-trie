@@ -3,8 +3,8 @@
  */
 
 import {ITrie, ITestOpts, ISearchOpts} from './BaseTrie';
-import floor_log2 from './floor_log2';
-import BinaryString from './BinaryString';
+import {floor_log2} from './floor_log2';
+import {BinaryString} from './BinaryString';
 import {
     TERMINAL,
     TERMINUS,
@@ -53,7 +53,7 @@ interface IChunk {
  * A structure to provide efficient membership tests for a set of strings
  * @class
  */
-class Trie implements ITrie {
+export class Trie implements ITrie {
 
     public root: INode;
 
@@ -501,5 +501,3 @@ class Trie implements ITrie {
     }
 
 }
-
-export default Trie;

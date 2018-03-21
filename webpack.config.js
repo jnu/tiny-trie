@@ -34,6 +34,7 @@ module.exports = {
             },
         ],
     },
+    devtool: DEBUG ? 'source-map' : false,
     output: {
         path: path.join(__dirname, 'dist'),
         filename: '[name]' + bundleExt,

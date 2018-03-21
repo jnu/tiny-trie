@@ -2,7 +2,7 @@ import { ITrie, ITestOpts, ISearchOpts } from './BaseTrie';
 export interface INode {
     [key: string]: INode;
 }
-declare class Trie implements ITrie {
+export declare class Trie implements ITrie {
     root: INode;
     frozen: boolean;
     constructor(tree?: INode);
@@ -14,4 +14,3 @@ declare class Trie implements ITrie {
     encode(): string;
     toJSON(): any;
 }
-export default Trie;

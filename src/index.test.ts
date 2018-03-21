@@ -4,7 +4,7 @@ import {
     createSync,
     createFrozenSync
 } from './index';
-import Trie from './Trie';
+import {Trie} from './Trie';
 import {assert} from 'chai';
 
 describe('index', function() {

@@ -1,4 +1,4 @@
-declare class BinaryString {
+export declare class BinaryString {
     private buffer;
     private pointer;
     private data;
@@ -7,4 +7,3 @@ declare class BinaryString {
     getData(): string;
     _digest(): void;
 }
-export default BinaryString;

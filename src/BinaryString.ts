@@ -3,14 +3,14 @@
  * string.
  */
 
-import floor_log2 from './floor_log2';
+import {floor_log2} from './floor_log2';
 import {BASE64_INT_TO_CHAR} from './base64';
 
 /**
  * Interface for writing binary data into a Base64-encoded string
  * @class
  */
-class BinaryString {
+export class BinaryString {
 
     /**
      * Data buffer
@@ -109,5 +109,3 @@ class BinaryString {
     }
 
 }
-
-export default BinaryString;

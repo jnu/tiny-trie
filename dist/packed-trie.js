@@ -81,28 +81,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ({
 
-/***/ "./node_modules/webpack/buildin/module.js":
-/*!***********************************!*\
-  !*** (webpack)/buildin/module.js ***!
-  \***********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-eval("module.exports = function(module) {\r\n\tif (!module.webpackPolyfill) {\r\n\t\tmodule.deprecate = function() {};\r\n\t\tmodule.paths = [];\r\n\t\t// module.parent = undefined by default\r\n\t\tif (!module.children) module.children = [];\r\n\t\tObject.defineProperty(module, \"loaded\", {\r\n\t\t\tenumerable: true,\r\n\t\t\tget: function() {\r\n\t\t\t\treturn module.l;\r\n\t\t\t}\r\n\t\t});\r\n\t\tObject.defineProperty(module, \"id\", {\r\n\t\t\tenumerable: true,\r\n\t\t\tget: function() {\r\n\t\t\t\treturn module.i;\r\n\t\t\t}\r\n\t\t});\r\n\t\tmodule.webpackPolyfill = 1;\r\n\t}\r\n\treturn module;\r\n};\r\n\n\n//# sourceURL=webpack://TinyTrie/(webpack)/buildin/module.js?");
-
-/***/ }),
-
-/***/ "./src sync recursive":
-/*!******************!*\
-  !*** ./src sync ***!
-  \******************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-eval("function webpackEmptyContext(req) {\n\tvar e = new Error('Cannot find module \"' + req + '\".');\n\te.code = 'MODULE_NOT_FOUND';\n\tthrow e;\n}\nwebpackEmptyContext.keys = function() { return []; };\nwebpackEmptyContext.resolve = webpackEmptyContext;\nmodule.exports = webpackEmptyContext;\nwebpackEmptyContext.id = \"./src sync recursive\";\n\n//# sourceURL=webpack://TinyTrie/./src_sync?");
-
-/***/ }),
-
 /***/ "./src/PackedTrie.ts":
 /*!***************************!*\
   !*** ./src/PackedTrie.ts ***!
@@ -111,7 +89,159 @@ eval("function webpackEmptyContext(req) {\n\tvar e = new Error('Cannot find modu
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if (\"value\" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\nfunction _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }\n\nfunction _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError(\"Cannot call a class as a function\"); } }\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! ./base64 */ \"./src/base64.ts\"), __webpack_require__(/*! ./constants */ \"./src/constants.ts\")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    var base64_1 = require(\"./base64\");\n    var constants_1 = require(\"./constants\");\n    function readBits(binary, start, len) {\n        var startChar = ~~(start / 6);\n        var startBitOffset = start % 6;\n        var endBit = startBitOffset + len;\n        var charLen = Math.ceil(endBit / 6);\n        var mask = (0x1 << len) - 1;\n        var chunk = 0;\n        for (var i = 0; i < charLen; i++) {\n            chunk <<= 6;\n            chunk |= base64_1.BASE64_CHAR_TO_INT[binary[startChar + i]];\n        }\n        var rightPadding = endBit % 6;\n        if (rightPadding) {\n            chunk >>= 6 - rightPadding;\n        }\n        return chunk & mask;\n    }\n\n    var PackedTrie = function () {\n        function PackedTrie(binary) {\n            _classCallCheck(this, PackedTrie);\n\n            this.lastMask = 0x1;\n            this.pointerShift = 1;\n            var ptr = 0;\n            var headerCharCount = readBits(binary, ptr, constants_1.HEADER_WIDTH_FIELD);\n            ptr += constants_1.HEADER_WIDTH_FIELD;\n            var header = binary.substr(0, headerCharCount);\n            var version = readBits(binary, ptr, constants_1.VERSION_FIELD);\n            ptr += constants_1.VERSION_FIELD;\n            if (version !== constants_1.VERSION) {\n                throw new Error(\"Version mismatch! Binary: \" + version + \", Reader: \" + constants_1.VERSION);\n            }\n            this.data = binary.substr(headerCharCount);\n            var offsetSign = readBits(header, ptr, constants_1.OFFSET_SIGN_FIELD);\n            ptr += constants_1.OFFSET_SIGN_FIELD;\n            var offset = readBits(header, ptr, constants_1.OFFSET_VAL_FIELD);\n            ptr += constants_1.OFFSET_VAL_FIELD;\n            if (offsetSign) {\n                offset = -offset;\n            }\n            this.offset = offset;\n            var charWidth = readBits(header, ptr, constants_1.CHAR_WIDTH_FIELD);\n            ptr += constants_1.CHAR_WIDTH_FIELD;\n            var pointerWidth = readBits(header, ptr, constants_1.POINTER_WIDTH_FIELD);\n            ptr += constants_1.POINTER_WIDTH_FIELD;\n            var headerFieldChars = Math.ceil(ptr / 6);\n            var charTable = header.substr(headerFieldChars);\n            this.table = charTable.split('').reduce(function (agg, char, i) {\n                agg[char] = i + 1;\n                return agg;\n            }, _defineProperty({}, constants_1.TERMINAL, 0));\n            this.inverseTable = [constants_1.TERMINAL].concat(charTable.split(''));\n            this.wordWidth = charWidth + pointerWidth + 1;\n            this.pointerMask = (0x1 << pointerWidth) - 1;\n            this.charMask = (0x1 << charWidth) - 1;\n            this.charShift = 1 + pointerWidth;\n        }\n\n        _createClass(PackedTrie, [{\n            key: \"test\",\n            value: function test(str) {\n                var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false },\n                    wildcard = _ref.wildcard,\n                    prefix = _ref.prefix;\n\n                return this.search(str, { wildcard: wildcard, prefix: prefix, first: true }) !== null;\n            }\n        }, {\n            key: \"search\",\n            value: function search(str) {\n                var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false, first: false },\n                    wildcard = _ref2.wildcard,\n                    prefix = _ref2.prefix,\n                    first = _ref2.first;\n\n                if (wildcard && wildcard.length !== 1) {\n                    throw new Error(\"Wilcard must be a single character; got \" + wildcard);\n                }\n                var data = this.data,\n                    offset = this.offset,\n                    table = this.table,\n                    inverseTable = this.inverseTable,\n                    wordWidth = this.wordWidth,\n                    lastMask = this.lastMask,\n                    pointerShift = this.pointerShift,\n                    pointerMask = this.pointerMask,\n                    charShift = this.charShift,\n                    charMask = this.charMask;\n\n                var matches = [];\n                var queue = [{ pointer: 0, memo: '', depth: 0 }];\n                var lastDepth = str.length;\n                while (queue.length) {\n                    var node = queue.shift();\n                    var isLast = node.depth >= lastDepth;\n                    var token = isLast ? constants_1.TERMINAL : str[node.depth];\n                    var isWild = token === wildcard || prefix && isLast;\n                    var wordPointer = node.pointer;\n                    while (true) {\n                        if (!isWild && !table.hasOwnProperty(token)) {\n                            break;\n                        }\n                        var bits = wordPointer * wordWidth;\n                        var chunk = readBits(data, bits, wordWidth);\n                        var charIdx = chunk >> charShift & charMask;\n                        if (isWild || charIdx === table[token]) {\n                            var pointer = chunk >> pointerShift & pointerMask;\n                            var newChar = inverseTable[charIdx];\n                            if (isLast && newChar === constants_1.TERMINAL) {\n                                if (first) {\n                                    return node.memo;\n                                }\n                                matches.push(node.memo);\n                                if (!isWild) {\n                                    break;\n                                }\n                            }\n                            if (newChar !== constants_1.TERMINAL) {\n                                queue.push({\n                                    pointer: wordPointer + offset + pointer,\n                                    depth: node.depth + 1,\n                                    memo: node.memo + newChar\n                                });\n                            }\n                        }\n                        var last = chunk & lastMask;\n                        if (last) {\n                            break;\n                        } else {\n                            wordPointer += 1;\n                        }\n                    }\n                }\n                return first ? null : matches;\n            }\n        }]);\n\n        return PackedTrie;\n    }();\n\n    exports.default = PackedTrie;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/PackedTrie.ts?");
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var base64_1 = __webpack_require__(/*! ./base64 */ "./src/base64.ts");
+var constants_1 = __webpack_require__(/*! ./constants */ "./src/constants.ts");
+function readBits(binary, start, len) {
+    var startChar = ~~(start / 6);
+    var startBitOffset = start % 6;
+    var endBit = startBitOffset + len;
+    var charLen = Math.ceil(endBit / 6);
+    var mask = (0x1 << len) - 1;
+    var chunk = 0;
+    for (var i = 0; i < charLen; i++) {
+        chunk <<= 6;
+        chunk |= base64_1.BASE64_CHAR_TO_INT[binary[startChar + i]];
+    }
+    var rightPadding = endBit % 6;
+    if (rightPadding) {
+        chunk >>= 6 - rightPadding;
+    }
+    return chunk & mask;
+}
+
+var PackedTrie = function () {
+    function PackedTrie(binary) {
+        _classCallCheck(this, PackedTrie);
+
+        this.lastMask = 0x1;
+        this.pointerShift = 1;
+        var ptr = 0;
+        var headerCharCount = readBits(binary, ptr, constants_1.HEADER_WIDTH_FIELD);
+        ptr += constants_1.HEADER_WIDTH_FIELD;
+        var header = binary.substr(0, headerCharCount);
+        var version = readBits(binary, ptr, constants_1.VERSION_FIELD);
+        ptr += constants_1.VERSION_FIELD;
+        if (version !== constants_1.VERSION) {
+            throw new Error("Version mismatch! Binary: " + version + ", Reader: " + constants_1.VERSION);
+        }
+        this.data = binary.substr(headerCharCount);
+        var offsetSign = readBits(header, ptr, constants_1.OFFSET_SIGN_FIELD);
+        ptr += constants_1.OFFSET_SIGN_FIELD;
+        var offset = readBits(header, ptr, constants_1.OFFSET_VAL_FIELD);
+        ptr += constants_1.OFFSET_VAL_FIELD;
+        if (offsetSign) {
+            offset = -offset;
+        }
+        this.offset = offset;
+        var charWidth = readBits(header, ptr, constants_1.CHAR_WIDTH_FIELD);
+        ptr += constants_1.CHAR_WIDTH_FIELD;
+        var pointerWidth = readBits(header, ptr, constants_1.POINTER_WIDTH_FIELD);
+        ptr += constants_1.POINTER_WIDTH_FIELD;
+        var headerFieldChars = Math.ceil(ptr / 6);
+        var charTable = header.substr(headerFieldChars);
+        this.table = charTable.split('').reduce(function (agg, char, i) {
+            agg[char] = i + 1;
+            return agg;
+        }, _defineProperty({}, constants_1.TERMINAL, 0));
+        this.inverseTable = [constants_1.TERMINAL].concat(charTable.split(''));
+        this.wordWidth = charWidth + pointerWidth + 1;
+        this.pointerMask = (0x1 << pointerWidth) - 1;
+        this.charMask = (0x1 << charWidth) - 1;
+        this.charShift = 1 + pointerWidth;
+    }
+
+    _createClass(PackedTrie, [{
+        key: "test",
+        value: function test(str) {
+            var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false },
+                wildcard = _ref.wildcard,
+                prefix = _ref.prefix;
+
+            return this.search(str, { wildcard: wildcard, prefix: prefix, first: true }) !== null;
+        }
+    }, {
+        key: "search",
+        value: function search(str) {
+            var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false, first: false },
+                wildcard = _ref2.wildcard,
+                prefix = _ref2.prefix,
+                first = _ref2.first;
+
+            if (wildcard && wildcard.length !== 1) {
+                throw new Error("Wilcard must be a single character; got " + wildcard);
+            }
+            var data = this.data,
+                offset = this.offset,
+                table = this.table,
+                inverseTable = this.inverseTable,
+                wordWidth = this.wordWidth,
+                lastMask = this.lastMask,
+                pointerShift = this.pointerShift,
+                pointerMask = this.pointerMask,
+                charShift = this.charShift,
+                charMask = this.charMask;
+
+            var matches = [];
+            var queue = [{ pointer: 0, memo: '', depth: 0 }];
+            var lastDepth = str.length;
+            while (queue.length) {
+                var node = queue.shift();
+                var isLast = node.depth >= lastDepth;
+                var token = isLast ? constants_1.TERMINAL : str[node.depth];
+                var isWild = token === wildcard || prefix && isLast;
+                var wordPointer = node.pointer;
+                while (true) {
+                    if (!isWild && !table.hasOwnProperty(token)) {
+                        break;
+                    }
+                    var bits = wordPointer * wordWidth;
+                    var chunk = readBits(data, bits, wordWidth);
+                    var charIdx = chunk >> charShift & charMask;
+                    if (isWild || charIdx === table[token]) {
+                        var pointer = chunk >> pointerShift & pointerMask;
+                        var newChar = inverseTable[charIdx];
+                        if (isLast && newChar === constants_1.TERMINAL) {
+                            if (first) {
+                                return node.memo;
+                            }
+                            matches.push(node.memo);
+                            if (!isWild) {
+                                break;
+                            }
+                        }
+                        if (newChar !== constants_1.TERMINAL) {
+                            queue.push({
+                                pointer: wordPointer + offset + pointer,
+                                depth: node.depth + 1,
+                                memo: node.memo + newChar
+                            });
+                        }
+                    }
+                    var last = chunk & lastMask;
+                    if (last) {
+                        break;
+                    } else {
+                        wordPointer += 1;
+                    }
+                }
+            }
+            return first ? null : matches;
+        }
+    }]);
+
+    return PackedTrie;
+}();
+
+exports.PackedTrie = PackedTrie;
 
 /***/ }),
 
@@ -123,7 +253,14 @@ eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FAC
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    exports.BASE64_INT_TO_CHAR = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\".split('');\n    exports.BASE64_CHAR_TO_INT = exports.BASE64_INT_TO_CHAR.reduce(function (agg, char, i) {\n        agg[char] = i;\n        return agg;\n    }, {});\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/base64.ts?");
+
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BASE64_INT_TO_CHAR = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split('');
+exports.BASE64_CHAR_TO_INT = exports.BASE64_INT_TO_CHAR.reduce(function (agg, char, i) {
+    agg[char] = i;
+    return agg;
+}, {});
 
 /***/ }),
 
@@ -135,9 +272,21 @@ eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FAC
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    exports.TERMINAL = '\\0';\n    exports.TERMINUS = Object.create(null);\n    exports.VERSION = 0;\n    exports.HEADER_WIDTH_FIELD = 10;\n    exports.VERSION_FIELD = 10;\n    exports.OFFSET_SIGN_FIELD = 1;\n    exports.OFFSET_VAL_FIELD = 21;\n    exports.CHAR_WIDTH_FIELD = 8;\n    exports.POINTER_WIDTH_FIELD = 8;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/constants.ts?");
+
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TERMINAL = '\0';
+exports.TERMINUS = Object.create(null);
+exports.VERSION = 0;
+exports.HEADER_WIDTH_FIELD = 10;
+exports.VERSION_FIELD = 10;
+exports.OFFSET_SIGN_FIELD = 1;
+exports.OFFSET_VAL_FIELD = 21;
+exports.CHAR_WIDTH_FIELD = 8;
+exports.POINTER_WIDTH_FIELD = 8;
 
 /***/ })
 
 /******/ });
 });
+//# sourceMappingURL=packed-trie.js.map

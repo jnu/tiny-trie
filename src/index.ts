@@ -2,8 +2,8 @@
  * @file Convenient functional tools for creating Tries from arrays
  */
 
-import Trie from './Trie';
-export {default as Trie} from './Trie';
+import {Trie} from './Trie';
+export {Trie} from './Trie';
 
 /**
  * Synchronously construct a new Trie out of the given strings.

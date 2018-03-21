@@ -81,28 +81,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ({
 
-/***/ "./node_modules/webpack/buildin/module.js":
-/*!***********************************!*\
-  !*** (webpack)/buildin/module.js ***!
-  \***********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-eval("module.exports = function(module) {\r\n\tif (!module.webpackPolyfill) {\r\n\t\tmodule.deprecate = function() {};\r\n\t\tmodule.paths = [];\r\n\t\t// module.parent = undefined by default\r\n\t\tif (!module.children) module.children = [];\r\n\t\tObject.defineProperty(module, \"loaded\", {\r\n\t\t\tenumerable: true,\r\n\t\t\tget: function() {\r\n\t\t\t\treturn module.l;\r\n\t\t\t}\r\n\t\t});\r\n\t\tObject.defineProperty(module, \"id\", {\r\n\t\t\tenumerable: true,\r\n\t\t\tget: function() {\r\n\t\t\t\treturn module.i;\r\n\t\t\t}\r\n\t\t});\r\n\t\tmodule.webpackPolyfill = 1;\r\n\t}\r\n\treturn module;\r\n};\r\n\n\n//# sourceURL=webpack://TinyTrie/(webpack)/buildin/module.js?");
-
-/***/ }),
-
-/***/ "./src sync recursive":
-/*!******************!*\
-  !*** ./src sync ***!
-  \******************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-eval("function webpackEmptyContext(req) {\n\tvar e = new Error('Cannot find module \"' + req + '\".');\n\te.code = 'MODULE_NOT_FOUND';\n\tthrow e;\n}\nwebpackEmptyContext.keys = function() { return []; };\nwebpackEmptyContext.resolve = webpackEmptyContext;\nmodule.exports = webpackEmptyContext;\nwebpackEmptyContext.id = \"./src sync recursive\";\n\n//# sourceURL=webpack://TinyTrie/./src_sync?");
-
-/***/ }),
-
 /***/ "./src/BinaryString.ts":
 /*!*****************************!*\
   !*** ./src/BinaryString.ts ***!
@@ -111,7 +89,81 @@ eval("function webpackEmptyContext(req) {\n\tvar e = new Error('Cannot find modu
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if (\"value\" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\nfunction _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError(\"Cannot call a class as a function\"); } }\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! ./floor_log2 */ \"./src/floor_log2.ts\"), __webpack_require__(/*! ./base64 */ \"./src/base64.ts\")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    var floor_log2_1 = require(\"./floor_log2\");\n    var base64_1 = require(\"./base64\");\n\n    var BinaryString = function () {\n        function BinaryString() {\n            _classCallCheck(this, BinaryString);\n\n            this.buffer = 0;\n            this.pointer = 0;\n            this.data = '';\n        }\n\n        _createClass(BinaryString, [{\n            key: \"write\",\n            value: function write(val) {\n                var width = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;\n\n                var buf = this.buffer;\n                var len = width || floor_log2_1.default(val) + 1;\n                if (width && val >= 0x1 << width) {\n                    throw new Error(\"Can't write \" + val + \" in only \" + width + \" bits\");\n                }\n                this.buffer = buf << len | val;\n                this.pointer += len;\n                this._digest();\n            }\n        }, {\n            key: \"flush\",\n            value: function flush() {\n                var buffer = this.buffer;\n                var pointer = this.pointer;\n                while (pointer && pointer < 6) {\n                    buffer <<= 1;\n                    pointer += 1;\n                }\n                this.pointer = pointer;\n                this.buffer = buffer;\n                this._digest();\n            }\n        }, {\n            key: \"getData\",\n            value: function getData() {\n                this.flush();\n                return this.data;\n            }\n        }, {\n            key: \"_digest\",\n            value: function _digest() {\n                var buffer = this.buffer;\n                var pointer = this.pointer;\n                var newData = '';\n                while (pointer >= 6) {\n                    var remainder = pointer - 6;\n                    var code = buffer >> remainder;\n                    buffer = buffer ^ code << remainder;\n                    pointer = remainder;\n                    newData += base64_1.BASE64_INT_TO_CHAR[code];\n                }\n                this.pointer = pointer;\n                this.buffer = buffer;\n                this.data += newData;\n            }\n        }]);\n\n        return BinaryString;\n    }();\n\n    exports.default = BinaryString;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/BinaryString.ts?");
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var floor_log2_1 = __webpack_require__(/*! ./floor_log2 */ "./src/floor_log2.ts");
+var base64_1 = __webpack_require__(/*! ./base64 */ "./src/base64.ts");
+
+var BinaryString = function () {
+    function BinaryString() {
+        _classCallCheck(this, BinaryString);
+
+        this.buffer = 0;
+        this.pointer = 0;
+        this.data = '';
+    }
+
+    _createClass(BinaryString, [{
+        key: "write",
+        value: function write(val) {
+            var width = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+            var buf = this.buffer;
+            var len = width || floor_log2_1.floor_log2(val) + 1;
+            if (width && val >= 0x1 << width) {
+                throw new Error("Can't write " + val + " in only " + width + " bits");
+            }
+            this.buffer = buf << len | val;
+            this.pointer += len;
+            this._digest();
+        }
+    }, {
+        key: "flush",
+        value: function flush() {
+            var buffer = this.buffer;
+            var pointer = this.pointer;
+            while (pointer && pointer < 6) {
+                buffer <<= 1;
+                pointer += 1;
+            }
+            this.pointer = pointer;
+            this.buffer = buffer;
+            this._digest();
+        }
+    }, {
+        key: "getData",
+        value: function getData() {
+            this.flush();
+            return this.data;
+        }
+    }, {
+        key: "_digest",
+        value: function _digest() {
+            var buffer = this.buffer;
+            var pointer = this.pointer;
+            var newData = '';
+            while (pointer >= 6) {
+                var remainder = pointer - 6;
+                var code = buffer >> remainder;
+                buffer = buffer ^ code << remainder;
+                pointer = remainder;
+                newData += base64_1.BASE64_INT_TO_CHAR[code];
+            }
+            this.pointer = pointer;
+            this.buffer = buffer;
+            this.data += newData;
+        }
+    }]);
+
+    return BinaryString;
+}();
+
+exports.BinaryString = BinaryString;
 
 /***/ }),
 
@@ -123,7 +175,307 @@ eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FAC
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if (\"value\" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\nfunction _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }\n\nfunction _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError(\"Cannot call a class as a function\"); } }\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! ./floor_log2 */ \"./src/floor_log2.ts\"), __webpack_require__(/*! ./BinaryString */ \"./src/BinaryString.ts\"), __webpack_require__(/*! ./constants */ \"./src/constants.ts\")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    var floor_log2_1 = require(\"./floor_log2\");\n    var BinaryString_1 = require(\"./BinaryString\");\n    var constants_1 = require(\"./constants\");\n\n    var Trie = function () {\n        function Trie() {\n            var tree = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};\n\n            _classCallCheck(this, Trie);\n\n            this.root = tree;\n            this.frozen = false;\n        }\n\n        _createClass(Trie, [{\n            key: \"insert\",\n            value: function insert(str) {\n                if (this.frozen) {\n                    throw new SyntaxError(\"Can't insert into frozen Trie\");\n                }\n                var lastNode = str.split('').reduce(function (node, char) {\n                    if (char === constants_1.TERMINAL) {\n                        throw new TypeError(\"Illegal string character \" + constants_1.TERMINAL);\n                    }\n                    var nextNode = node.hasOwnProperty(char) ? node[char] : node[char] = {};\n                    return nextNode;\n                }, this.root);\n                lastNode[constants_1.TERMINAL] = constants_1.TERMINUS;\n                return this;\n            }\n        }, {\n            key: \"test\",\n            value: function test(str) {\n                var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false },\n                    wildcard = _ref.wildcard,\n                    prefix = _ref.prefix;\n\n                if (!wildcard) {\n                    var node = this.root;\n                    var match = str.split('').every(function (char) {\n                        return !!(node = node[char]);\n                    });\n                    return !!match && (prefix || node.hasOwnProperty(constants_1.TERMINAL));\n                }\n                return !!this.search(str, { wildcard: wildcard, prefix: prefix, first: true });\n            }\n        }, {\n            key: \"search\",\n            value: function search(str) {\n                var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false, first: false },\n                    wildcard = _ref2.wildcard,\n                    prefix = _ref2.prefix,\n                    first = _ref2.first;\n\n                if (wildcard && wildcard.length !== 1) {\n                    throw new Error(\"Wildcard length must be 1; got \" + wildcard.length);\n                }\n                var matches = [];\n                var queue = [{ data: this.root, depth: 0, memo: '' }];\n                var lastDepth = str.length;\n\n                var _loop = function _loop() {\n                    var node = queue.shift();\n                    if (node.depth >= lastDepth) {\n                        if (node.data.hasOwnProperty(constants_1.TERMINAL)) {\n                            if (first) {\n                                return {\n                                    v: node.memo\n                                };\n                            }\n                            matches.push(node.memo);\n                        }\n                        if (!prefix) {\n                            return \"continue\";\n                        }\n                    }\n                    var isPfXOverflow = prefix && node.depth >= lastDepth;\n                    var token = str[node.depth];\n                    if (token === wildcard || isPfXOverflow) {\n                        Object.keys(node.data).forEach(function (n) {\n                            if (n !== constants_1.TERMINAL) {\n                                queue.push({\n                                    data: node.data[n],\n                                    depth: node.depth + 1,\n                                    memo: node.memo + n\n                                });\n                            }\n                        });\n                    } else {\n                        if (node.data.hasOwnProperty(token)) {\n                            queue.push({\n                                data: node.data[token],\n                                depth: node.depth + 1,\n                                memo: node.memo + token\n                            });\n                        }\n                    }\n                };\n\n                while (queue.length) {\n                    var _ret = _loop();\n\n                    switch (_ret) {\n                        case \"continue\":\n                            continue;\n\n                        default:\n                            if ((typeof _ret === \"undefined\" ? \"undefined\" : _typeof(_ret)) === \"object\") return _ret.v;\n                    }\n                }\n                return first ? null : matches;\n            }\n        }, {\n            key: \"clone\",\n            value: function clone() {\n                return new Trie(this.toJSON());\n            }\n        }, {\n            key: \"freeze\",\n            value: function freeze() {\n                if (this.frozen) {\n                    return this;\n                }\n                var suffixTree = {};\n                var node = this.root;\n                var stack = [];\n                var depthStack = [node];\n                while (depthStack.length) {\n                    node = depthStack.pop();\n                    Object.keys(node).forEach(function (char) {\n                        if (char[1] === '_') {\n                            return;\n                        }\n                        var current = node[char];\n                        stack.push({\n                            current: current,\n                            char: char,\n                            parent: node\n                        });\n                        depthStack.push(current);\n                    });\n                }\n\n                var _loop2 = function _loop2() {\n                    var _stack$pop = stack.pop(),\n                        char = _stack$pop.char,\n                        parent = _stack$pop.parent,\n                        current = _stack$pop.current;\n\n                    if (suffixTree.hasOwnProperty(char)) {\n                        var suffixMeta = suffixTree[char];\n                        var match = suffixMeta.find(function (other) {\n                            var oKeys = Object.keys(other);\n                            var cKeys = Object.keys(current);\n                            return oKeys.length === cKeys.length && oKeys.every(function (key) {\n                                return other[key] === current[key];\n                            });\n                        });\n                        if (match) {\n                            parent[char] = match;\n                        } else {\n                            suffixMeta.push(current);\n                        }\n                    } else {\n                        suffixTree[char] = [current];\n                    }\n                };\n\n                while (stack.length) {\n                    _loop2();\n                }\n                this.frozen = true;\n                return this;\n            }\n        }, {\n            key: \"encode\",\n            value: function encode() {\n                var chunks = [];\n                var queue = [this.root];\n                var charTable = new Set();\n                var visitCode = Date.now();\n                var offsetMin = Infinity;\n                var offsetMax = -Infinity;\n\n                var _loop3 = function _loop3() {\n                    var node = queue.shift();\n                    var keys = Object.keys(node).filter(function (k) {\n                        return k[1] !== '_';\n                    });\n                    var n = keys.length;\n                    node.__visited__ = visitCode;\n                    var nodeChunkIndex = node.__idx__ = chunks.length;\n                    if (node.__parents__) {\n                        node.__parents__.forEach(function (chunk) {\n                            var offset = chunk.offset = nodeChunkIndex - chunk.idx;\n                            if (offset < offsetMin) {\n                                offsetMin = offset;\n                            }\n                            if (offset > offsetMax) {\n                                offsetMax = offset;\n                            }\n                        });\n                    }\n                    keys.forEach(function (char, i) {\n                        var child = node[char];\n                        var chunkIdx = chunks.length;\n                        var lastInLevel = i === n - 1;\n                        var newChunk = {\n                            char: char,\n                            idx: chunkIdx,\n                            offset: null,\n                            last: lastInLevel\n                        };\n                        if (child.__visited__ === visitCode) {\n                            var idx = child.__idx__;\n                            var offset = newChunk.offset = idx - chunkIdx;\n                            if (offset < offsetMin) {\n                                offsetMin = offset;\n                            }\n                            if (offset > offsetMax) {\n                                offsetMax = offset;\n                            }\n                        } else {\n                            if (child.__willVisit__ === visitCode) {\n                                child.__parents__.push(newChunk);\n                            } else {\n                                child.__willVisit__ = visitCode;\n                                child.__parents__ = [newChunk];\n                            }\n                            queue.push(child);\n                        }\n                        chunks.push(newChunk);\n                        charTable.add(char);\n                    });\n                };\n\n                while (queue.length) {\n                    _loop3();\n                }\n                var charTableAsArray = Array.from(charTable).filter(function (char) {\n                    return char !== constants_1.TERMINAL;\n                });\n                var charMap = charTableAsArray.reduce(function (agg, char, i) {\n                    agg[char] = i + 1;\n                    return agg;\n                }, _defineProperty({}, constants_1.TERMINAL, 0));\n                var charEncodingWidth = floor_log2_1.default(charTableAsArray.length) + 1;\n                var pointerRange = offsetMax - offsetMin;\n                var pointerEncodingWidth = floor_log2_1.default(pointerRange) + 1;\n                var encodedTrie = new BinaryString_1.default();\n                chunks.forEach(function (chunk) {\n                    var char = chunk.char,\n                        offset = chunk.offset,\n                        last = chunk.last;\n\n                    encodedTrie.write(charMap[char], charEncodingWidth);\n                    encodedTrie.write(offset - offsetMin, pointerEncodingWidth);\n                    encodedTrie.write(+last, 1);\n                });\n                encodedTrie.flush();\n                var headerString = new BinaryString_1.default();\n                var outputCharTable = charTableAsArray.join('');\n                var headerWidth = Math.ceil((constants_1.HEADER_WIDTH_FIELD + constants_1.VERSION_FIELD + constants_1.OFFSET_SIGN_FIELD + constants_1.OFFSET_VAL_FIELD + constants_1.CHAR_WIDTH_FIELD + constants_1.POINTER_WIDTH_FIELD) / 6) + outputCharTable.length;\n                var offsetSign = +(offsetMin < 0);\n                headerString.write(headerWidth, constants_1.HEADER_WIDTH_FIELD);\n                headerString.write(constants_1.VERSION, constants_1.VERSION_FIELD);\n                headerString.write(offsetSign, constants_1.OFFSET_SIGN_FIELD);\n                headerString.write(offsetSign ? -offsetMin : offsetMin, constants_1.OFFSET_VAL_FIELD);\n                headerString.write(charEncodingWidth, constants_1.CHAR_WIDTH_FIELD);\n                headerString.write(pointerEncodingWidth, constants_1.POINTER_WIDTH_FIELD);\n                headerString.flush();\n                return \"\" + headerString.getData() + outputCharTable + encodedTrie.getData();\n            }\n        }, {\n            key: \"toJSON\",\n            value: function toJSON() {\n                var str = JSON.stringify(this.root, function (k, v) {\n                    if (k[1] === '_') {\n                        return undefined;\n                    }\n                    return v;\n                });\n                return JSON.parse(str);\n            }\n        }]);\n\n        return Trie;\n    }();\n\n    exports.default = Trie;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/Trie.ts?");
+
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var floor_log2_1 = __webpack_require__(/*! ./floor_log2 */ "./src/floor_log2.ts");
+var BinaryString_1 = __webpack_require__(/*! ./BinaryString */ "./src/BinaryString.ts");
+var constants_1 = __webpack_require__(/*! ./constants */ "./src/constants.ts");
+
+var Trie = function () {
+    function Trie() {
+        var tree = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+        _classCallCheck(this, Trie);
+
+        this.root = tree;
+        this.frozen = false;
+    }
+
+    _createClass(Trie, [{
+        key: "insert",
+        value: function insert(str) {
+            if (this.frozen) {
+                throw new SyntaxError("Can't insert into frozen Trie");
+            }
+            var lastNode = str.split('').reduce(function (node, char) {
+                if (char === constants_1.TERMINAL) {
+                    throw new TypeError("Illegal string character " + constants_1.TERMINAL);
+                }
+                var nextNode = node.hasOwnProperty(char) ? node[char] : node[char] = {};
+                return nextNode;
+            }, this.root);
+            lastNode[constants_1.TERMINAL] = constants_1.TERMINUS;
+            return this;
+        }
+    }, {
+        key: "test",
+        value: function test(str) {
+            var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false },
+                wildcard = _ref.wildcard,
+                prefix = _ref.prefix;
+
+            if (!wildcard) {
+                var node = this.root;
+                var match = str.split('').every(function (char) {
+                    return !!(node = node[char]);
+                });
+                return !!match && (prefix || node.hasOwnProperty(constants_1.TERMINAL));
+            }
+            return !!this.search(str, { wildcard: wildcard, prefix: prefix, first: true });
+        }
+    }, {
+        key: "search",
+        value: function search(str) {
+            var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { wildcard: null, prefix: false, first: false },
+                wildcard = _ref2.wildcard,
+                prefix = _ref2.prefix,
+                first = _ref2.first;
+
+            if (wildcard && wildcard.length !== 1) {
+                throw new Error("Wildcard length must be 1; got " + wildcard.length);
+            }
+            var matches = [];
+            var queue = [{ data: this.root, depth: 0, memo: '' }];
+            var lastDepth = str.length;
+
+            var _loop = function _loop() {
+                var node = queue.shift();
+                if (node.depth >= lastDepth) {
+                    if (node.data.hasOwnProperty(constants_1.TERMINAL)) {
+                        if (first) {
+                            return {
+                                v: node.memo
+                            };
+                        }
+                        matches.push(node.memo);
+                    }
+                    if (!prefix) {
+                        return "continue";
+                    }
+                }
+                var isPfXOverflow = prefix && node.depth >= lastDepth;
+                var token = str[node.depth];
+                if (token === wildcard || isPfXOverflow) {
+                    Object.keys(node.data).forEach(function (n) {
+                        if (n !== constants_1.TERMINAL) {
+                            queue.push({
+                                data: node.data[n],
+                                depth: node.depth + 1,
+                                memo: node.memo + n
+                            });
+                        }
+                    });
+                } else {
+                    if (node.data.hasOwnProperty(token)) {
+                        queue.push({
+                            data: node.data[token],
+                            depth: node.depth + 1,
+                            memo: node.memo + token
+                        });
+                    }
+                }
+            };
+
+            while (queue.length) {
+                var _ret = _loop();
+
+                switch (_ret) {
+                    case "continue":
+                        continue;
+
+                    default:
+                        if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+                }
+            }
+            return first ? null : matches;
+        }
+    }, {
+        key: "clone",
+        value: function clone() {
+            return new Trie(this.toJSON());
+        }
+    }, {
+        key: "freeze",
+        value: function freeze() {
+            if (this.frozen) {
+                return this;
+            }
+            var suffixTree = {};
+            var node = this.root;
+            var stack = [];
+            var depthStack = [node];
+            while (depthStack.length) {
+                node = depthStack.pop();
+                Object.keys(node).forEach(function (char) {
+                    if (char[1] === '_') {
+                        return;
+                    }
+                    var current = node[char];
+                    stack.push({
+                        current: current,
+                        char: char,
+                        parent: node
+                    });
+                    depthStack.push(current);
+                });
+            }
+
+            var _loop2 = function _loop2() {
+                var _stack$pop = stack.pop(),
+                    char = _stack$pop.char,
+                    parent = _stack$pop.parent,
+                    current = _stack$pop.current;
+
+                if (suffixTree.hasOwnProperty(char)) {
+                    var suffixMeta = suffixTree[char];
+                    var match = suffixMeta.find(function (other) {
+                        var oKeys = Object.keys(other);
+                        var cKeys = Object.keys(current);
+                        return oKeys.length === cKeys.length && oKeys.every(function (key) {
+                            return other[key] === current[key];
+                        });
+                    });
+                    if (match) {
+                        parent[char] = match;
+                    } else {
+                        suffixMeta.push(current);
+                    }
+                } else {
+                    suffixTree[char] = [current];
+                }
+            };
+
+            while (stack.length) {
+                _loop2();
+            }
+            this.frozen = true;
+            return this;
+        }
+    }, {
+        key: "encode",
+        value: function encode() {
+            var chunks = [];
+            var queue = [this.root];
+            var charTable = new Set();
+            var visitCode = Date.now();
+            var offsetMin = Infinity;
+            var offsetMax = -Infinity;
+
+            var _loop3 = function _loop3() {
+                var node = queue.shift();
+                var keys = Object.keys(node).filter(function (k) {
+                    return k[1] !== '_';
+                });
+                var n = keys.length;
+                node.__visited__ = visitCode;
+                var nodeChunkIndex = node.__idx__ = chunks.length;
+                if (node.__parents__) {
+                    node.__parents__.forEach(function (chunk) {
+                        var offset = chunk.offset = nodeChunkIndex - chunk.idx;
+                        if (offset < offsetMin) {
+                            offsetMin = offset;
+                        }
+                        if (offset > offsetMax) {
+                            offsetMax = offset;
+                        }
+                    });
+                }
+                keys.forEach(function (char, i) {
+                    var child = node[char];
+                    var chunkIdx = chunks.length;
+                    var lastInLevel = i === n - 1;
+                    var newChunk = {
+                        char: char,
+                        idx: chunkIdx,
+                        offset: null,
+                        last: lastInLevel
+                    };
+                    if (child.__visited__ === visitCode) {
+                        var idx = child.__idx__;
+                        var offset = newChunk.offset = idx - chunkIdx;
+                        if (offset < offsetMin) {
+                            offsetMin = offset;
+                        }
+                        if (offset > offsetMax) {
+                            offsetMax = offset;
+                        }
+                    } else {
+                        if (child.__willVisit__ === visitCode) {
+                            child.__parents__.push(newChunk);
+                        } else {
+                            child.__willVisit__ = visitCode;
+                            child.__parents__ = [newChunk];
+                        }
+                        queue.push(child);
+                    }
+                    chunks.push(newChunk);
+                    charTable.add(char);
+                });
+            };
+
+            while (queue.length) {
+                _loop3();
+            }
+            var charTableAsArray = Array.from(charTable).filter(function (char) {
+                return char !== constants_1.TERMINAL;
+            });
+            var charMap = charTableAsArray.reduce(function (agg, char, i) {
+                agg[char] = i + 1;
+                return agg;
+            }, _defineProperty({}, constants_1.TERMINAL, 0));
+            var charEncodingWidth = floor_log2_1.floor_log2(charTableAsArray.length) + 1;
+            var pointerRange = offsetMax - offsetMin;
+            var pointerEncodingWidth = floor_log2_1.floor_log2(pointerRange) + 1;
+            var encodedTrie = new BinaryString_1.BinaryString();
+            chunks.forEach(function (chunk) {
+                var char = chunk.char,
+                    offset = chunk.offset,
+                    last = chunk.last;
+
+                encodedTrie.write(charMap[char], charEncodingWidth);
+                encodedTrie.write(offset - offsetMin, pointerEncodingWidth);
+                encodedTrie.write(+last, 1);
+            });
+            encodedTrie.flush();
+            var headerString = new BinaryString_1.BinaryString();
+            var outputCharTable = charTableAsArray.join('');
+            var headerWidth = Math.ceil((constants_1.HEADER_WIDTH_FIELD + constants_1.VERSION_FIELD + constants_1.OFFSET_SIGN_FIELD + constants_1.OFFSET_VAL_FIELD + constants_1.CHAR_WIDTH_FIELD + constants_1.POINTER_WIDTH_FIELD) / 6) + outputCharTable.length;
+            var offsetSign = +(offsetMin < 0);
+            headerString.write(headerWidth, constants_1.HEADER_WIDTH_FIELD);
+            headerString.write(constants_1.VERSION, constants_1.VERSION_FIELD);
+            headerString.write(offsetSign, constants_1.OFFSET_SIGN_FIELD);
+            headerString.write(offsetSign ? -offsetMin : offsetMin, constants_1.OFFSET_VAL_FIELD);
+            headerString.write(charEncodingWidth, constants_1.CHAR_WIDTH_FIELD);
+            headerString.write(pointerEncodingWidth, constants_1.POINTER_WIDTH_FIELD);
+            headerString.flush();
+            return "" + headerString.getData() + outputCharTable + encodedTrie.getData();
+        }
+    }, {
+        key: "toJSON",
+        value: function toJSON() {
+            var str = JSON.stringify(this.root, function (k, v) {
+                if (k[1] === '_') {
+                    return undefined;
+                }
+                return v;
+            });
+            return JSON.parse(str);
+        }
+    }]);
+
+    return Trie;
+}();
+
+exports.Trie = Trie;
 
 /***/ }),
 
@@ -135,7 +487,14 @@ eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FAC
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    exports.BASE64_INT_TO_CHAR = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\".split('');\n    exports.BASE64_CHAR_TO_INT = exports.BASE64_INT_TO_CHAR.reduce(function (agg, char, i) {\n        agg[char] = i;\n        return agg;\n    }, {});\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/base64.ts?");
+
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BASE64_INT_TO_CHAR = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split('');
+exports.BASE64_CHAR_TO_INT = exports.BASE64_INT_TO_CHAR.reduce(function (agg, char, i) {
+    agg[char] = i;
+    return agg;
+}, {});
 
 /***/ }),
 
@@ -147,7 +506,18 @@ eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FAC
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    exports.TERMINAL = '\\0';\n    exports.TERMINUS = Object.create(null);\n    exports.VERSION = 0;\n    exports.HEADER_WIDTH_FIELD = 10;\n    exports.VERSION_FIELD = 10;\n    exports.OFFSET_SIGN_FIELD = 1;\n    exports.OFFSET_VAL_FIELD = 21;\n    exports.CHAR_WIDTH_FIELD = 8;\n    exports.POINTER_WIDTH_FIELD = 8;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/constants.ts?");
+
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TERMINAL = '\0';
+exports.TERMINUS = Object.create(null);
+exports.VERSION = 0;
+exports.HEADER_WIDTH_FIELD = 10;
+exports.VERSION_FIELD = 10;
+exports.OFFSET_SIGN_FIELD = 1;
+exports.OFFSET_VAL_FIELD = 21;
+exports.CHAR_WIDTH_FIELD = 8;
+exports.POINTER_WIDTH_FIELD = 8;
 
 /***/ }),
 
@@ -159,7 +529,17 @@ eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FAC
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    function floor_log2(x) {\n        var n = 0;\n        while (x >>= 1) {\n            n++;\n        }\n        return n;\n    }\n    exports.default = floor_log2;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/floor_log2.ts?");
+
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function floor_log2(x) {
+    var n = 0;
+    while (x >>= 1) {
+        n++;
+    }
+    return n;
+}
+exports.floor_log2 = floor_log2;
 
 /***/ }),
 
@@ -171,9 +551,27 @@ eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FAC
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;\n\nvar _typeof = typeof Symbol === \"function\" && typeof Symbol.iterator === \"symbol\" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === \"function\" && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; };\n\n(function (factory) {\n    if (( false ? undefined : _typeof(module)) === \"object\" && _typeof(module.exports) === \"object\") {\n        var v = factory(__webpack_require__(\"./src sync recursive\"), exports);\n        if (v !== undefined) module.exports = v;\n    } else if (true) {\n        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! ./Trie */ \"./src/Trie.ts\"), __webpack_require__(/*! ./Trie */ \"./src/Trie.ts\")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?\n\t\t\t\t(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),\n\t\t\t\t__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));\n    }\n})(function (require, exports) {\n    \"use strict\";\n\n    Object.defineProperty(exports, \"__esModule\", { value: true });\n    var Trie_1 = require(\"./Trie\");\n    var Trie_2 = require(\"./Trie\");\n    exports.Trie = Trie_2.default;\n    function createSync(strings) {\n        var trie = new Trie_1.default();\n        strings.forEach(function (s) {\n            return trie.insert(s);\n        });\n        return trie;\n    }\n    exports.createSync = createSync;\n    function createFrozenSync(words) {\n        return createSync(words).freeze();\n    }\n    exports.createFrozenSync = createFrozenSync;\n});\n/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/webpack/buildin/module.js */ \"./node_modules/webpack/buildin/module.js\")(module)))\n\n//# sourceURL=webpack://TinyTrie/./src/index.ts?");
+
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Trie_1 = __webpack_require__(/*! ./Trie */ "./src/Trie.ts");
+var Trie_2 = __webpack_require__(/*! ./Trie */ "./src/Trie.ts");
+exports.Trie = Trie_2.Trie;
+function createSync(strings) {
+    var trie = new Trie_1.Trie();
+    strings.forEach(function (s) {
+        return trie.insert(s);
+    });
+    return trie;
+}
+exports.createSync = createSync;
+function createFrozenSync(words) {
+    return createSync(words).freeze();
+}
+exports.createFrozenSync = createFrozenSync;
 
 /***/ })
 
 /******/ });
 });
+//# sourceMappingURL=tiny-trie.js.map

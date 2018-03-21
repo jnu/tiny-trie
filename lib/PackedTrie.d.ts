@@ -1,5 +1,5 @@
 import { ITrie, ISearchOpts, ITestOpts } from './BaseTrie';
-declare class PackedTrie implements ITrie {
+export declare class PackedTrie implements ITrie {
     data: string;
     private offset;
     private table;
@@ -14,4 +14,3 @@ declare class PackedTrie implements ITrie {
     test(str: string, {wildcard, prefix}?: ITestOpts): boolean;
     search(str: string, {wildcard, prefix, first}?: ISearchOpts): string | string[];
 }
-export default PackedTrie;

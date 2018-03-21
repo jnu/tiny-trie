@@ -1,1 +1,1 @@
-{"version":3,"file":"floor_log2.js","sourceRoot":"","sources":["../src/floor_log2.ts"],"names":[],"mappings":";;;;;;;;;;;IASA,oBAAmC,CAAS;QACxC,IAAI,CAAC,GAAG,CAAC,CAAC;QACV,OAAO,CAAC,KAAK,CAAC,EAAE,CAAC;YACb,CAAC,EAAE,CAAC;QACR,CAAC;QACD,MAAM,CAAC,CAAC,CAAC;IACb,CAAC;IAND,6BAMC"}
+{"version":3,"file":"floor_log2.js","sourceRoot":"","sources":["../src/floor_log2.ts"],"names":[],"mappings":";;AASA,oBAA2B,CAAS;IAChC,IAAI,CAAC,GAAG,CAAC,CAAC;IACV,OAAO,CAAC,KAAK,CAAC,EAAE,CAAC;QACb,CAAC,EAAE,CAAC;IACR,CAAC;IACD,MAAM,CAAC,CAAC,CAAC;AACb,CAAC;AAND,gCAMC"}

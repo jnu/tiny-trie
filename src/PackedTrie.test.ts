@@ -1,6 +1,6 @@
 /* eslint-env mocha */
-import Trie from './Trie';
-import PackedTrie from './PackedTrie';
+import {Trie} from './Trie';
+import {PackedTrie} from './PackedTrie';
 import {assert} from 'chai';
 
 describe('PackedTrie', () => {

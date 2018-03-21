@@ -7,7 +7,7 @@
  * @param  {Number} x
  * @return {Number}
  */
-export default function floor_log2(x: number) {
+export function floor_log2(x: number) {
     let n = 0;
     while (x >>= 1) {
         n++;

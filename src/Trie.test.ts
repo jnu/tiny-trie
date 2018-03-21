@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 
-import Trie, {INode} from './Trie';
+import {Trie, INode} from './Trie';
 import {assert} from 'chai';
 
 /**

@@ -53,7 +53,7 @@ function readBits(binary: string, start: number, len: number) {
  * phenomenally low.
  * @class
  */
-class PackedTrie implements ITrie {
+export class PackedTrie implements ITrie {
 
     /**
      * Binary string encoded as Base64 representing Trie
@@ -322,5 +322,3 @@ class PackedTrie implements ITrie {
     }
 
 }
-
-export default PackedTrie;
