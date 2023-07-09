@@ -7,6 +7,7 @@
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
+        "inlineSources": true,
         "sourceMap": true
     },
     "include": ["src/**/*"],
